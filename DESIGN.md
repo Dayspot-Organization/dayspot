@@ -1,4 +1,4 @@
-# Design — Smart Booking
+# Design — Dayspot
 
 Referência visual do `web/`. A fonte é o canvas **Smart Booking — design system**
 (<https://claude.ai/artifact/5wVbMpoFcFtUr87MYhSVQc>), com os boards Sistema (claro e

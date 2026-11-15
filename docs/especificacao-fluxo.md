@@ -1,4 +1,4 @@
-# Especificação de fluxo — Smart Booking
+# Especificação de fluxo — Dayspot
 
 Versão **1.1** · 23/10/2026 (§8.1 e §8.2 decididos: req. §12)
 
@@ -259,7 +259,7 @@ erros no formato de `docs/erros-api.md`, lidos pelo cliente HTTP da 1.9.
   concluir (5.4); exportar `.ics` do período (7.7). Concluir só aparece com o início
   passado (inferido da guarda).
 - **`.ics` (7.6):** download, não feed; mesmo `Escopo` e período; só `confirmado` e
-  `concluido`; `METHOD:PUBLISH`, `UID:<id>@smartbooking`, `DTSTAMP` = agora,
+  `concluido`; `METHOD:PUBLISH`, `UID:<id>@dayspot`, `DTSTAMP` = agora,
   `SEQUENCE` = epoch de `atualizado_em`, `DTSTART`/`DTEND` em UTC; cookie da sessão,
   sem token na URL.
 - **Estados:** semana vazia; cliente não vinculado ou que bloqueou o bot sinalizado
