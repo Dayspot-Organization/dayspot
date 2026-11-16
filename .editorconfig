@@ -1,0 +1,11 @@
+root = true
+
+# O dotnet format (CI) confere estas regras. LF em todo sistema: junto com o
+# .gitattributes, o Windows não troca a quebra de linha no checkout.
+[*.cs]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true

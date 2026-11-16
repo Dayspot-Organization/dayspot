@@ -1,6 +1,6 @@
 # 📅 Smart Booking
 
-![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)
+![.NET](https://img.shields.io/badge/.NET%2010-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL%2016-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
@@ -61,11 +61,11 @@ O isolamento entre organizações é garantido no banco, com Row Level Security,
 
 | Camada | Tecnologia |
 | --- | --- |
-| API e worker | Go |
+| API e worker | C# — ASP.NET Core (.NET 10), minimal APIs |
 | Frontend | React + Vite + TypeScript |
 | Banco | PostgreSQL 16 |
 | Migrations | goose v3.28.0 |
-| Acesso a dados | pgx v5 + sqlc |
+| Acesso a dados | EF Core + Npgsql, só mapeando o schema do goose (sem EF Migrations) |
 | Notificações | Telegram Bot API |
 | Ambiente | Docker Compose |
 
@@ -76,16 +76,17 @@ O isolamento entre organizações é garantido no banco, com Row Level Security,
 ### Pré-requisitos
 
 - [Docker](https://docs.docker.com/get-docker/) com Compose
-- [Go](https://go.dev/dl/) 1.27+
+- [.NET SDK](https://dotnet.microsoft.com/download) 10
 - [Node.js](https://nodejs.org/) 22+ — para o `web/`
 - [goose](https://github.com/pressly/goose) v3.28.0
-- [sqlc](https://sqlc.dev/) v1.31.1
 - `psql` (cliente do PostgreSQL) — para o seed e a verificação de isolamento
 
+O goose é um binário só: baixe a v3.28.0 em
+[releases](https://github.com/pressly/goose/releases/tag/v3.28.0) e ponha no PATH. No Linux:
+
 ```bash
-go install github.com/pressly/goose/v3/cmd/goose@v3.28.0
-go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
-# instalam em ~/go/bin, que precisa estar no PATH
+sudo curl -fsSL -o /usr/local/bin/goose   https://github.com/pressly/goose/releases/download/v3.28.0/goose_linux_x86_64
+sudo chmod +x /usr/local/bin/goose
 ```
 
 ### Clonando
@@ -120,12 +121,17 @@ cp .env.example .env
 ```bash
 docker compose up -d      # PostgreSQL em localhost:5467, Adminer em localhost:8088
 goose up                  # aplica as migrations
-set -a; . ./.env; set +a  # exporta o .env para o psql e o go test
-psql "$GOOSE_DBSTRING" -f db/seed.sql   # o teste de repositório lê o seed
+set -a; . ./.env; set +a  # exporta o .env para o psql e o dotnet test
+psql "$GOOSE_DBSTRING" -f db/seed.sql   # os testes de banco leem o seed
 
-go run ./cmd/api          # sobe em :8080 lendo o .env; sem variável obrigatória, não sobe
-go test ./...
+dotnet run --project src/Api   # sobe em :8080 lendo o .env; sem variável obrigatória, não sobe
+dotnet test                    # sem DATABASE_URL e GOOSE_DBSTRING exportadas, os testes de banco são pulados
+dotnet format                  # o CI roda com --verify-no-changes
 ```
+
+Os testes de banco rodam contra o Postgres do `compose.yml`, com as migrations do goose
+e o seed aplicados: gravam e apagam os próprios dados (UUIDs `f…`) e desfazem o resto
+por `ROLLBACK`.
 
 > ⚠️ O `db/init/app_user.sh` só roda com o volume do banco vazio. Se o seu volume é anterior ao `db/init`, rode `docker compose down -v` uma vez antes do `up` — isso **apaga os dados locais** do banco.
 
@@ -213,21 +219,21 @@ Hoje:
 ```
 thesmartbooking/
 ├── .github/
-│   ├── workflows/ci.yml        # em push e PR para a main: Go (gofmt, build, vet; Postgres 16 com migrations up, down e up de novo; testes, inclusive os de banco) e web (lint, build)
+│   ├── workflows/ci.yml        # em push e PR para a main: .NET (dotnet format, build; Postgres 16 com migrations up, down e up de novo; testes, inclusive os de banco) e web (lint, build)
 │   └── pull_request_template.md
-├── cmd/api/                    # entrada da API
-├── internal/api/               # handlers e formato de erro (docs/erros-api.md)
-├── internal/config/            # leitura das variáveis de ambiente e do .env
-├── internal/storage/           # repositórios — todo método recebe tenantID; testes de isolamento (RLS), exclusão de tenant e repositório
-├── internal/storage/db/        # código gerado pelo sqlc — não editar à mão
+├── src/Api/                    # a API (ASP.NET Core): Program.cs, rotas e handlers, Erros.cs (docs/erros-api.md), Transacao.cs
+├── src/Api/Config.cs           # leitura das variáveis de ambiente e do .env — só ele lê o ambiente
+├── src/Api/Auth/               # hash de senha (Argon2id) e normalização de e-mail
+├── src/Api/Dados/              # EF Core: AppDb (mapeia o schema do goose), Modelos e Consultas — toda consulta recebe tenantId
+├── tests/Api.Tests/            # xUnit: API, config, auth e banco (isolamento por RLS, exclusão de tenant, consultas)
 ├── db/migrations/              # goose, SQL puro
-├── db/queries/                 # queries SQL anotadas para o sqlc
 ├── db/seed.sql                 # dois tenants fictícios (alfa e beta)
 ├── db/init/                    # app_user.sh: cria o app_user no primeiro up do compose
 ├── web/                        # frontend React + Vite
 ├── docs/
 ├── compose.yml                 # PostgreSQL 16 + Adminer
-├── sqlc.yaml                   # configuração do sqlc (pgx v5, schema = db/migrations)
+├── Dayspot.slnx                # solução .NET (API + testes)
+├── global.json                 # versão do SDK e runner de testes
 ├── .env.example
 ├── CLAUDE.md                   # regras para o Claude Code
 └── CONTRIBUTING.md
@@ -236,8 +242,8 @@ thesmartbooking/
 Estrutura-alvo — cada pasta nasce no card que a usa:
 
 ```
-cmd/worker/            # consumidor da fila de notificações (T3)
-internal/notificador/  # interface Notificador + implementação Telegram (T3)
+src/Worker/            # consumidor da fila de notificações (T3)
+src/Api/Notificador/   # interface Notificador + implementação Telegram (T3)
 ```
 
 ---
@@ -277,7 +283,7 @@ Especificação completa em [`docs/erros-api.md`](docs/erros-api.md).
 
 🔑 **Contexto de tenant.** Toda requisição abre transação e define `app.tenant_id` via `set_config(..., true)`. Nunca `SET` sem escopo local — com pool de conexões, a variável vaza para a requisição seguinte e vira vazamento de dados entre organizações.
 
-📦 **Repositórios.** SQL mora em `db/queries/` e vira Go pelo sqlc (driver pgx v5). O código gerado nunca é chamado direto dos handlers: passa por `internal/storage`, onde nenhuma função aceita query sem receber `tenantID`. O RLS é a rede de segurança; a camada de repositório é a primeira barreira.
+📦 **Acesso a dados.** EF Core com Npgsql, mapeando o schema que o goose cria (sem EF Migrations). As consultas ficam em `src/Api/Dados/Consultas.cs`, e toda uma recebe `tenantId` e filtra por ele. O RLS é a rede de segurança; o filtro na consulta é a primeira barreira.
 
 🕐 **Fuso horário.** Tudo em UTC no banco (`timestamptz`). Conversão apenas na borda, usando `tenants.fuso_horario`.
 

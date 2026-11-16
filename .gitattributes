@@ -1,2 +1,4 @@
 # Scripts rodam no container Linux: com CRLF (autocrlf no Windows) o sh quebra.
 *.sh text eol=lf
+# O dotnet format --verify-no-changes do CI exige LF (.editorconfig).
+*.cs text eol=lf

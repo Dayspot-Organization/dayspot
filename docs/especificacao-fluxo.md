@@ -79,14 +79,14 @@ sessão → 401 `nao_autenticado`.
 O RLS separa empresas; dentro da empresa, o prestador é separado por filtro na query,
 sem policy extra (req. §6.2, guia §Acesso a dados).
 
-- **`Escopo{TenantID, PrestadorID *uuid.UUID}`** é montado só pelo middleware da 2.7,
+- **`Escopo(TenantId, PrestadorId)`** (`Guid?`) é montado só pelo middleware da 2.7,
   a partir da sessão. Prestador: sempre o da sessão. Administrador: o do seletor (query
-  string) ou `nil` (empresa toda). O handler nunca monta o filtro (RNF11).
+  string) ou `null` (empresa toda). O handler nunca monta o filtro (RNF11).
 - **Listagens, financeiro, `.ics`, slots e log:** filtro na query com
-  `sqlc.narg('prestador_id')`. Um `nil` por bug devolve a empresa toda, sem o RLS como
+  `prestadorId == null || ...`. Um `null` por bug devolve a empresa toda, sem o RLS como
   rede; daí o `Escopo` pronto.
 - **Operações por id** (GET, PATCH, cancelar, concluir): `SELECT ... FOR UPDATE` no
-  tenant, sem filtro de prestador; em Go, nesta ordem: sem linha → 404; `prestador_id`
+  tenant, sem filtro de prestador; no código, nesta ordem: sem linha → 404; `prestador_id`
   ≠ sessão e papel ≠ administrador → 403; transição ou horário inválido → 409
   `status_invalido`; então o `UPDATE`, na mesma transação.
 - **`tenant_id`** sai só da sessão, nunca do corpo nem da query (RNF05). A sessão é
@@ -249,7 +249,7 @@ erros no formato de `docs/erros-api.md`, lidos pelo cliente HTTP da 1.9.
   horário e status; cor por status (paleta a definir, §8.6). Horários exibidos no fuso
   do tenant (RNF01).
 - **Navegação:** semana anterior e seguinte. A semana conta pelo `inicio`, no fuso do
-  tenant: limites calculados em Go (`time.LoadLocation`) e enviados como
+  tenant: limites calculados no C# (`TimeZoneInfo`) e enviados como
   `timestamptz` (`inicio >= de AND inicio < ate`).
 - **Seletor (administrador, 7.2):** lista membros, inclusive removidos marcados "(removido)".
   O calendário abre na própria agenda; a API sem `prestador_id` devolve a empresa
@@ -281,7 +281,7 @@ erros no formato de `docs/erros-api.md`, lidos pelo cliente HTTP da 1.9.
 - **Quem:** administrador (pessoal, total da empresa, por prestador) e prestador (só pessoal).
 - **Dados:** soma de `valor_centavos` dos `concluido` no mês; para o administrador, também por
   prestador, com removidos marcados (7.4). Quantidade de atendimentos: a definir.
-- **Regras:** mês pelo `inicio`, no fuso do tenant, limites calculados em Go. Soma com
+- **Regras:** mês pelo `inicio`, no fuso do tenant, limites calculados no C#. Soma com
   `COALESCE(sum(valor_centavos), 0)::bigint`. Valores em centavos na API, formatados em
   BRL só no frontend (R$ 45,90 = `4590`, guia §Dinheiro). `cancelado` e `confirmado`
   não contam.
@@ -575,7 +575,7 @@ para `agendamentos` com `ON DELETE CASCADE`.
 ## 6. Erros da API
 
 Corpo `{"erro": {"codigo", "mensagem", "detalhes"}}`; o frontend decide pelo `codigo`.
-Os marcados "previsto" ainda não estão em `internal/api/erros.go` e entram no PR do
+Os marcados "previsto" ainda não estão em `src/Api/Erros.cs` e entram no PR do
 card indicado.
 
 | HTTP | `codigo` | Quando | Card |

@@ -49,7 +49,7 @@ Regras de trabalho do time. Valem para os três integrantes e para o Claude Code
 | `docs` | só documentação |
 | `test` | só testes |
 | `refactor` | muda código sem mudar comportamento |
-| `build` | dependências, Docker, versão de Go/Node |
+| `build` | dependências, Docker, versão de .NET/Node |
 | `ci` | GitHub Actions |
 | `chore` | configuração e tarefas que não entram nas outras |
 
@@ -60,7 +60,7 @@ feat - migration de clientes
 fix - .env.example sem espaço antes do valor
 docs - padrão de commit e branch
 build(web) - setup inicial react com vite
-ci - roda go test em todo PR
+ci - roda dotnet test em todo PR
 ```
 
 ---
@@ -116,6 +116,24 @@ conflito em todo PR.
 
 `docs/cards.md` lista os cards que existem, sem status. Muda só quando cards são
 criados ou apagados (uma fatia por vez), num PR `docs`.
+
+---
+
+## Comandos de desenvolvimento
+
+Com o Postgres do `compose.yml` de pé, migrado e com seed (passo a passo no
+[`README.md`](README.md#subindo-o-ambiente)):
+
+```bash
+dotnet run --project src/Api      # API em :8080, lendo o .env da raiz
+set -a; . ./.env; set +a          # DATABASE_URL e GOOSE_DBSTRING para os testes de banco
+dotnet test                       # sem as duas variáveis, os testes de banco são pulados
+dotnet format                     # o CI falha se sobrar diferença (--verify-no-changes)
+```
+
+- Schema muda só por migration do goose em `db/migrations/` (`goose -s create nome sql`),
+  nunca por EF Migrations; a classe em `src/Api/Dados/Modelos.cs` acompanha no mesmo PR.
+- No `web/`: `npm run lint` e `npm run build`.
 
 ---
 

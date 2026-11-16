@@ -1,9 +1,19 @@
 # Requisitos — Smart Booking
 
 Sistema de agendamentos multi-tenant com notificação via Telegram.
-Documento de requisitos e decisões técnicas — **v0.10** · 23/10/2026
+Documento de requisitos e decisões técnicas — **v0.11** · 15/11/2026
 
 > Fonte da verdade: este arquivo. A pasta do Drive é histórico.
+
+## Mudanças desde a v0.10
+
+Decisão do time, 15/11/2026: o backend passa de Go para .NET.
+
+| # | O que mudou | Onde |
+|---|---|---|
+| 1 | API (e worker, quando nascer) em C# com ASP.NET Core (.NET 10), no lugar de Go | 1, 5, 11, 12 |
+| 2 | Acesso a dados por EF Core + Npgsql. **Reverte a decisão 10 da v0.4** ("pgx v5 + sqlc, sem ORM") | 1, 6.2, 12 |
+| 3 | O goose continua dono do schema: o EF Core só mapeia, sem EF Migrations | 6.2, 12 |
 
 ## Mudanças desde a v0.9
 
@@ -79,7 +89,7 @@ entre os dois documentos era o risco: quem copiasse daqui levava a versão bugad
 | 7 | Exclusão lógica em `clientes` e `memberships` | 7 |
 | 8 | Cookie de sessão e origem do frontend em desenvolvimento | 9 |
 | 9 | Índices de chave estrangeira explicitados | 7 |
-| 10 | Acesso a dados definido: pgx v5 + sqlc, sem ORM | 1, 6.2, 12 |
+| 10 | Acesso a dados definido: pgx v5 + sqlc, sem ORM (**revertida na v0.11**: EF Core + Npgsql) | 1, 6.2, 12 |
 
 ---
 
@@ -89,8 +99,9 @@ Plataforma web multi-tenant para gestão de agendamentos. Cada tenant (empresa)
 tem seus próprios usuários (administradores e prestadores), serviços, horários e clientes,
 isolados dos demais. Notificações de lembrete enviadas via bot do Telegram.
 
-**Stack:** API em Go, frontend em React, banco PostgreSQL (acesso via pgx v5 +
-sqlc), worker de notificações em Go, Telegram Bot API.
+**Stack:** API em C# (ASP.NET Core, .NET 10), frontend em React, banco PostgreSQL
+(acesso via EF Core + Npgsql; migrations pelo goose), worker de notificações em
+C#, Telegram Bot API.
 
 ## 2. Ordem de execução
 
@@ -159,15 +170,15 @@ agendam os mesmos clientes. Só o administrador gerencia serviços e preços.
 ## 5. Arquitetura
 
 ```
-[React SPA] --HTTPS/JSON--> [API Go] ---> [PostgreSQL + RLS]
+[React SPA] --HTTPS/JSON--> [API .NET] --> [PostgreSQL + RLS]
                                 |            ^
                                 v            |
-                       [Worker Go (scheduler)]
+                      [Worker .NET (scheduler)]
                                 |
                                 v
                        [Telegram Bot API]
                                 |
-              [webhook de updates] --> [API Go]
+              [webhook de updates] --> [API .NET]
 ```
 
 **Worker separado da API:** a API responde HTTP e precisa ser rápida; o envio de
@@ -257,22 +268,21 @@ Três detalhes que a v0.3 deixava passar:
 
 A API define o contexto no início de cada transação:
 
-```go
-tx, err := pool.Begin(ctx)
-defer tx.Rollback(ctx)
-
-_, err = tx.Exec(ctx, "SELECT set_config('app.tenant_id', $1, true)", tenantID)
+```csharp
+await using var tx = await db.Database.BeginTransactionAsync(ct);
+await db.Database.ExecuteSqlInterpolatedAsync(
+    $"SELECT set_config('app.tenant_id', {tenantId.ToString()}, true)", ct);
 // o terceiro parâmetro `true` = local à transação
 ```
 
 Nunca `SET` sem escopo local: com pool de conexões, a variável sobrevive ao fim da
 requisição e a próxima pega a conexão reciclada com o tenant da anterior.
 
-**(b) Camada de repositório** — nenhuma função de acesso a dados aceita query sem
-receber `tenantID` como primeiro parâmetro. Torna o erro difícil de escrever, não
-só difícil de passar. As queries são geradas pelo sqlc; o pacote gerado só é
-usado por dentro de `internal/storage`, que abre a transação, chama `set_config`
-e entrega `Queries.WithTx(tx)` (ver `docs/guia-banco-de-dados.md`).
+**(b) Camada de acesso a dados** — nenhuma consulta roda sem receber `tenantId`
+logo depois do contexto e filtrar por ele. Torna o erro difícil de escrever, não
+só difícil de passar. As consultas ficam em `src/Api/Dados/Consultas.cs`, sobre o
+`AppDb` do EF Core, e rodam dentro da transação que o `AppDb.IniciarComTenant`
+abre com `set_config` (ver `docs/guia-banco-de-dados.md`).
 
 **Exceções ao RLS, e por quê.** `usuarios` e `memberships` ficam de fora: são
 consultadas *antes* de existir contexto de tenant (no login o sistema ainda não
@@ -442,7 +452,7 @@ disso a API retorna HTTP 429 com `retry_after`. O worker trata 429 respeitando
 - **Long polling em desenvolvimento**: não exige URL pública, funciona atrás de NAT.
 - **Webhook em produção**: exige HTTPS com certificado válido e endpoint público.
 
-Abstrair atrás de uma interface em Go permite trocar por configuração.
+Abstrair atrás de uma interface permite trocar por configuração.
 
 **Autenticação do webhook (RNF10).** O endpoint é público: sem verificação,
 qualquer um faz POST forjando `/start <token>` ou um `callback_query` de
@@ -508,7 +518,7 @@ termina em algo demonstrável. Detalhe, issues e critérios em `docs/backlog.md`
 usuário do tenant A e verificar que nenhum endpoint retorna dado do tenant B (item
 2.13); e, dentro do tenant A, que um prestador não vê agendamento de outro (item
 2.16). Sem esses testes, o isolamento é suposição, não garantia — e eles exigem
-**Postgres no CI** (item 0.17), não só `go test`.
+**Postgres no CI** (item 0.17), não só `dotnet test` sem banco.
 
 ## 11. Riscos
 
@@ -520,7 +530,7 @@ usuário do tenant A e verificar que nenhum endpoint retorna dado do tenant B (i
 | Webhook sem autenticação | Update forjado | `secret_token` (RNF10) |
 | Baixa adoção do Telegram | Produto inútil na prática | Decidir cedo |
 | Escopo maior que a equipe | Não entrega | Cortar RF10 e RF17; RF14 só em último caso (ordem no backlog) |
-| Equipe sem experiência em Go | Atraso geral | Responsáveis e estudo na semana 1 |
+| Troca de Go para .NET no meio da Fatia 2 | Retrabalho | Porte com paridade de comportamento e os mesmos testes, antes de código novo |
 | Notificação duplicada | Perda de confiança | `UNIQUE` + `SKIP LOCKED` + backoff |
 
 ## 12. Decisões tomadas
@@ -534,13 +544,15 @@ usuário do tenant A e verificar que nenhum endpoint retorna dado do tenant B (i
 | Bot | Único no MVP, coluna por tenant já prevista |
 | Sessão | Cookie `HttpOnly` + tabela `sessoes` |
 | Papéis | `text` + `CHECK`, não `ENUM` |
-| Acesso a dados | pgx v5 (`pgxpool`) + sqlc; sem ORM (motivo no guia de banco, §Acesso a dados) |
-| UUID no Go | `google/uuid` via `overrides` do sqlc |
+| Backend | C# com ASP.NET Core (.NET 10), minimal APIs; um projeto de API e um de testes (xUnit). Decidido em 15/11/2026, no lugar de Go |
+| Acesso a dados | EF Core + Npgsql, só mapeando o schema (guia de banco, §Acesso a dados). Reverte "pgx v5 + sqlc, sem ORM" em 15/11/2026 |
+| Migrations | goose v3.28.0, SQL puro em `db/migrations/`; sem EF Migrations |
+| UUID no C# | `Guid` (nulo: `Guid?`) |
 | Rotas da API | Tudo sob `/api`; proxy do Vite sem reescrita |
 | Serviço na Fatia 1 | `SERVICO_FIXO` no config até a 6.6 |
 | Sessão na Fatia 1 | `TENANT_FIXO` e `PRESTADOR_FIXO` no config até a 2.12 |
-| Configuração | Só `internal/config` lê o ambiente; `.env` via `godotenv`, ambiente real vence o arquivo |
-| Worker × RLS | Laço por tenant com `ComTenant`, como `app_user` |
+| Configuração | Só `src/Api/Config.cs` lê o ambiente; `.env` lido pelo próprio `Config`, ambiente real vence o arquivo |
+| Worker × RLS | Laço por tenant com `IniciarComTenant`, como `app_user` |
 
 Decididos em 02/10/2026:
 

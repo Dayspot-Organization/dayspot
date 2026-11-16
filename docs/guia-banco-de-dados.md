@@ -2,7 +2,22 @@
 
 Fatia 0 do backlog (itens 0.7 a 0.18) e base de acesso a dados da Fatia 1 (1.2 e
 1.3). Complementa `docs/requisitos.md`.
-Versão **1.7** · 16/10/2026
+Versão **1.8** · 15/11/2026
+
+## Mudanças desde a v1.7
+
+Decisão do time de 15/11/2026 (`requisitos.md` v0.11): o backend passa de Go para
+.NET e a decisão "pgx v5 + sqlc, sem ORM" é revertida. O schema não muda.
+
+- **Acesso a dados:** EF Core com Npgsql no lugar de pgx + sqlc (§Acesso a dados).
+  O EF **só mapeia** o schema; as migrations continuam no goose, em SQL puro. Não há
+  EF Migrations, `sqlc.yaml` nem `db/queries/`.
+- **Helper de transação:** `AppDb.IniciarComTenant` no lugar do `Store.ComTenant`;
+  a regra é a mesma: `set_config('app.tenant_id', ..., true)` dentro da transação.
+- **Testes de banco:** em `tests/Api.Tests/BancoTests.cs` (xUnit), contra o Postgres
+  com as migrations do goose.
+- As notas de versões anteriores abaixo citam arquivos Go (`internal/storage` etc.)
+  que não existem mais: ficam como histórico.
 
 ## Mudanças desde a v1.6
 
@@ -95,14 +110,16 @@ agora: o guia descreve o que as 003, 005, 007, 009 e 011 vão conter.
 `compose.yml`, fixe a versão: `postgres:16-alpine`. Nunca use `latest` — o banco
 muda de versão sozinho e a equipe passa uma tarde caçando o motivo.
 
-**Ferramenta de migrations:** goose. SQL puro, um único binário Go, sem DSL para
-aprender. Alternativa razoável: `golang-migrate`. O que importa mais que a
+**Ferramenta de migrations:** goose. SQL puro, um único binário, sem DSL para
+aprender. Continua sendo ele com a API em .NET: o EF Core só mapeia o schema, e
+EF Migrations não entra no projeto. O que importa mais que a
 escolha: **nenhuma alteração de schema fora de migration versionada, nunca**. Um
 `ALTER TABLE` rodado à mão no banco de alguém é a origem clássica do "na minha
 máquina funciona".
 
 ```bash
-go install github.com/pressly/goose/v3/cmd/goose@v3.28.0   # mesma versão para todos
+# goose v3.28.0, a mesma versão para todos: binário da release, no PATH
+#   https://github.com/pressly/goose/releases/tag/v3.28.0
 mkdir -p db/migrations
 goose -dir db/migrations -s create criar_extensoes sql   # -s: 00001_, 00002_... na ordem abaixo
 ```
@@ -138,8 +155,8 @@ Convenção para toda coluna de valor (hoje `servicos.preco_centavos` e
 - `CHECK (... >= 0)` e sem `DEFAULT`: valor esquecido falha no `INSERT`, não vira zero.
 - Nunca `money` (depende de `lc_monetary` e arredonda na conversão) nem `float`
   (`0,1 + 0,2` não dá `0,3`).
-- Nem `numeric`: o sqlc gera `pgtype.Numeric`, incômodo no Go. Com `integer`, a
-  coluna vira `int32`; somas saem com `COALESCE(sum(...), 0)::bigint`, `int64` no Go.
+- Nem `numeric`: viraria `decimal` no C#, que centavos não pedem. Com `integer`, a
+  coluna vira `int`; somas saem com `COALESCE(sum(...), 0)::bigint`, `long` no C#.
 - Formatar em reais só na borda (frontend), como o fuso horário.
 
 `integer` vai até 2³¹ − 1 centavos (~R$ 21 milhões) por linha: sobra para um
@@ -510,14 +527,15 @@ só o banco resolve isso.
   tese, ter dois agendamentos simultâneos com prestadores diferentes. Se isso não
   for desejado, é uma segunda constraint — decidam explicitamente. O administrador que
   atende entra na mesma regra, sem mudança: é um `prestador_id` como outro qualquer.
-- Violação chega no Go como `SQLSTATE 23P01` (`exclusion_violation`) e precisa
+- Violação chega na API como `PostgresException` com `SQLSTATE 23P01`
+  (`exclusion_violation`) e precisa
   virar **HTTP 409**, não 500 — no `POST` (1.5) e no `PATCH` que remarca ou troca
   o serviço (5.1), que dispara a constraint de novo:
 
-```go
-var pgErr *pgconn.PgError
-if errors.As(err, &pgErr) && pgErr.Code == "23P01" {
-    return ErrHorarioIndisponivel
+```csharp
+catch (PostgresException e) when (e.SqlState == PostgresErrorCodes.ExclusionViolation)
+{
+    return Erros.Responder(StatusCodes.Status409Conflict, Erros.ConflitoHorario, ...);
 }
 ```
 
@@ -685,11 +703,10 @@ agendamentos` como `app_user` falha com `42501`. Duas consequências:
    o tenant da anterior — e passa a ler dados da outra empresa. `set_config(...,
    true)` morre com a transação. **Toda** requisição precisa abrir transação:
 
-```go
-tx, err := pool.Begin(ctx)
-defer tx.Rollback(ctx)
-
-_, err = tx.Exec(ctx, "SELECT set_config('app.tenant_id', $1, true)", tenantID)
+```csharp
+await using var tx = await db.Database.BeginTransactionAsync(ct);
+await db.Database.ExecuteSqlInterpolatedAsync(
+    $"SELECT set_config('app.tenant_id', {tenantId.ToString()}, true)", ct);
 ```
 
    `set_config(..., true)` é preferível a `SET LOCAL` porque aceita parâmetro —
@@ -864,145 +881,138 @@ ROLLBACK;
 Rode conectado como `app_user`. Se o segundo `SELECT` retornar linha ou o `INSERT`
 passar, o RLS não está ativo — provavelmente por uma das três armadilhas.
 
-O teste Go está em `internal/storage/isolamento_test.go` (0.14). Ele grava os
+O teste automatizado é o `IsolamentoTests` de `tests/Api.Tests/BancoTests.cs`
+(0.14). Ele grava os
 próprios dados como dono (`GOOSE_DBSTRING`), com UUIDs fora da faixa do seed, lê como
 `app_user` (`DATABASE_URL`) e apaga tudo no fim. Confere também que `DATABASE_URL` não
 é superusuário, não tem `BYPASSRLS` e não é dona de tabela (armadilha 1), e que
-`DELETE FROM agendamentos` falha com `42501`. Sem as duas variáveis, o teste pula:
+`DELETE FROM agendamentos` falha com `42501`, e repete a leitura pelo EF Core, que
+é por onde a API passa. Sem as duas variáveis, o teste pula (no CI, falha):
 
 ```bash
 set -a; . ./.env; set +a     # GOOSE_DBSTRING e DATABASE_URL
 goose up
-go test ./internal/storage/ -run Isolamento -v
+dotnet test --filter-class "*IsolamentoTests"
 ```
 
-Ele precisa rodar no CI. **Isso exige Postgres no CI**
-(`services: postgres` no workflow, item 0.17): o job atual roda só `go build/vet/test` e não
-tem banco. Teste de isolamento que só existe como comando manual deixa de ser
+Ele roda no CI, com o Postgres do workflow (`services: postgres`, item 0.17) e as
+migrations aplicadas pelo goose. Teste de isolamento que só existe como comando manual deixa de ser
 executado na terceira semana.
 
-## Acesso a dados: pgx + sqlc
+## Acesso a dados: EF Core + Npgsql
 
-**Driver:** `github.com/jackc/pgx/v5`, com pool via `pgxpool`. **Geração de
-código:** sqlc. Sem ORM: o SQL é escrito à mão em `db/queries/` e o sqlc gera
-funções Go tipadas em `internal/storage/db`. Erro de SQL aparece no
-`sqlc generate`, não em produção.
+**ORM:** EF Core, com o provider `Npgsql.EntityFrameworkCore.PostgreSQL`. Decisão do
+time de 15/11/2026, junto com a troca do backend de Go para .NET; substitui a
+"pgx v5 + sqlc, sem ORM" de 25/09/2026 (`requisitos.md`, decisão 10).
 
-```bash
-go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1   # mesma versão para todos
-go get github.com/jackc/pgx/v5
+**O EF só mapeia. O schema é do goose.** O que protege os dados deste projeto mora
+no Postgres: RLS com `FORCE`, `set_config` por transação, constraint de exclusão,
+FKs compostas e `FOR UPDATE SKIP LOCKED` na fila. Nada disso é descrito no modelo
+do EF, e nada disso pode ser gerado por ele. Por isso:
+
+- **Sem EF Migrations.** Nada de `dotnet ef migrations add`, `Database.Migrate()`
+  nem `EnsureCreated()`: competem com o goose. Mudou o schema, é migration SQL em
+  `db/migrations/` e, no mesmo PR, o ajuste da classe em `Modelos.cs`.
+- **Nomes em snake_case** pela convenção `UseSnakeCaseNamingConvention()`
+  (`EFCore.NamingConventions`): `TenantId` ↔ `tenant_id`, `DbSet Clientes` ↔
+  `clientes`. Sem `[Column]` espalhado.
+- **Uma classe por tabela** em `src/Api/Dados/Modelos.cs`, sem navegações: as FKs
+  compostas ficam no banco e os joins são explícitos na consulta.
+- **`DEFAULT` do banco** que a API precisa ler de volta (id, `criado_em`) é declarado
+  com `HasDefaultValueSql` em `AppDb.OnModelCreating`: o `INSERT` não envia a coluna.
+- **`vinculo_token` não está no modelo**: é credencial (§004), e assim nenhuma
+  leitura de `clientes` o traz. Entra com a rota de vínculo (Fatia 4).
+- **Leitura sem rastreamento** (`QueryTrackingBehavior.NoTracking`), configurada em
+  `AppDb.Opcoes`. Para alterar, prefira `ExecuteUpdateAsync` com o `WHERE` explícito
+  a carregar, mudar e salvar.
+
+O teste `ModeloCasaComOSchema` consulta cada tabela pelo EF contra o banco migrado
+pelo goose: coluna com nome ou tipo errado aparece no CI, não em produção.
+
+**Tipos:** `uuid` ↔ `Guid` (nulo: `Guid?`); `timestamptz` ↔ `DateTime` com
+`Kind = Utc` (o Npgsql recusa gravar outro `Kind`); `integer` ↔ `int`; `bigint` ↔
+`long`; `time` ↔ `TimeOnly`.
+
+As consultas ficam em `src/Api/Dados/Consultas.cs`, como métodos de extensão do
+`AppDb`. Toda uma recebe `tenantId` logo depois do contexto:
+
+```csharp
+public static Task<List<Cliente>> ListarClientes(this AppDb db, Guid tenantId, CancellationToken ct = default) =>
+    db.Clientes.Where(c => c.TenantId == tenantId && c.RemovidoEm == null)
+        .OrderBy(c => c.Nome)
+        .ToListAsync(ct);
 ```
 
-**Versão fixa, igual no CI e nas três máquinas.** O código gerado traz a versão do
-sqlc no cabeçalho: com versões diferentes, o `sqlc diff` acusa diferença em todo
-PR. O `go install` do sqlc usa cgo (precisa de `gcc`); no Windows, use o binário
-da release ou `docker run --rm -v "$PWD":/src -w /src sqlc/sqlc:1.31.1 generate`.
+O `Where(c => c.TenantId == tenantId)` continua lá mesmo com RLS: é a camada (b) de
+defesa. O RLS pega o erro que escapar dela, não substitui. Conferir isso na revisão
+é olhar um arquivo só.
 
-**Por que sem ORM.** O que protege os dados deste projeto mora no Postgres: RLS
-com `FORCE`, `set_config` por transação, constraint de exclusão, FKs compostas e
-`FOR UPDATE SKIP LOCKED` na fila. Um ORM (GORM, ent, Bun) não ajuda em nenhum
-desses pontos, e parte dele atrapalha: `AutoMigrate` ou schema em Go competem com
-o goose, e o `Updates(struct)` do GORM ignora valor zero — gravar
-`notificavel = false` (4.5) vira no-op silencioso. Com SQL explícito em
-`db/queries/`, conferir o `WHERE tenant_id = $1` na revisão é um grep, e o sqlc
-valida cada query contra as migrations antes do CI. O que se quer de um ORM —
-struct tipada e nada de `Scan` à mão — o sqlc já gera.
+**SQL à mão quando o LINQ não expressa.** O `INSERT ... SELECT` do agendamento (uma
+instrução só, 1.5) e o que vier com `FOR UPDATE` usam `FromSql` com interpolação,
+que vira parâmetro, nunca concatenação:
 
-`sqlc.yaml` na raiz. O schema **são as próprias migrations** — o sqlc entende as
-anotações do goose e ignora os blocos `Down`. Nada de `schema.sql` paralelo, que
-diverge das migrations na segunda semana.
-
-```yaml
-version: "2"
-sql:
-  - engine: postgresql
-    schema: db/migrations
-    queries: db/queries
-    gen:
-      go:
-        package: db
-        out: internal/storage/db
-        sql_package: pgx/v5
-        emit_pointers_for_null_types: true
-        overrides:
-          - db_type: uuid
-            go_type: github.com/google/uuid.UUID
-          - db_type: uuid
-            nullable: true
-            go_type:
-              import: github.com/google/uuid
-              type: UUID
-              pointer: true
+```csharp
+db.Agendamentos.FromSql($"""
+    INSERT INTO agendamentos (...)
+    SELECT s.tenant_id, {n.ClienteId}, ...
+    WHERE s.tenant_id = {tenantId} AND s.id = {n.ServicoId} AND s.ativo
+    RETURNING *
+    """)
 ```
 
-UUID no Go é `uuid.UUID` (`github.com/google/uuid`), não `pgtype.UUID`: é o que o
-config (1.1) já parseia e o que o #49 escreve. Decidido em 25/09/2026.
-
-Uma query por bloco, com nome e tipo de retorno:
-
-```sql
--- db/queries/clientes.sql
-
--- name: ListarClientes :many
-SELECT id, nome, criado_em
-FROM clientes
-WHERE tenant_id = $1 AND removido_em IS NULL
-ORDER BY nome;
-```
-
-O `WHERE tenant_id = $1` continua lá mesmo com RLS: é a camada (b) de defesa.
-O RLS pega o erro que escapar dela, não substitui.
+`FromSqlRaw` e `ExecuteSqlRaw` com texto montado por concatenação são proibidos: é
+SQL injection.
 
 ### O helper de transação com tenant
 
-O sqlc gera `db.New(pool)`, que roda cada query direto no pool — **sem**
-`set_config`, portanto sem tenant, portanto zero linhas (RLS falha fechado) ou,
-pior, bug silencioso nas tabelas fora do RLS. Por isso o pacote gerado só é
-usado por dentro de `internal/storage`, sempre através de um helper:
+Uma consulta pelo `AppDb` fora de transação roda **sem** `set_config`, portanto sem
+tenant, portanto zero linhas (RLS falha fechado) ou, pior, bug silencioso nas
+tabelas fora do RLS. Por isso toda consulta roda dentro de uma transação aberta por
+este helper:
 
-```go
-func (s *Store) ComTenant(ctx context.Context, tenantID uuid.UUID, fn func(tx pgx.Tx) error) error {
-    tx, err := s.pool.Begin(ctx)
-    if err != nil {
-        return err
+```csharp
+public async Task<IDbContextTransaction> IniciarComTenant(Guid tenantId, CancellationToken ct = default)
+{
+    var tx = await Database.BeginTransactionAsync(ct);
+    try
+    {
+        await Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT set_config('app.tenant_id', {tenantId.ToString()}, true)", ct);
+        return tx;
     }
-    defer tx.Rollback(ctx) // no-op depois do Commit
-
-    if _, err := tx.Exec(ctx, "SELECT set_config('app.tenant_id', $1, true)", tenantID.String()); err != nil {
-        return err
+    catch
+    {
+        await tx.DisposeAsync();
+        throw;
     }
-    if err := fn(tx); err != nil {
-        return err
-    }
-    return tx.Commit(ctx)
 }
 ```
 
-Na Fatia 1 quem chama o `ComTenant` é o middleware da 1.3: uma transação por
-requisição, com o tenant vindo de `TENANT_FIXO` (e da sessão a partir da Fatia 2).
-O repositório é construído sobre o `pgx.Tx` (`storage.NovoClientesRepo(tx)`), nunca
-sobre o pool: o construtor só aceita `pgx.Tx`, então passar o pool não compila. Quem
-chama não vê `*db.Queries`; o `db.New(tx)` fica dentro de `internal/storage`.
+Quem chama na API é o middleware da 1.3 (`UseTransacaoNasRotas`, em
+`src/Api/Transacao.cs`): uma transação por requisição, com o tenant vindo de
+`TENANT_FIXO` (e da sessão a partir da Fatia 2). Os handlers recebem o `AppDb` da
+requisição, que já está nessa transação. Resposta 4xx/5xx ou exceção = `ROLLBACK`;
+o resto, `COMMIT`, e a resposta só sai depois dele.
 
 Uso direto, fora de uma requisição HTTP (testes, scripts):
 
-```go
-err := s.ComTenant(ctx, tenantID, func(tx pgx.Tx) error {
-    clientes, err = storage.NovoClientesRepo(tx).Listar(ctx, tenantID)
-    return err
-})
+```csharp
+await using var tx = await db.IniciarComTenant(tenantId, ct);
+var clientes = await db.ListarClientes(tenantId, ct);
+await tx.CommitAsync(ct); // sem o Commit, o Dispose desfaz
 ```
 
 Regras:
 
-- **Nenhum handler importa `internal/storage/db`.** Se importar, pulou o helper.
-- **Código gerado não se edita à mão.** Mudou a query ou a migration, roda
-  `sqlc generate` e commita o resultado no mesmo PR. O CI roda `sqlc diff` e
-  falha se estiverem fora de sincronia.
-- **Tipos:** `uuid` vira `uuid.UUID` pelo `overrides` acima (nulo vira
-  `*uuid.UUID`); `tstzrange` vira `pgtype.Range[pgtype.Timestamptz]`.
-- **Erros do Postgres** chegam como `*pgconn.PgError` (ver `23P01` na 007);
-  `pgx.ErrNoRows` é o "não encontrado" de `:one`.
+- **Nenhum handler abre transação nem chama `set_config`.** Quem faz é o middleware.
+- **Nunca `SET app.tenant_id`**, nem `set_config(..., false)`: valem para a conexão,
+  que volta para o pool. O teste `SemSetTenantForaDoSetConfigLocal` varre o código.
+- **`COMMIT` em transação abortada vira `ROLLBACK` sem erro** no Postgres, e o
+  Npgsql não avisa. O middleware roda um `SELECT 1` antes do `COMMIT` para a falha
+  aparecer como 500, e não como um 201 de algo que não foi gravado.
+- **Erros do Postgres** chegam como `PostgresException` (ver `23P01` na 007), dentro
+  de `DbUpdateException` quando vêm do `SaveChangesAsync`. "Não encontrado" é o
+  `null` do `FirstOrDefaultAsync`.
 
 ### Escopo por prestador (2.7) e operações por id
 
@@ -1011,48 +1021,41 @@ policy extra.
 
 **Listagens, financeiro e `.ics`: filtro na query.**
 
-```sql
--- name: ListarAgendamentos :many
-SELECT id, cliente_id, prestador_id, inicio, fim, status
-FROM agendamentos
-WHERE tenant_id = @tenant_id
-  AND inicio >= @de AND inicio < @ate
-  AND (sqlc.narg('prestador_id')::uuid IS NULL OR prestador_id = sqlc.narg('prestador_id'))
-ORDER BY inicio;
+```csharp
+where a.TenantId == tenantId && a.Inicio >= de && a.Inicio < ate
+    && (prestadorId == null || a.PrestadorId == prestadorId)
+orderby a.Inicio
 ```
 
-Com `emit_pointers_for_null_types`, `prestador_id` vira `*uuid.UUID` — e um `nil`
-por bug devolve a empresa inteira, sem o RLS como rede (é o mesmo tenant). Por isso
-o handler nunca monta esse filtro: recebe um `Escopo` pronto do middleware da 2.7.
+`prestadorId` é `Guid?` — e um `null` por bug devolve a empresa inteira, sem o RLS
+como rede (é o mesmo tenant). Por isso o handler nunca monta esse filtro: recebe um
+`Escopo` pronto do middleware da 2.7.
 
-```go
+```csharp
 // Escopo é construído só pelo middleware da 2.7, a partir da sessão.
-type Escopo struct {
-    TenantID    uuid.UUID
-    PrestadorID *uuid.UUID // prestador: sempre o da sessão; administrador: o do seletor ou nil
-}
+// PrestadorId — prestador: sempre o da sessão; administrador: o do seletor ou null.
+public sealed record Escopo(Guid TenantId, Guid? PrestadorId);
 ```
 
-- Papel `prestador`: `PrestadorID` é sempre o usuário da sessão; `prestador_id` de
+- Papel `prestador`: `PrestadorId` é sempre o usuário da sessão; `prestador_id` de
   outro na query string → 403 `sem_permissao`.
-- Papel `administrador`: `PrestadorID` vem do seletor (query string) ou fica `nil` (a
+- Papel `administrador`: `PrestadorId` vem do seletor (query string) ou fica `null` (a
   empresa toda).
 - Vale para agendamentos, slots (6.3), log de notificações (6.8), reenvio (RF13),
   financeiro e `.ics`.
 
 **Período no fuso do tenant.** A semana do calendário e o mês do financeiro contam
-pelo `inicio`, no fuso do tenant (RNF01), não em UTC. Os limites saem do Go
-(`time.LoadLocation(tenant.FusoHorario)`) e entram como `timestamptz` (`@de` e
-`@ate` na query acima). O financeiro soma `valor_centavos` dos `concluido`
+pelo `inicio`, no fuso do tenant (RNF01), não em UTC. Os limites saem do C#
+(`TimeZoneInfo.FindSystemTimeZoneById(tenant.FusoHorario)`) e entram como
+`timestamptz` (`de` e `ate` na consulta acima). O financeiro soma `valor_centavos` dos `concluido`
 (§Dinheiro).
 
 **Operações por id (GET, PATCH, cancelar, concluir): trava, compara, atualiza.**
-Com o filtro na query, agendamento de outro prestador viraria `pgx.ErrNoRows` e
+Com o filtro na query, agendamento de outro prestador viraria "não encontrado" e
 404 — mas a regra é 403. Por isso a operação busca no tenant, sem filtro de
-prestador, e decide em Go:
+prestador, e decide no código (o `FOR UPDATE` vai por `FromSql`):
 
 ```sql
--- name: TravarAgendamento :one
 SELECT id, prestador_id, servico_id, status, inicio, fim
 FROM agendamentos
 WHERE tenant_id = $1 AND id = $2
@@ -1100,8 +1103,8 @@ na véspera da entrega.
 
 ## Checklist da Fatia 1 (1.2 e 1.3)
 
-- [ ] `sqlc generate` roda sem erro e `sqlc diff` passa no CI
-- [ ] Nenhum pacote fora de `internal/storage` importa `internal/storage/db`
+- [ ] O modelo do EF casa com o schema do goose (`ModeloCasaComOSchema` no CI)
+- [ ] Toda consulta de `Consultas.cs` recebe `tenantId` e filtra por ele
 - [ ] Duas requisições seguidas na mesma conexão do pool, com tenants diferentes,
       não se enxergam
 - [ ] Nenhum `SET app.tenant_id` no repositório fora de `set_config(..., true)`
