@@ -7,7 +7,7 @@
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Telegram](https://img.shields.io/badge/Telegram%20Bot%20API-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)
 
-[![CI](https://img.shields.io/github/actions/workflow/status/The-Smart-Booking/thesmartbooking/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/The-Smart-Booking/thesmartbooking/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/Dayspot-Organization/dayspot/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/Dayspot-Organization/dayspot/actions)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow?style=for-the-badge)
 
 **Plataforma multi-tenant de agendamentos com notificações automáticas via Telegram.**
@@ -91,8 +91,8 @@ go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
 ### Clonando
 
 ```bash
-git clone git@github.com:The-Smart-Booking/thesmartbooking.git
-cd thesmartbooking
+git clone git@github.com:Dayspot-Organization/dayspot.git
+cd dayspot
 ```
 
 ### Variáveis de ambiente
@@ -211,7 +211,7 @@ ROLLBACK;
 Hoje:
 
 ```
-thesmartbooking/
+dayspot/
 ├── .github/
 │   ├── workflows/ci.yml        # em push e PR para a main: Go (gofmt, build, vet; Postgres 16 com migrations up, down e up de novo; testes, inclusive os de banco) e web (lint, build)
 │   └── pull_request_template.md
