@@ -47,7 +47,7 @@ function App() {
   }
 
   useEffect(() => {
-    document.title = titulo ? `${titulo} · Smart Booking` : "Smart Booking";
+    document.title = titulo ? `${titulo} · Dayspot` : "Dayspot";
   }, [titulo]);
 
   const fechar = () => gaveta.current?.close();

@@ -1,4 +1,4 @@
-# Guia de Banco de Dados — Smart Booking
+# Guia de Banco de Dados — Dayspot
 
 Fatia 0 do backlog (itens 0.7 a 0.18) e base de acesso a dados da Fatia 1 (1.2 e
 1.3). Complementa `docs/requisitos.md`.
@@ -813,7 +813,7 @@ registro.
 
 ```sql
 CREATE ROLE app_user LOGIN PASSWORD '...';
-GRANT CONNECT ON DATABASE smartbooking TO app_user;
+GRANT CONNECT ON DATABASE dayspot TO app_user;
 GRANT USAGE   ON SCHEMA public, app TO app_user;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public

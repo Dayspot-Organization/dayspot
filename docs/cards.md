@@ -1,4 +1,4 @@
-# Cards — Smart Booking
+# Cards — Dayspot
 
 Cards que existem no board **Smart Booking DevOps** (GitHub Projects), por fatia.
 Só a lista: status, responsável e sprint ficam no board. Atualize este arquivo

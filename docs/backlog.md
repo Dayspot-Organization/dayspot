@@ -276,7 +276,7 @@ Depende da 5.4 (concluir) e da 6.1 (preço): sem os dois, o financeiro sai zerad
 
 > **Período no fuso do tenant.** Semana e mês contam pelo `inicio`, no fuso do tenant (RNF01): limites calculados em Go e passados como `timestamptz` (`guia-banco-de-dados.md` §Acesso a dados). O resumo soma `valor_centavos` dos `concluido`: para o prestador, os próprios; para o administrador, o total da empresa e, na 7.4, por prestador.
 
-> **`.ics` (7.6).** Download, não feed: é uma fotografia do período e não sincroniza. Mesmo escopo e mesmo período do calendário; só `confirmado` e `concluido` (cancelados ficam fora). `METHOD:PUBLISH`; por evento, `UID:<id>@smartbooking`, `DTSTAMP` = agora, `SEQUENCE` = epoch de `atualizado_em` (reimportar substitui o evento remarcado) e `DTSTART`/`DTEND` em UTC (`Z`). Rota na mesma origem, com o cookie da sessão; sem token na URL.
+> **`.ics` (7.6).** Download, não feed: é uma fotografia do período e não sincroniza. Mesmo escopo e mesmo período do calendário; só `confirmado` e `concluido` (cancelados ficam fora). `METHOD:PUBLISH`; por evento, `UID:<id>@dayspot`, `DTSTAMP` = agora, `SEQUENCE` = epoch de `atualizado_em` (reimportar substitui o evento remarcado) e `DTSTART`/`DTEND` em UTC (`Z`). Rota na mesma origem, com o cookie da sessão; sem token na URL.
 
 **Se faltar tempo, corte nesta ordem:** `.ics` (7.6, 7.7) → financeiro por prestador (7.4) → calendário (7.1, 7.2; fica a lista da 1.10). Decidido em 02/10/2026.
 

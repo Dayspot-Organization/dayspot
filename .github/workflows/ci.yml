@@ -18,25 +18,25 @@ jobs:
         env:
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci
-          POSTGRES_DB: smartbooking
+          POSTGRES_DB: dayspot
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U ci -d smartbooking"
+          --health-cmd "pg_isready -U ci -d dayspot"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
 
     env:
       POSTGRES_USER: ci
-      POSTGRES_DB: smartbooking
+      POSTGRES_DB: dayspot
       PGHOST: localhost
       PGPASSWORD: ci
       APP_USER_PASSWORD: ci_app
       GOOSE_DRIVER: postgres
-      GOOSE_DBSTRING: postgres://ci:ci@localhost:5432/smartbooking?sslmode=disable
+      GOOSE_DBSTRING: postgres://ci:ci@localhost:5432/dayspot?sslmode=disable
       GOOSE_MIGRATION_DIR: db/migrations
-      DATABASE_URL: postgres://app_user:ci_app@localhost:5432/smartbooking?sslmode=disable
+      DATABASE_URL: postgres://app_user:ci_app@localhost:5432/dayspot?sslmode=disable
 
     steps:
       - name: Checkout do repositório

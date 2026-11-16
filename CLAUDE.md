@@ -1,4 +1,4 @@
-# Smart Booking — regras para o Claude Code
+# Dayspot — regras para o Claude Code
 
 1. **Card antes de código.** Só trabalhe em card que esteja em **Ready** ou
    **In progress** no board (GitHub Projects › Smart Booking DevOps). Item do
