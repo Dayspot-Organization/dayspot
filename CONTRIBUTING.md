@@ -126,13 +126,18 @@ Com o Postgres do `compose.yml` de pé, migrado e com seed (passo a passo no
 
 ```bash
 dotnet run --project src/Api      # API em :8080, lendo o .env da raiz
-set -a; . ./.env; set +a          # DATABASE_URL e GOOSE_DBSTRING para os testes de banco
+set -a; . ./.env; set +a          # DATABASE_URL e MIGRATIONS_DATABASE_URL para os testes de banco
 dotnet test                       # sem as duas variáveis, os testes de banco são pulados
 dotnet format                     # o CI falha se sobrar diferença (--verify-no-changes)
 ```
 
-- Schema muda só por migration do goose em `db/migrations/` (`goose -s create nome sql`),
-  nunca por EF Migrations; a classe em `src/Api/Dados/Modelos.cs` acompanha no mesmo PR.
+- Schema muda só por EF Core Migration em `src/Api/Migrations/`
+  (`dotnet ef migrations add Nome --project src/Api`), com o SQL do `Up` e do `Down`
+  escrito à mão em `migrationBuilder.Sql`. A classe em `src/Api/Dados/Modelos.cs` e o
+  snapshot acompanham no mesmo PR: o CI roda `dotnet ef migrations has-pending-model-changes`.
+- Banco de dev migrado antes das EF Core Migrations (tem `goose_db_version`, não tem
+  `__EFMigrationsHistory`): recrie com `docker compose down -v` e `docker compose up -d`,
+  depois migrations e seed ([README](README.md#subindo-o-ambiente)). Apaga os dados locais.
 - No `web/`: `npm run lint` e `npm run build`.
 
 ---

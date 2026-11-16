@@ -12,7 +12,7 @@ public sealed class ErroDeConfig(string mensagem) : Exception(mensagem);
 /// </summary>
 public sealed record Config(
     // Conecta como app_user, sem BYPASSRLS (RNF07), nunca como o dono das tabelas
-    // (GOOSE_DBSTRING).
+    // (MIGRATIONS_DATABASE_URL).
     string DatabaseUrl,
     string PortaHttp,
     // Sessão da Fatia 1, enquanto não há login; saem na 2.12 (docs/requisitos.md §12).
@@ -102,8 +102,23 @@ public sealed record Config(
     }
 
     /// <summary>
+    /// Connection string do dono das tabelas (MIGRATIONS_DATABASE_URL), do ambiente
+    /// ou do .env dado. Só o dotnet ef a lê, para as migrations; a API nunca.
+    /// </summary>
+    public static string MigrationsConnectionString(string env)
+    {
+        const string nome = "MIGRATIONS_DATABASE_URL";
+        var url = Environment.GetEnvironmentVariable(nome) ?? LerEnv(env).GetValueOrDefault(nome, "");
+        if (url == "")
+        {
+            throw new ErroDeConfig($"config:\n{nome} ausente (ver .env.example)");
+        }
+        return ParaConnectionString(url);
+    }
+
+    /// <summary>
     /// Converte a URL postgres://usuario:senha@host:porta/banco?sslmode=... (a mesma
-    /// que o goose usa) na connection string do Npgsql, que não lê URL.
+    /// do psql) na connection string do Npgsql, que não lê URL.
     /// </summary>
     public static string ParaConnectionString(string url)
     {

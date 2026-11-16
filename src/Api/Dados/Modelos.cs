@@ -1,7 +1,7 @@
 namespace Dayspot.Api.Dados;
 
-// Uma classe por tabela de db/migrations. O schema é do goose: aqui só o
-// mapeamento, com os nomes em snake_case pela convenção do AppDb.
+// Uma classe por tabela de src/Api/Migrations. O schema é o SQL das migrations:
+// aqui só o mapeamento, com os nomes em snake_case pela convenção do AppDb.
 
 public sealed class Tenant
 {

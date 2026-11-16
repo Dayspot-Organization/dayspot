@@ -1,7 +1,7 @@
 #!/bin/sh
 # Cria o app_user (a API): LOGIN, sem BYPASSRLS, sem superusuário, dono de nada.
-# Roda no initdb do compose (só com volume vazio) e, no CI (0.17), via sh antes do
-# goose up, com PGHOST/PGPASSWORD do dono. Quem roda é o dono das tabelas
+# Roda no initdb do compose (só com volume vazio) e, no CI (0.17), via sh antes das
+# migrations (dotnet ef database update), com PGHOST/PGPASSWORD do dono. Quem roda é o dono das tabelas
 # (POSTGRES_USER), o mesmo das migrations: é a ele que o DEFAULT PRIVILEGES se aplica.
 set -eu
 : "${APP_USER_PASSWORD:?defina APP_USER_PASSWORD (.env.example)}"

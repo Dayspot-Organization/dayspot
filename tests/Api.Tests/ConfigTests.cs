@@ -175,7 +175,7 @@ public sealed partial class ConfigTests : IDisposable
         Config.Load();
     }
 
-    // Aspas, comentários e export, como no .env.example e no que o goose aceita.
+    // Aspas, comentários e export, como no .env.example.
     [Fact]
     public void EnvComAspasEComentarios()
     {

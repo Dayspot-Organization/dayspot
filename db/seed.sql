@@ -1,8 +1,8 @@
 -- Seed de desenvolvimento (0.16): dois tenants fictícios, Barbearia Alfa e Clinica Beta.
 -- Dois de propósito: com um só não dá para testar isolamento.
 --
--- Roda como dono das tabelas (GOOSE_DBSTRING, superusuário, ignora o RLS), num
--- banco recém-migrado: psql "$GOOSE_DBSTRING" -f db/seed.sql (README §Seed).
+-- Roda como dono das tabelas (MIGRATIONS_DATABASE_URL, superusuário, ignora o RLS), num
+-- banco recém-migrado: psql "$MIGRATIONS_DATABASE_URL" -f db/seed.sql (README §Seed).
 -- Pode rodar de novo: ON CONFLICT (id) DO NOTHING pula o que já existe. O alvo é
 -- só o id, de propósito: e-mail repetido ou horário sobreposto continuam falhando.
 --

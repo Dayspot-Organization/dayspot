@@ -35,7 +35,7 @@ public static class Banco
     public const string ForaDoAr = "Host=127.0.0.1;Port=1;Username=app_user;Database=x;Timeout=1";
 
     /// <summary>
-    /// Connection string da variável (DATABASE_URL = app_user; GOOSE_DBSTRING = dono
+    /// Connection string da variável (DATABASE_URL = app_user; MIGRATIONS_DATABASE_URL = dono
     /// das tabelas). Sem ela, o teste é pulado; no CI (CI definida), falha.
     /// </summary>
     public static string ConnectionString(string variavel)

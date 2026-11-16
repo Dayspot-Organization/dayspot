@@ -4,13 +4,13 @@ namespace Dayspot.Api.Tests;
 
 public static class Repositorio
 {
-    /// <summary>A raiz do repositório: o primeiro diretório acima que tem db/migrations.</summary>
+    /// <summary>A raiz do repositório: o primeiro diretório acima que tem o Dayspot.slnx.</summary>
     public static readonly string Raiz = AcharRaiz();
 
     private static string AcharRaiz()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null && !Directory.Exists(Path.Combine(dir.FullName, "db", "migrations")))
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "Dayspot.slnx")))
         {
             dir = dir.Parent;
         }
@@ -43,7 +43,7 @@ public partial class CodigoTests
             .Where(a => Path.GetExtension(a) is ".cs" or ".sql").ToList();
         // A varredura alcança a API e as migrations.
         Assert.Contains(arquivos, a => a.EndsWith("AppDb.cs"));
-        Assert.Contains(arquivos, a => a.EndsWith("00009_ativar_rls.sql"));
+        Assert.Contains(arquivos, a => a.EndsWith("00000000000009_AtivarRls.cs"));
         foreach (var a in arquivos)
         {
             var achados = TenantSemEscopo().Matches(File.ReadAllText(a)).Select(m => m.Value).ToList();

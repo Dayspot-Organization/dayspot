@@ -5,7 +5,7 @@ using Dayspot.Api.Dados;
 namespace Dayspot.Api.Tests;
 
 // Teste de isolamento da 0.14 (guia §Seed e teste de isolamento). Os dados são
-// gravados pelo dono das tabelas (GOOSE_DBSTRING) e lidos pelo app_user
+// gravados pelo dono das tabelas (MIGRATIONS_DATABASE_URL) e lidos pelo app_user
 // (DATABASE_URL), como a API faz. Sem as duas variáveis, pula; no CI, falha.
 public class IsolamentoTests
 {
@@ -64,7 +64,7 @@ public class IsolamentoTests
     [Fact]
     public async Task IsolamentoPorTenant()
     {
-        await using var dono = await Banco.Conectar("GOOSE_DBSTRING");
+        await using var dono = await Banco.Conectar("MIGRATIONS_DATABASE_URL");
         await using var app = await Banco.Conectar("DATABASE_URL");
 
         // Armadilha 1 do guia: se a API conecta como dono ou com BYPASSRLS, tudo
@@ -135,7 +135,7 @@ public class IsolamentoTests
 // RESTRICT, e todos cascateiam de tenants. DELETE FROM tenants não pode quebrar
 // pela ordem em que o Postgres processa o CASCADE.
 //
-// Roda como dono das tabelas (GOOSE_DBSTRING), como no guia (§009): o app_user não
+// Roda como dono das tabelas (MIGRATIONS_DATABASE_URL), como no guia (§009): o app_user não
 // tem DELETE em agendamentos e excluir empresa não é operação da API.
 public class ExclusaoTenantTests
 {
@@ -153,7 +153,7 @@ public class ExclusaoTenantTests
     [Fact]
     public async Task ExclusaoDeTenant()
     {
-        await using var dono = await Banco.Conectar("GOOSE_DBSTRING");
+        await using var dono = await Banco.Conectar("MIGRATIONS_DATABASE_URL");
         await ApagarDados(dono);
         try
         {
@@ -258,7 +258,7 @@ public class ConsultasTests
         Assert.DoesNotContain(await db.ListarClientes(Seed.Alfa), c => c.Id == criado.Id);
     }
 
-    // O modelo do EF contra o schema do goose: coluna com nome ou tipo errado
+    // O modelo do EF contra o schema das migrations: coluna com nome ou tipo errado
     // aparece aqui, não na primeira requisição.
     [Fact]
     public async Task ModeloCasaComOSchema()

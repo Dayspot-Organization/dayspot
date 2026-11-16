@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Dayspot.Api.Dados;
 
 /// <summary>
-/// Única porta para o banco (requisitos §6.2, camada b). Só mapeia o schema que o
-/// goose criou (db/migrations): não há EF Migrations.
+/// Única porta para o banco (requisitos §6.2, camada b). O schema vem das EF Core
+/// Migrations em SQL (src/Api/Migrations); o modelo aqui só o mapeia.
 /// </summary>
 public sealed class AppDb(DbContextOptions<AppDb> opcoes) : DbContext(opcoes)
 {
@@ -62,4 +63,15 @@ public sealed class AppDb(DbContextOptions<AppDb> opcoes) : DbContext(opcoes)
             throw;
         }
     }
+}
+
+/// <summary>
+/// Contexto do dotnet ef (migrations), sobre a conexão do dono das tabelas
+/// (MIGRATIONS_DATABASE_URL). A API não passa por aqui. O dotnet ef roda em
+/// src/Api, e o .env fica na raiz do repositório.
+/// </summary>
+public sealed class AppDbDesignTime : IDesignTimeDbContextFactory<AppDb>
+{
+    public AppDb CreateDbContext(string[] args) =>
+        new(AppDb.Opcoes(Config.MigrationsConnectionString(Path.Combine("..", "..", ".env"))));
 }

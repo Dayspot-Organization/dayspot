@@ -1,9 +1,17 @@
 # Requisitos — Dayspot
 
 Sistema de agendamentos multi-tenant com notificação via Telegram.
-Documento de requisitos e decisões técnicas — **v0.11** · 15/11/2026
+Documento de requisitos e decisões técnicas — **v0.12** · 15/11/2026
 
 > Fonte da verdade: este arquivo. A pasta do Drive é histórico.
+
+## Mudanças desde a v0.11
+
+Decisão do time, 15/11/2026: as migrations também passam para o .NET.
+
+| # | O que mudou | Onde |
+|---|---|---|
+| 1 | Migrations em EF Core Migrations (`src/Api/Migrations/`), com o SQL escrito à mão em `migrationBuilder.Sql`. **Reverte o item 3 da v0.11** (goose dono do schema). O schema não muda | 1, 12 |
 
 ## Mudanças desde a v0.10
 
@@ -100,7 +108,7 @@ tem seus próprios usuários (administradores e prestadores), serviços, horári
 isolados dos demais. Notificações de lembrete enviadas via bot do Telegram.
 
 **Stack:** API em C# (ASP.NET Core, .NET 10), frontend em React, banco PostgreSQL
-(acesso via EF Core + Npgsql; migrations pelo goose), worker de notificações em
+(acesso via EF Core + Npgsql; EF Core Migrations em SQL), worker de notificações em
 C#, Telegram Bot API.
 
 ## 2. Ordem de execução
@@ -546,7 +554,7 @@ usuário do tenant A e verificar que nenhum endpoint retorna dado do tenant B (i
 | Papéis | `text` + `CHECK`, não `ENUM` |
 | Backend | C# com ASP.NET Core (.NET 10), minimal APIs; um projeto de API e um de testes (xUnit). Decidido em 15/11/2026, no lugar de Go |
 | Acesso a dados | EF Core + Npgsql, só mapeando o schema (guia de banco, §Acesso a dados). Reverte "pgx v5 + sqlc, sem ORM" em 15/11/2026 |
-| Migrations | goose v3.28.0, SQL puro em `db/migrations/`; sem EF Migrations |
+| Migrations | EF Core Migrations em `src/Api/Migrations/`, SQL escrito à mão em `migrationBuilder.Sql` (`Up` e `Down`); `dotnet-ef` como ferramenta local de versão fixa. Rodam como dono das tabelas (`MIGRATIONS_DATABASE_URL`). Decidido em 15/11/2026 |
 | UUID no C# | `Guid` (nulo: `Guid?`) |
 | Rotas da API | Tudo sob `/api`; proxy do Vite sem reescrita |
 | Serviço na Fatia 1 | `SERVICO_FIXO` no config até a 6.6 |

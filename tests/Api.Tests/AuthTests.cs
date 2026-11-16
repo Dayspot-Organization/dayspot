@@ -32,7 +32,7 @@ public class SenhaTests
         Assert.False(Senha.Conferir(SenhaDeTeste.ToUpperInvariant(), hash)); // maiúscula muda a senha
     }
 
-    // Hashes gerados pela implementação anterior (Go, golang.org/x/crypto/argon2):
+    // Hashes gerados pela implementação anterior (Go, pacote x/crypto/argon2):
     // senha gravada antes da troca de linguagem continua valendo. O primeiro tem os
     // parâmetros de produção; os outros, parâmetros diferentes, que é o que permite
     // subir o custo depois sem migration.

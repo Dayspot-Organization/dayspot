@@ -2,7 +2,27 @@
 
 Fatia 0 do backlog (itens 0.7 a 0.18) e base de acesso a dados da Fatia 1 (1.2 e
 1.3). Complementa `docs/requisitos.md`.
-Versão **1.8** · 15/11/2026
+Versão **1.9** · 15/11/2026
+
+## Mudanças desde a v1.8
+
+Decisão do time de 15/11/2026 (`requisitos.md` v0.12): as migrations saem do goose
+e passam para EF Core Migrations. O schema não muda: cada migration tem o mesmo SQL,
+na mesma ordem.
+
+- **Migrations:** uma classe por migration em `src/Api/Migrations/`, de
+  `00000000000001_CriarExtensoes` a `00000000000010_CriarSessoes`, com o SQL em
+  `migrationBuilder.Sql` no `Up` e no `Down` (§Antes de escrever a primeira
+  migration). O `AppDbModelSnapshot` reflete o modelo do `AppDb`; o CI confere com
+  `dotnet ef migrations has-pending-model-changes`.
+- **Blocos de SQL deste guia:** `-- Up` e `-- Down` marcam o SQL de cada método.
+  Sem `StatementBegin/End`: o EF manda o texto inteiro ao Postgres.
+- **Conexão de dono:** `MIGRATIONS_DATABASE_URL` no lugar de `GOOSE_DBSTRING`, com
+  o mesmo papel (migrations e seed). A API continua só com a `DATABASE_URL`.
+- **Banco de dev migrado pelo goose** (tem `goose_db_version`, não tem
+  `__EFMigrationsHistory`): recriar com `docker compose down -v`. Não há transição.
+- As notas de versões anteriores citam o goose e os comandos dele: ficam como
+  histórico.
 
 ## Mudanças desde a v1.7
 
@@ -110,19 +130,55 @@ agora: o guia descreve o que as 003, 005, 007, 009 e 011 vão conter.
 `compose.yml`, fixe a versão: `postgres:16-alpine`. Nunca use `latest` — o banco
 muda de versão sozinho e a equipe passa uma tarde caçando o motivo.
 
-**Ferramenta de migrations:** goose. SQL puro, um único binário, sem DSL para
-aprender. Continua sendo ele com a API em .NET: o EF Core só mapeia o schema, e
-EF Migrations não entra no projeto. O que importa mais que a
+**Ferramenta de migrations:** EF Core Migrations, com o SQL escrito à mão. O
+`dotnet-ef` é ferramenta local, com versão fixa em `.config/dotnet-tools.json` (a
+mesma do EF Core), e conecta como dono das tabelas pela `MIGRATIONS_DATABASE_URL`
+(ambiente ou `.env`). O que importa mais que a
 escolha: **nenhuma alteração de schema fora de migration versionada, nunca**. Um
 `ALTER TABLE` rodado à mão no banco de alguém é a origem clássica do "na minha
 máquina funciona".
 
 ```bash
-# goose v3.28.0, a mesma versão para todos: binário da release, no PATH
-#   https://github.com/pressly/goose/releases/tag/v3.28.0
-mkdir -p db/migrations
-goose -dir db/migrations -s create criar_extensoes sql   # -s: 00001_, 00002_... na ordem abaixo
+dotnet tool restore                                        # dotnet-ef na versão fixa
+dotnet ef migrations add CriarConvites --project src/Api   # classe nova + snapshot atualizado
+dotnet ef database update --project src/Api                # aplica as pendentes
+dotnet ef database update 0 --project src/Api              # desfaz todas
 ```
+
+Cada migration é uma classe em `src/Api/Migrations/`, com o SQL em raw string:
+
+```csharp
+[DbContext(typeof(AppDb))]
+[Migration("00000000000001_CriarExtensoes")]
+public sealed class CriarExtensoes : Migration
+{
+    protected override void Up(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.Sql("""
+            CREATE EXTENSION IF NOT EXISTS btree_gist;
+            ...
+            """);
+    }
+
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.Sql("""
+            ...
+            """);
+    }
+}
+```
+
+O `migrations add` gera operações a partir do modelo do `AppDb`, que não conhece
+RLS, FK composta, `CHECK` nem constraint de exclusão: troque o corpo gerado do `Up`
+e do `Down` pelo SQL e mantenha o snapshot como o EF o gerou (o CI roda
+`has-pending-model-changes`). Migration nova ganha id com data e hora
+(`20261120093000_Nome`) e entra depois das dez primeiras, numeradas de
+`00000000000001` a `00000000000010`. Cada migration roda em transação; SQL que não
+pode rodar em uma (`CREATE INDEX CONCURRENTLY`) vai em
+`migrationBuilder.Sql(..., suppressTransaction: true)`.
+
+Nos blocos de SQL abaixo, `-- Up` e `-- Down` marcam o que vai em cada método.
 
 **Regra para toda migration:** escreva o `Down` junto com o `Up`, e teste os dois.
 Down que não funciona é Down que não existe, e vocês descobrem isso no pior
@@ -167,18 +223,16 @@ agendamento.
 ## 001 — Extensões e função de contexto
 
 ```sql
--- +goose Up
+-- Up
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 CREATE SCHEMA IF NOT EXISTS app;
 
--- +goose StatementBegin
 CREATE FUNCTION app.current_tenant_id() RETURNS uuid
 LANGUAGE sql STABLE AS $$
   SELECT NULLIF(current_setting('app.tenant_id', true), '')::uuid
 $$;
--- +goose StatementEnd
 
--- +goose Down
+-- Down
 DROP FUNCTION IF EXISTS app.current_tenant_id();
 DROP SCHEMA IF EXISTS app;
 DROP EXTENSION IF EXISTS btree_gist;
@@ -194,13 +248,13 @@ em vez de lançar erro. Combinado com `tenant_id = NULL` (que avalia como
 desconhecido, nunca verdadeiro), o resultado é **falha fechada**: esqueceu de
 definir o tenant, não vem linha nenhuma.
 
-`-- +goose StatementBegin/End` é necessário porque o goose divide o arquivo por
-`;` e o corpo da função tem `;` dentro.
+O corpo da função tem `;` dentro, e não precisa de marcação: o `migrationBuilder.Sql`
+manda o texto inteiro, e o Npgsql respeita o `$$`.
 
 ## 002 — tenants
 
 ```sql
--- +goose Up
+-- Up
 CREATE TABLE tenants (
   id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   nome               text NOT NULL,
@@ -211,7 +265,7 @@ CREATE TABLE tenants (
   CONSTRAINT slug_formato CHECK (slug ~ '^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$')
 );
 
--- +goose Down
+-- Down
 DROP TABLE tenants;
 ```
 
@@ -234,7 +288,7 @@ que o bot por tenant entrar, o segredo sai para tabela própria com policy.
 ## 003 — usuarios e memberships
 
 ```sql
--- +goose Up
+-- Up
 CREATE TABLE usuarios (
   id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   email      text NOT NULL,
@@ -263,7 +317,7 @@ CREATE TABLE memberships (
 CREATE INDEX idx_memberships_usuario ON memberships (usuario_id);
 CREATE INDEX idx_memberships_tenant  ON memberships (tenant_id);
 
--- +goose Down
+-- Down
 DROP TABLE memberships;
 ALTER TABLE tenants DROP COLUMN criado_por;
 DROP TABLE usuarios;
@@ -285,7 +339,8 @@ regra do endpoint de remoção (5.8), com teste, sem trigger. Sem índice: a col
 não é filtro de consulta.
 
 ⚠️ **Banco de dev com linhas em `tenants`:** o `ADD COLUMN ... NOT NULL` falha. Ao
-atualizar, rode `goose down-to 0` (ou `docker compose down -v`) antes do `goose up`.
+atualizar, rode `dotnet ef database update 0 --project src/Api` (ou `docker compose down -v`)
+antes do `dotnet ef database update`.
 
 **Dois papéis: `administrador` e `prestador`.** O administrador gerencia a empresa e também pode
 atender: a FK de `agendamentos.prestador_id` aponta para `memberships`, não para o
@@ -322,7 +377,7 @@ todas as colunas que o usam. `CHECK` se altera com um `ALTER TABLE`.
 ## 004 — clientes
 
 ```sql
--- +goose Up
+-- Up
 CREATE TABLE clientes (
   id                uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id         uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
@@ -347,7 +402,7 @@ CREATE TABLE clientes (
 
 CREATE INDEX idx_clientes_tenant ON clientes (tenant_id);
 
--- +goose Down
+-- Down
 DROP TABLE clientes;
 ```
 
@@ -388,7 +443,7 @@ lógica é a única forma de cumprir isso sem destruir histórico.
 ## 005 — servicos
 
 ```sql
--- +goose Up
+-- Up
 CREATE TABLE servicos (
   id              uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id       uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
@@ -405,7 +460,7 @@ CREATE TABLE servicos (
 
 CREATE INDEX idx_servicos_tenant ON servicos (tenant_id);
 
--- +goose Down
+-- Down
 DROP TABLE servicos;
 ```
 
@@ -425,7 +480,7 @@ valor da época (ver 007).
 ## 006 — disponibilidades
 
 ```sql
--- +goose Up
+-- Up
 CREATE TABLE disponibilidades (
   id           uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id    uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
@@ -443,7 +498,7 @@ CREATE TABLE disponibilidades (
 CREATE INDEX idx_disponibilidades_prestador
   ON disponibilidades (tenant_id, prestador_id, dia_semana);
 
--- +goose Down
+-- Down
 DROP TABLE disponibilidades;
 ```
 
@@ -460,7 +515,7 @@ disponibilidade para alguém que realmente pertence àquele tenant. FK simples p
 ## 007 — agendamentos
 
 ```sql
--- +goose Up
+-- Up
 CREATE TABLE agendamentos (
   id            uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id     uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
@@ -498,7 +553,7 @@ CREATE INDEX idx_agendamentos_tenant_inicio    ON agendamentos (tenant_id, inici
 CREATE INDEX idx_agendamentos_cliente          ON agendamentos (tenant_id, cliente_id);
 CREATE INDEX idx_agendamentos_prestador_inicio ON agendamentos (tenant_id, prestador_id, inicio);
 
--- +goose Down
+-- Down
 DROP TABLE agendamentos;
 DROP FUNCTION app.tocar_atualizado_em();   -- a função do trigger, abaixo
 ```
@@ -561,7 +616,6 @@ calendário e financeiro filtram por `(tenant_id, prestador_id)` e período. O m
 confiável — ninguém esquece:
 
 ```sql
--- +goose StatementBegin
 CREATE FUNCTION app.tocar_atualizado_em() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -569,7 +623,6 @@ BEGIN
   RETURN NEW;
 END;
 $$;
--- +goose StatementEnd
 
 CREATE TRIGGER trg_agendamentos_atualizado_em
 BEFORE UPDATE ON agendamentos
@@ -583,7 +636,7 @@ apagar o schema (`2BP01`) e subir a 007 de novo falha com `42723` (função já 
 ## 008 — notificacoes (outbox)
 
 ```sql
--- +goose Up
+-- Up
 CREATE TABLE notificacoes (
   id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id           uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
@@ -612,7 +665,7 @@ CREATE INDEX idx_notificacoes_fila
 CREATE INDEX idx_notificacoes_agendamento
   ON notificacoes (agendamento_id, tenant_id);
 
--- +goose Down
+-- Down
 DROP TABLE notificacoes;
 ```
 
@@ -640,7 +693,7 @@ notificação falha em todo ciclo e queima o rate limit do Telegram.
 ## 009 — RLS
 
 ```sql
--- +goose Up
+-- Up
 ALTER TABLE clientes         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE servicos         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE disponibilidades ENABLE ROW LEVEL SECURITY;
@@ -666,7 +719,7 @@ REVOKE DELETE ON agendamentos FROM app_user;
 -- o Down da 001 apaga o schema app e leva o GRANT do script da 0.15 (v1.6)
 GRANT USAGE ON SCHEMA app TO app_user;
 
--- +goose Down
+-- Down
 GRANT DELETE ON agendamentos TO app_user;
 DROP POLICY isolamento_tenant ON clientes;          -- e nas outras quatro
 ALTER TABLE clientes NO FORCE ROW LEVEL SECURITY;   -- e nas outras quatro
@@ -684,7 +737,7 @@ regras de acesso do `app_user`, porque é a 0.14 que já depende da 0.15 (o
 `app_user` precisa existir); a 0.12 não depende. Com isso, `DELETE FROM
 agendamentos` como `app_user` falha com `42501`. Duas consequências:
 
-- O `app_user` precisa existir antes do `goose up`. No compose já existe (o script
+- O `app_user` precisa existir antes do `dotnet ef database update`. No compose já existe (o script
   roda no `initdb`); no CI (0.17), rode o script antes das migrations.
 - O teste de exclusão de tenant (0.18) não é afetado: roda como dono das tabelas, e
   o `CASCADE` executa com o privilégio do dono.
@@ -744,7 +797,7 @@ query, sem policy extra (§Acesso a dados).
 > decisão atual — cookie `HttpOnly` —, esta migration entra na Fatia 2 (item 2.14), antes do login (2.3).
 
 ```sql
--- +goose Up
+-- Up
 CREATE TABLE sessoes (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   usuario_id  uuid NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -759,7 +812,7 @@ CREATE TABLE sessoes (
 CREATE INDEX idx_sessoes_usuario ON sessoes (usuario_id);
 CREATE INDEX idx_sessoes_validas ON sessoes (expira_em) WHERE revogado_em IS NULL;
 
--- +goose Down
+-- Down
 DROP TABLE sessoes;
 ```
 
@@ -770,7 +823,7 @@ exatamente o que um JWT sem estado não entrega.
 ## 011 — convites (RF12)
 
 ```sql
--- +goose Up
+-- Up
 CREATE TABLE convites (
   id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id  uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
@@ -787,7 +840,7 @@ CREATE TABLE convites (
 
 CREATE INDEX idx_convites_tenant ON convites (tenant_id);
 
--- +goose Down
+-- Down
 DROP TABLE convites;
 ```
 
@@ -822,8 +875,8 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
 
 `app_user` **não** é dono de nenhuma tabela, **não** tem `BYPASSRLS` e **não** é
 superusuário. Migrations rodam com outro usuário. Sem essa separação, o RLS é
-enfeite. No `.env`: a API conecta por `DATABASE_URL` (este usuário); goose e seed,
-por `GOOSE_DBSTRING` (o dono).
+enfeite. No `.env`: a API conecta por `DATABASE_URL` (este usuário); migrations
+(`dotnet ef`) e seed, por `MIGRATIONS_DATABASE_URL` (o dono).
 
 O script da 0.15 precisa rodar em dois lugares: no `compose.yml`, via
 `docker-entrypoint-initdb.d` (só executa com volume vazio — quem já tem banco
@@ -883,20 +936,20 @@ passar, o RLS não está ativo — provavelmente por uma das três armadilhas.
 
 O teste automatizado é o `IsolamentoTests` de `tests/Api.Tests/BancoTests.cs`
 (0.14). Ele grava os
-próprios dados como dono (`GOOSE_DBSTRING`), com UUIDs fora da faixa do seed, lê como
+próprios dados como dono (`MIGRATIONS_DATABASE_URL`), com UUIDs fora da faixa do seed, lê como
 `app_user` (`DATABASE_URL`) e apaga tudo no fim. Confere também que `DATABASE_URL` não
 é superusuário, não tem `BYPASSRLS` e não é dona de tabela (armadilha 1), e que
 `DELETE FROM agendamentos` falha com `42501`, e repete a leitura pelo EF Core, que
 é por onde a API passa. Sem as duas variáveis, o teste pula (no CI, falha):
 
 ```bash
-set -a; . ./.env; set +a     # GOOSE_DBSTRING e DATABASE_URL
-goose up
+set -a; . ./.env; set +a     # MIGRATIONS_DATABASE_URL e DATABASE_URL
+dotnet ef database update --project src/Api
 dotnet test --filter-class "*IsolamentoTests"
 ```
 
 Ele roda no CI, com o Postgres do workflow (`services: postgres`, item 0.17) e as
-migrations aplicadas pelo goose. Teste de isolamento que só existe como comando manual deixa de ser
+migrations aplicadas pelo `dotnet ef database update`. Teste de isolamento que só existe como comando manual deixa de ser
 executado na terceira semana.
 
 ## Acesso a dados: EF Core + Npgsql
@@ -905,14 +958,16 @@ executado na terceira semana.
 time de 15/11/2026, junto com a troca do backend de Go para .NET; substitui a
 "pgx v5 + sqlc, sem ORM" de 25/09/2026 (`requisitos.md`, decisão 10).
 
-**O EF só mapeia. O schema é do goose.** O que protege os dados deste projeto mora
-no Postgres: RLS com `FORCE`, `set_config` por transação, constraint de exclusão,
-FKs compostas e `FOR UPDATE SKIP LOCKED` na fila. Nada disso é descrito no modelo
-do EF, e nada disso pode ser gerado por ele. Por isso:
+**O modelo do EF só mapeia. O schema é o SQL das migrations.** O que protege os
+dados deste projeto mora no Postgres: RLS com `FORCE`, `set_config` por transação,
+constraint de exclusão, FKs compostas e `FOR UPDATE SKIP LOCKED` na fila. Nada disso
+é descrito no modelo do EF, e nada disso pode ser gerado por ele. Por isso:
 
-- **Sem EF Migrations.** Nada de `dotnet ef migrations add`, `Database.Migrate()`
-  nem `EnsureCreated()`: competem com o goose. Mudou o schema, é migration SQL em
-  `db/migrations/` e, no mesmo PR, o ajuste da classe em `Modelos.cs`.
+- **Migration com SQL escrito à mão.** O `dotnet ef migrations add` cria a classe e
+  atualiza o snapshot; o corpo gerado dá lugar ao SQL em `migrationBuilder.Sql`
+  (§Antes de escrever a primeira migration). No mesmo PR, o ajuste da classe em
+  `Modelos.cs`. Nada de `Database.Migrate()` na API nem `EnsureCreated()`: a API
+  conecta como `app_user`, e migration roda pelo `dotnet ef`, como dono.
 - **Nomes em snake_case** pela convenção `UseSnakeCaseNamingConvention()`
   (`EFCore.NamingConventions`): `TenantId` ↔ `tenant_id`, `DbSet Clientes` ↔
   `clientes`. Sem `[Column]` espalhado.
@@ -926,8 +981,8 @@ do EF, e nada disso pode ser gerado por ele. Por isso:
   `AppDb.Opcoes`. Para alterar, prefira `ExecuteUpdateAsync` com o `WHERE` explícito
   a carregar, mudar e salvar.
 
-O teste `ModeloCasaComOSchema` consulta cada tabela pelo EF contra o banco migrado
-pelo goose: coluna com nome ou tipo errado aparece no CI, não em produção.
+O teste `ModeloCasaComOSchema` consulta cada tabela pelo EF contra o banco migrado:
+coluna com nome ou tipo errado aparece no CI, não em produção.
 
 **Tipos:** `uuid` ↔ `Guid` (nulo: `Guid?`); `timestamptz` ↔ `DateTime` com
 `Kind = Utc` (o Npgsql recusa gravar outro `Kind`); `integer` ↔ `int`; `bigint` ↔
@@ -1074,8 +1129,8 @@ zero linhas atualizadas → 409 `status_invalido` (o horário ainda não começo
 
 ## Checklist de conclusão da Fatia 0
 
-- [ ] Todas as migrations rodam do zero em banco vazio (`goose up`)
-- [ ] Todas as migrations revertem (`goose down-to 0`) e rodam de novo
+- [ ] Todas as migrations rodam do zero em banco vazio (`dotnet ef database update`)
+- [ ] Todas as migrations revertem (`dotnet ef database update 0`) e rodam de novo
 - [ ] Inserir dois agendamentos sobrepostos retorna erro `23P01`
 - [ ] Inserir agendamentos consecutivos (9–10h e 10–11h) **funciona**
 - [ ] Agendamento cancelado libera o horário
@@ -1103,7 +1158,7 @@ na véspera da entrega.
 
 ## Checklist da Fatia 1 (1.2 e 1.3)
 
-- [ ] O modelo do EF casa com o schema do goose (`ModeloCasaComOSchema` no CI)
+- [ ] O modelo do EF casa com o schema das migrations (`ModeloCasaComOSchema` no CI)
 - [ ] Toda consulta de `Consultas.cs` recebe `tenantId` e filtra por ele
 - [ ] Duas requisições seguidas na mesma conexão do pool, com tenants diferentes,
       não se enxergam

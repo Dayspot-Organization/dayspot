@@ -33,9 +33,7 @@ jobs:
       PGHOST: localhost
       PGPASSWORD: ci
       APP_USER_PASSWORD: ci_app
-      GOOSE_DRIVER: postgres
-      GOOSE_DBSTRING: postgres://ci:ci@localhost:5432/dayspot?sslmode=disable
-      GOOSE_MIGRATION_DIR: db/migrations
+      MIGRATIONS_DATABASE_URL: postgres://ci:ci@localhost:5432/dayspot?sslmode=disable
       DATABASE_URL: postgres://app_user:ci_app@localhost:5432/dayspot?sslmode=disable
 
     steps:
@@ -50,34 +48,37 @@ jobs:
       - name: Restaurar dependências
         run: dotnet restore
 
+      # dotnet-ef na versão do .config/dotnet-tools.json, a mesma do EF Core.
+      - name: Restaurar ferramentas (dotnet-ef)
+        run: dotnet tool restore
+
       - name: Formatação (dotnet format)
         run: dotnet format --verify-no-changes --no-restore
 
       - name: Compilar (dotnet build)
         run: dotnet build --no-restore -warnaserror
 
-      # Versão fixa, a mesma do README: binário da release, sem depender de Go.
-      - name: Instalar goose v3.28.0
-        run: |
-          sudo curl -fsSL -o /usr/local/bin/goose https://github.com/pressly/goose/releases/download/v3.28.0/goose_linux_x86_64
-          sudo chmod +x /usr/local/bin/goose
-          goose --version
+      # Modelo do AppDb diferente do snapshot = faltou gerar a migration.
+      - name: Migrations pendentes no modelo
+        run: dotnet ef migrations has-pending-model-changes --project src/Api --no-build
 
-      # Antes do goose up: a 009 faz REVOKE para o app_user (guia §009).
+      # Antes das migrations: a 009 faz REVOKE para o app_user (guia §009).
       - name: Criar app_user
         run: sh db/init/app_user.sh
 
-      - name: Migrations (goose up)
-        run: goose up
+      - name: Migrations (Up)
+        run: dotnet ef database update --project src/Api --no-build
 
       - name: Migrations (Down e Up de novo)
-        run: goose down-to 0 && goose up
+        run: |
+          dotnet ef database update 0 --project src/Api --no-build
+          dotnet ef database update --project src/Api --no-build
 
       # Os testes de banco leem os dados do seed.
       - name: Seed
-        run: psql "$GOOSE_DBSTRING" -f db/seed.sql
+        run: psql "$MIGRATIONS_DATABASE_URL" -f db/seed.sql
 
-      # Com CI definida, teste de banco sem DATABASE_URL ou GOOSE_DBSTRING falha em vez de pular.
+      # Com CI definida, teste de banco sem DATABASE_URL ou MIGRATIONS_DATABASE_URL falha em vez de pular.
       - name: Executar testes (dotnet test)
         run: dotnet test --no-build
 
