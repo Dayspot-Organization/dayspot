@@ -1,4 +1,4 @@
-# Como contribuir — Smart Booking
+# Como contribuir — Dayspot
 
 Regras de trabalho do time. Valem para os três integrantes e para o Claude Code.
 

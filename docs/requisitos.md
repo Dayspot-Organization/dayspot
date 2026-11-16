@@ -1,4 +1,4 @@
-# Requisitos — Smart Booking
+# Requisitos — Dayspot
 
 Sistema de agendamentos multi-tenant com notificação via Telegram.
 Documento de requisitos e decisões técnicas — **v0.10** · 23/10/2026
