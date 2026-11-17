@@ -3,22 +3,19 @@ import { ChangeDetectionStrategy, Component, input, output } from "@angular/core
 import { RouterLink, RouterLinkActive } from "@angular/router";
 import type { Tema } from "./tema";
 
-/** Símbolo (o "d" com o ponto: um lugar no dia) e nome. Sobre a nav: traço claro, ponto pêssego. */
+/** Símbolo (simbolo-negativo.svg dos assets da marca, sobre a nav) e nome. */
 @Component({
   selector: "app-logo",
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: "logo" },
   template: `
-    <svg width="28" height="28" viewBox="20 16 64 64" aria-hidden="true">
+    <svg width="25" height="28" viewBox="4 0 56 64" aria-hidden="true">
+      <path d="M15 6A6 6 0 0 1 21 12V52A6 6 0 0 1 9 52V12A6 6 0 0 1 15 6Z" fill="#fbf7f5" />
       <path
-        d="M32 29V70H50A20 20 0 0 0 70 50V44"
-        fill="none"
-        stroke="#fbf7f5"
-        stroke-width="13"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        d="M15 58H30A26 26 0 0 0 54.727 23.966A5.976 5.976 0 0 0 43.361 27.659A15 15 0 0 1 29 47H15Z"
+        fill="#fbf7f5"
       />
-      <circle cx="52.5" cy="29" r="7.8" fill="var(--ponto)" />
+      <path d="M27.25 12.75A7.25 7.25 0 1 0 41.75 12.75A7.25 7.25 0 1 0 27.25 12.75Z" fill="var(--ponto)" />
     </svg>
     <span>dayspot</span>
   `,
@@ -33,9 +30,12 @@ export class Logo {}
   template: `
     <nav class="menu" aria-label="Menu principal">
       <a routerLink="/agendamentos" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="navegar.emit()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke="currentColor" stroke-width="1.8" />
-          <path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+          <g fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 4.5H7.5a4 4 0 0 0-4 4v8a4 4 0 0 0 4 4h9a4 4 0 0 0 4-4v-5.5" />
+            <path d="M8 11.5h4M8 15.5h7.5" />
+          </g>
+          <circle cx="19" cy="5.5" r="2.1" fill="var(--ponto)" />
         </svg>
         Agenda
       </a>

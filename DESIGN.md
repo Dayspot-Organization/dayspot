@@ -1,8 +1,8 @@
 # Design — Dayspot
 
-Referência visual do `web/`. A identidade é a **Dayspot** (folha de contato
-`assets-dev` e a "Identidade visual — referência rápida"): ameixa, ponto pêssego e
-Nunito. As telas de referência continuam as do canvas anterior (estrutura, medidas e
+Referência visual do `web/`. A identidade é a **Dayspot** (pacote de assets da marca,
+folha de contato `assets-dev` e a "Identidade visual — referência rápida"): ameixa,
+ponto pêssego e Nunito. As cores do escuro seguem as versões `-escuro` dos assets. As telas de referência continuam as do canvas anterior (estrutura, medidas e
 componentes), agora com as cores e a fonte abaixo. Mudou a identidade, muda este
 arquivo no mesmo PR que levar a mudança para o código.
 
@@ -55,23 +55,23 @@ ou o tema escolhido no botão da top-bar).
 
 | Token | Claro | Escuro | Uso |
 |---|---|---|---|
-| `fundo` | `#FBF7F5` | `#140C10` | fundo do app (papel) |
-| `superficie` | `#FFFFFF` | `#1E1419` | cartão e folha |
-| `afundado` | `#F3ECE9` | `#2A1D23` | trilho e botão secundário |
-| `linha` | `#EFE4DF` | `#33242B` | divisória |
-| `linha-forte` | `#DCCFCB` | `#46333C` | borda de campo e ponto livre |
+| `fundo` | `#FBF7F5` | `#1A1417` | fundo do app (papel) |
+| `superficie` | `#FFFFFF` | `#251D21` | cartão e folha |
+| `afundado` | `#F4ECEA` | `#30272B` | trilho e botão secundário |
+| `linha` | `#EEE3E0` | `#3A3035` | divisória |
+| `linha-forte` | `#DCCFCB` | `#463A40` | borda de campo e ponto livre |
 | `texto` | `#1A1417` | `#F3E9EC` | texto principal (tinta) |
 | `texto-2` | `#6B5F64` | `#B3A2A9` | secundário, rótulo de apoio |
-| `texto-3` | `#A3979C` | `#75636B` | placeholder, desabilitado |
+| `texto-3` | `#8E807F` | `#857880` | placeholder, desabilitado |
 | `nav` | `#86315C` | `#3A1A2B` | menu lateral, logo claro |
-| `marca` | `#86315C` | `#E07F9E` | traço do símbolo fora da nav |
+| `marca` | `#86315C` | `#EE9DBF` | traço do símbolo fora da nav |
 | `ponto` | `#F4A08A` | `#F4A08A` | ponto do símbolo, hover do ícone no menu |
 | `sucesso` | `#1F6B4A` | `#6FCB9C` | texto e ícone de sucesso |
 | `sucesso-suave` | `#E3F3EA` | `#12291F` | fundo do aviso de sucesso |
-| `destaque` | `#86315C` | `#E07F9E` | ação, seleção, "agora" |
-| `destaque-texto` | `#86315C` | `#EBA0BA` | link (hover: `#5E1F40` / `#F4A08A`) |
-| `agendado` | `#F7E6E3` | `#3A2230` | bloco de agendamento (hora em `destaque`) |
-| `sobre-cor` | `#FFFFFF` | `#140C10` | texto sobre `destaque` ou `nav` |
+| `destaque` | `#86315C` | `#EE9DBF` | ação, seleção, "agora" |
+| `destaque-texto` | `#86315C` | `#EE9DBF` | link (hover: `#5E1F40` / `#F4A08A`) |
+| `agendado` | `#F7E6E3` | `#3D2632` | bloco de agendamento (hora em `destaque`) |
+| `sobre-cor` | `#FFFFFF` | `#1A1417` | texto sobre `destaque` ou `nav` |
 | `atencao` | `#935A00` | `#E3B062` | ponto e texto de atenção |
 | `atencao-suave` | `#FCF1DC` | `#2B2214` | fundo do selo e aviso de atenção |
 | `perigo` | `#B3261E` | `#F0908A` | texto e ação destrutiva, erro |
@@ -81,7 +81,7 @@ Na nav (ameixa nos dois temas) o texto do menu é `#F3DDE6`, o item ativo leva b
 16 % e o hover branco a 10 %.
 
 Foco: anel de 3 px em `destaque` com transparência (`rgba(134,49,92,.22)` no claro,
-`rgba(224,127,158,.32)` no escuro) e borda do campo em `destaque`.
+`rgba(238,157,191,.32)` no escuro) e borda do campo em `destaque`.
 
 ## Tipografia
 
@@ -133,16 +133,27 @@ Hora e dinheiro com algarismos tabulares (`font-variant-numeric: tabular-nums`).
 ## Marca
 
 Símbolo: um "d" arredondado (haste, base e curva subindo à direita) com um ponto pêssego
-em cima: um lugar marcado no dia. Traço de 13 no quadro de 100, pontas e cantos
-redondos. Nome **dayspot** em Nunito 800, minúsculo, espaçamento −2%. Tagline: "O seu
+em cima: um lugar marcado no dia. O desenho vem de `simbolo.svg` (quadro `4 0 56 64`);
+no menu usa-se `simbolo-negativo.svg`. Nome **dayspot** em Nunito 800, minúsculo, espaçamento −2%. Tagline: "O seu
 lugar no dia."
 
 - Ponto sempre em `ponto` (pêssego). Traço em `marca` sobre fundo claro e em `#FBF7F5`
   sobre ameixa ou escuro, inclusive no menu lateral e na gaveta (`nav`).
-- Favicon (aba do navegador): o ícone de app, isto é, fundo ameixa com canto de 23% e
-  o símbolo claro com o ponto pêssego. Lê em aba clara e escura.
+- Favicon: `favicon.svg` é o símbolo inteiro em ameixa, rosa (`#EE9DBF`) quando o
+  sistema está no escuro; `favicon.ico` (16/32/48) e `favicon-32x32.png` para
+  navegadores sem SVG. Ícone de app (fundo ameixa, símbolo claro, ponto pêssego) em
+  `apple-touch-icon.png`, `icon-192.png`, `icon-512.png` e `icon-maskable-512.png`
+  (`manifest.webmanifest`). Compartilhamento: `og-image.png` (1200 × 630) e
+  `twitter-card.png` (1200 × 600), todos em `web/public/`.
 - Tamanhos: 16 (aba), 24 (barra do celular), 28 (menu lateral, nome a 20, 8 px entre os
   dois), 48 (entrar, versão empilhada com nome a 24).
+- Ícones de interface: traço `currentColor` de 2,25 no quadro de 24, com o ponto em
+  `--ponto` (o `--icone-ponto` dos assets). Cada ícone entra com a tela dele no menu.
+- Ilustrações de estado (vazio e erro): traço, linha e preenchimento em cinza quente e o
+  ponto em ameixa; as cores vêm das variáveis `--ilu-*` do `styles.css`, então um único
+  desenho serve aos dois temas. Em uso: `agenda-vazia` (agenda sem horários) e
+  `sem-clientes`. As demais (`sem-servicos`, `sem-horarios`, `erro`, `nao-encontrado`),
+  o painel e a faixa do login e o padrão da semana entram com os cards das suas telas.
 - O degradê da marca (pêssego claro `#FDD4B1` → `#F4A08A` → `#C95F7C` → ameixa) é das
   peças de divulgação, login e Telegram; no app ele não entra (regra 8).
 - Não pode: girar o símbolo, mudar o ponto de lugar ou de cor, ponto em âmbar ou
@@ -172,7 +183,7 @@ componentes acima (campos, botão primário, aviso de erro para o 409). A estrut
 ## Acessibilidade
 
 - Texto com contraste AA (4,5:1). Os pares de texto e estado acima passam, conferidos
-  em 16/11/2026. A exceção é `texto-3` (2,8:1 no claro, 3,2:1 no escuro), que fica
+  em 16/11/2026. A exceção é `texto-3` (3,8:1 no claro, 3,9:1 no escuro), que fica
   só em placeholder e desabilitado e nunca em texto que precisa ser lido. Cor nova
   precisa ser conferida.
 - Estado nunca só por cor: selo tem texto, cancelado é riscado e concluído tem ícone.

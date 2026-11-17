@@ -27,7 +27,7 @@
 } @else if (agendamentos.hasValue()) {
   @let lista = agendamentos.value();
   @if (lista.length === 0) {
-    <app-vazio>Nenhum agendamento nesse período.</app-vazio>
+    <app-vazio ilustracao="agenda">Nenhum agendamento nesse período.</app-vazio>
   } @else {
     <ul class="cartao lista">
       @for (a of lista; track a.id) {

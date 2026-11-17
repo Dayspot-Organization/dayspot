@@ -2,29 +2,36 @@
 :root {
   /* light-dark(claro, escuro): o color-scheme escolhe o lado. Sem data-tema, segue o sistema. */
   color-scheme: light dark;
-  --fundo: light-dark(#fbf7f5, #140c10);
-  --superficie: light-dark(#ffffff, #1e1419);
-  --afundado: light-dark(#f3ece9, #2a1d23);
-  --linha: light-dark(#efe4df, #33242b);
-  --linha-forte: light-dark(#dccfcb, #46333c);
+  --fundo: light-dark(#fbf7f5, #1a1417);
+  --superficie: light-dark(#ffffff, #251d21);
+  --afundado: light-dark(#f4ecea, #30272b);
+  --linha: light-dark(#eee3e0, #3a3035);
+  --linha-forte: light-dark(#dccfcb, #463a40);
   --texto: light-dark(#1a1417, #f3e9ec);
   --texto-2: light-dark(#6b5f64, #b3a2a9);
-  --texto-3: light-dark(#a3979c, #75636b);
+  --texto-3: light-dark(#8e807f, #857880);
   --nav: light-dark(#86315c, #3a1a2b);
-  --marca: light-dark(#86315c, #e07f9e);
+  --marca: light-dark(#86315c, #ee9dbf);
   --ponto: #f4a08a;
   --sucesso: light-dark(#1f6b4a, #6fcb9c);
   --sucesso-suave: light-dark(#e3f3ea, #12291f);
-  --destaque: light-dark(#86315c, #e07f9e);
-  --destaque-texto: light-dark(#86315c, #eba0ba);
-  --agendado: light-dark(#f7e6e3, #3a2230);
-  --sobre-cor: light-dark(#ffffff, #140c10);
+  --destaque: light-dark(#86315c, #ee9dbf);
+  --destaque-texto: light-dark(#86315c, #ee9dbf);
+  --agendado: light-dark(#f7e6e3, #3d2632);
+  --sobre-cor: light-dark(#ffffff, #1a1417);
   --atencao: light-dark(#935a00, #e3b062);
   --atencao-suave: light-dark(#fcf1dc, #2b2214);
   --perigo: light-dark(#b3261e, #f0908a);
   --perigo-suave: light-dark(#fbeae8, #2e1a1d);
-  --foco: light-dark(rgba(134, 49, 92, 0.22), rgba(224, 127, 158, 0.32));
+  --foco: light-dark(rgba(134, 49, 92, 0.22), rgba(238, 157, 191, 0.32));
   --hover: light-dark(#5e1f40, #f4a08a);
+  /* Ilustrações de estado (assets da marca): as cores entram por variável. */
+  --ilu-traco: light-dark(#8e807f, #857880);
+  --ilu-linha: light-dark(#eee3e0, #463a40);
+  --ilu-preenchimento: light-dark(#f4ecea, #30272b);
+  --ilu-superficie: light-dark(#ffffff, #251d21);
+  --ilu-ponto: light-dark(#86315c, #ee9dbf);
+  --ilu-acento: light-dark(#f4a08a, #f4b49a);
 }
 
 :root[data-tema="claro"] {
@@ -327,6 +334,54 @@ select:focus-visible {
 
 .secundario {
   color: var(--texto-2);
+}
+
+/* Estado vazio: ilustração da marca e o texto embaixo, centralizados. */
+.vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--texto-2);
+}
+
+.vazio svg {
+  width: 160px;
+  height: auto;
+}
+
+.vazio p {
+  margin: 0;
+}
+
+.ilu-tr,
+.ilu-li {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ilu-tr {
+  stroke: var(--ilu-traco);
+}
+
+.ilu-li {
+  stroke: var(--ilu-linha);
+}
+
+.ilu-pr {
+  fill: var(--ilu-preenchimento);
+}
+
+.ilu-ac {
+  fill: var(--ilu-ponto);
+}
+
+.ilu-a2 {
+  fill: var(--ilu-acento);
 }
 
 .erro {

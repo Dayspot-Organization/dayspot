@@ -3,7 +3,7 @@
 } @else if (!clientes.hasValue() || clientes.isLoading()) {
   <app-carregando />
 } @else if (clientes.value().length === 0) {
-  <app-vazio>Nenhum cliente cadastrado ainda.</app-vazio>
+  <app-vazio ilustracao="clientes">Nenhum cliente cadastrado ainda.</app-vazio>
 } @else {
   <form class="cartao formulario" (submit)="salvar($event)">
     <div>
