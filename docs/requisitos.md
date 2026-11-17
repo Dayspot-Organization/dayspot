@@ -1,9 +1,17 @@
 # Requisitos — Dayspot
 
 Sistema de agendamentos multi-tenant com notificação via Telegram.
-Documento de requisitos e decisões técnicas — **v0.12** · 15/11/2026
+Documento de requisitos e decisões técnicas — **v0.13** · 17/11/2026
 
 > Fonte da verdade: este arquivo. A pasta do Drive é histórico.
+
+## Mudanças desde a v0.12
+
+Migração do frontend (#146, PR #147), 16/11/2026.
+
+| # | O que mudou | Onde |
+|---|---|---|
+| 1 | Frontend passa de React + Vite para Angular; proxy de dev do `ng serve` em `:4200` | 1, 5, 9, 12 |
 
 ## Mudanças desde a v0.11
 
@@ -21,7 +29,7 @@ Decisão do time, 15/11/2026: o backend passa de Go para .NET.
 |---|---|---|
 | 1 | API (e worker, quando nascer) em C# com ASP.NET Core (.NET 10), no lugar de Go | 1, 5, 11, 12 |
 | 2 | Acesso a dados por EF Core + Npgsql. **Reverte a decisão 10 da v0.4** ("pgx v5 + sqlc, sem ORM") | 1, 6.2, 12 |
-| 3 | O goose continua dono do schema: o EF Core só mapeia, sem EF Migrations | 6.2, 12 |
+| 3 | O goose continua dono do schema: o EF Core só mapeia, sem EF Migrations (**revertida na v0.12**: EF Core Migrations) | 6.2, 12 |
 
 ## Mudanças desde a v0.9
 
@@ -107,7 +115,7 @@ Plataforma web multi-tenant para gestão de agendamentos. Cada tenant (empresa)
 tem seus próprios usuários (administradores e prestadores), serviços, horários e clientes,
 isolados dos demais. Notificações de lembrete enviadas via bot do Telegram.
 
-**Stack:** API em C# (ASP.NET Core, .NET 10), frontend em React, banco PostgreSQL
+**Stack:** API em C# (ASP.NET Core, .NET 10), frontend em Angular, banco PostgreSQL
 (acesso via EF Core + Npgsql; EF Core Migrations em SQL), worker de notificações em
 C#, Telegram Bot API.
 
@@ -178,7 +186,7 @@ agendam os mesmos clientes. Só o administrador gerencia serviços e preços.
 ## 5. Arquitetura
 
 ```
-[React SPA] --HTTPS/JSON--> [API .NET] --> [PostgreSQL + RLS]
+[Angular SPA] -HTTPS/JSON-> [API .NET] --> [PostgreSQL + RLS]
                                 |            ^
                                 v            |
                       [Worker .NET (scheduler)]
@@ -552,11 +560,12 @@ usuário do tenant A e verificar que nenhum endpoint retorna dado do tenant B (i
 | Bot | Único no MVP, coluna por tenant já prevista |
 | Sessão | Cookie `HttpOnly` + tabela `sessoes` |
 | Papéis | `text` + `CHECK`, não `ENUM` |
-| Backend | C# com ASP.NET Core (.NET 10), minimal APIs; um projeto de API e um de testes (xUnit). Decidido em 15/11/2026, no lugar de Go |
+| Backend | C# com ASP.NET Core (.NET 10), minimal APIs; um projeto de API e um de testes (xUnit). Decidido em 15/11/2026, no lugar de Go (#144) |
+| Frontend | Angular (Angular CLI, componentes standalone, signals, `@angular/router`), em `web/`. Decidido em 16/11/2026, no lugar de React + Vite (#146, #147) |
 | Acesso a dados | EF Core + Npgsql, só mapeando o schema (guia de banco, §Acesso a dados). Reverte "pgx v5 + sqlc, sem ORM" em 15/11/2026 |
 | Migrations | EF Core Migrations em `src/Api/Migrations/`, SQL escrito à mão em `migrationBuilder.Sql` (`Up` e `Down`); `dotnet-ef` como ferramenta local de versão fixa. Rodam como dono das tabelas (`MIGRATIONS_DATABASE_URL`). Decidido em 15/11/2026 |
 | UUID no C# | `Guid` (nulo: `Guid?`) |
-| Rotas da API | Tudo sob `/api`; proxy do Vite sem reescrita |
+| Rotas da API | Tudo sob `/api`; proxy do `ng serve` sem reescrita |
 | Serviço na Fatia 1 | `SERVICO_FIXO` no config até a 6.6 |
 | Sessão na Fatia 1 | `TENANT_FIXO` e `PRESTADOR_FIXO` no config até a 2.12 |
 | Configuração | Só `src/Api/Config.cs` lê o ambiente; `.env` lido pelo próprio `Config`, ambiente real vence o arquivo |

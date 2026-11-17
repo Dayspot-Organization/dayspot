@@ -1,6 +1,6 @@
 # Backlog
 
-## Organizado por fatias verticais — v2.3 · 23/10/2026
+## Organizado por fatias verticais — v2.4 · 17/11/2026
 
 Complementa `docs/requisitos.md` e `docs/guia-banco-de-dados.md`.
 
@@ -11,6 +11,8 @@ Complementa `docs/requisitos.md` e `docs/guia-banco-de-dados.md`.
 > **Mudanças da v2.2:** decisões de 02/10/2026 sobre papéis, agenda e financeiro (`requisitos.md` v0.8). Papéis administrador e prestador com escopo por prestador (2.7, teste 2.16); convites na Fatia 2 (2.17–2.20); agendamento nunca é apagado — a 5.1 perde o `DELETE` e ganha concluir; remoção de membro (5.8); tela de clientes na 3.8; preço nos serviços (6.1, 6.5a); fatia nova **7 Acompanhar** (calendário semanal, financeiro e `.ics`), e Entregar passa a ser a Fatia 8. Corte de escopo e cronograma recalculados (~474h).
 
 > **Mudanças da v2.3:** revisão da Fatia 2 (23/10/2026). A 2.7 aplica o `Escopo` também na criação de agendamento e a 2.16 testa isso; a escolha de empresa no login ficou decidida e é da 2.3 (`requisitos.md` §12); itens novos 2.21 (`GET /membros`, para a 2.20) e 2.22 (criar conta pelo convite, para a 2.19). Cronograma recalculado (~481h).
+
+> **Mudanças da v2.4:** o backend passou de Go para .NET com EF Core (#144) e o frontend de React para Angular (#147); o projeto se chama Dayspot (#143). Itens e decisões não mudam: só as referências técnicas (0.5, 0.7, 1.2, 1.8, 3.2, acesso a dados da Fatia 1 e período da Fatia 7).
 
 ---
 
@@ -50,9 +52,9 @@ Fatiando vertical, existe sistema funcionando na semana ~8 e ele cresce em capac
 | 0.2  | `[T0] Branch protection na main (1 aprovação obrigatória)` | P |
 | 0.3  | `[T0] docker-compose com postgres:16-alpine` | P |
 | 0.4  | `[T0] .env.example e carregamento de config na aplicação` | P |
-| 0.5  | `[T0] GitHub Actions: go build, go vet, go test` | M |
+| 0.5  | `[T0] GitHub Actions: dotnet format, dotnet build, dotnet test` | M |
 | 0.6  | `[T0] Padrão de commit e template de PR` | P |
-| 0.7  | `[T0] Configurar goose + migration 001 (extensões e app.current_tenant_id)` | P |
+| 0.7  | `[T0] Configurar EF Core Migrations + migration 001 (extensões e app.current_tenant_id)` | P |
 | 0.8  | `[T0] Migration: tenants` | M |
 | 0.9  | `[T0] Migration: usuarios e memberships` | M |
 | 0.10 | `[T0] Migration: clientes` | M |
@@ -84,13 +86,13 @@ O carregamento de config da 0.4 passou para a 1.1.
 | #    | Issue | Tam. |
 |------|-------|------|
 | 1.1  | `[T1] Config com TENANT_FIXO e PRESTADOR_FIXO (temporário, remover na T2)` | P |
-| 1.2  | `[T1] Camada de repositório: toda função recebe tenantID como 1º parâmetro` | M |
+| 1.2  | `[T1] Camada de repositório: toda consulta recebe tenantId logo depois do AppDb` | M |
 | 1.3  | `[T1] Abrir transação por requisição com set_config('app.tenant_id', ...)` | M |
 | 1.4  | `[T1] CRUD mínimo de clientes (criar e listar)` | M |
 | 1.5  | `[T1] POST /agendamentos traduzindo SQLSTATE 23P01 para HTTP 409` | M |
 | 1.6  | `[T1] GET /agendamentos com filtro por período` | M |
 | 1.7  | `[T1] Padronizar formato de resposta de erro da API` | P |
-| 1.8  | `[T1] Setup Vite + React + TypeScript + roteamento` | P |
+| 1.8  | `[T1] Setup Angular + TypeScript + roteamento` | P |
 | 1.9  | `[T1] Cliente HTTP com tratamento centralizado de erro` | M |
 | 1.10 | `[T1] Tela de listagem de agendamentos` | M |
 | 1.11 | `[T1] Formulário de novo agendamento (data e hora digitadas, sem slots)` | M |
@@ -100,7 +102,7 @@ O carregamento de config da 0.4 passou para a 1.1.
 
 > **Cuidado:** 1.3 precisa estar certo desde já. Se alguém usar `SET` em vez de `SET LOCAL` / `set_config(..., true)`, o bug fica dormindo até existir concorrência real e vira vazamento entre tenants.
 
-**Acesso a dados:** pgx v5 + sqlc, sem ORM. A 1.2 cria `sqlc.yaml`, `db/queries/` e `internal/storage`; a 1.3 usa o helper `ComTenant` do `guia-banco-de-dados.md` (§Acesso a dados) para abrir a transação da requisição.
+**Acesso a dados:** EF Core + Npgsql, só mapeando o schema (decidido em 15/11/2026, no lugar de pgx v5 + sqlc). As consultas da 1.2 ficam em `src/Api/Dados/Consultas.cs`, como métodos de extensão do `AppDb`; a 1.3 usa o helper `AppDb.IniciarComTenant` do `guia-banco-de-dados.md` (§Acesso a dados) para abrir a transação da requisição.
 
 **Paralelismo:** 1.7, 1.8 e 1.9 não dependem do banco e podem andar junto com o fim da Fatia 0.
 
@@ -158,7 +160,7 @@ O carregamento de config da 0.4 passou para a 1.1.
 | #    | Issue | Tam. |
 |------|-------|------|
 | 3.1  | `[T3] Criar bot no BotFather e documentar token no .env.example` | P |
-| 3.2  | `[T3] Camada de acesso à Telegram Bot API em Go` | M |
+| 3.2  | `[T3] Camada de acesso à Telegram Bot API em C#` | M |
 | 3.3  | `[T3] Modo long polling para desenvolvimento local` | M |
 | 3.4  | `[T3] Endpoint de webhook para receber updates` | M |
 | 3.5  | `[T3] Gerar vinculo_token e link t.me/Bot?start=<token> ao criar cliente` | M |
@@ -274,7 +276,7 @@ Depende da 5.4 (concluir) e da 6.1 (preço): sem os dois, o financeiro sai zerad
 
 **7.1 substitui a lista da 1.10**, que continua lista simples até lá, e consome a 1.6 com o período da semana.
 
-> **Período no fuso do tenant.** Semana e mês contam pelo `inicio`, no fuso do tenant (RNF01): limites calculados em Go e passados como `timestamptz` (`guia-banco-de-dados.md` §Acesso a dados). O resumo soma `valor_centavos` dos `concluido`: para o prestador, os próprios; para o administrador, o total da empresa e, na 7.4, por prestador.
+> **Período no fuso do tenant.** Semana e mês contam pelo `inicio`, no fuso do tenant (RNF01): limites calculados no C# e passados como `timestamptz` (`guia-banco-de-dados.md` §Acesso a dados). O resumo soma `valor_centavos` dos `concluido`: para o prestador, os próprios; para o administrador, o total da empresa e, na 7.4, por prestador.
 
 > **`.ics` (7.6).** Download, não feed: é uma fotografia do período e não sincroniza. Mesmo escopo e mesmo período do calendário; só `confirmado` e `concluido` (cancelados ficam fora). `METHOD:PUBLISH`; por evento, `UID:<id>@dayspot`, `DTSTAMP` = agora, `SEQUENCE` = epoch de `atualizado_em` (reimportar substitui o evento remarcado) e `DTSTART`/`DTEND` em UTC (`Z`). Rota na mesma origem, com o cookie da sessão; sem token na URL.
 

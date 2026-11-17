@@ -59,7 +59,7 @@ Exemplos:
 feat - migration de clientes
 fix - .env.example sem espaço antes do valor
 docs - padrão de commit e branch
-build(web) - setup inicial react com vite
+build(web) - atualiza dependências do frontend
 ci - roda dotnet test em todo PR
 ```
 
@@ -102,7 +102,7 @@ Quem revisa confere: critérios de aceite da issue, testes, e se o card foi movi
 
 ## Board — obrigatório
 
-O status de card mora **só** no board do GitHub Projects (**Smart Booking DevOps**).
+O status de card mora **só** no board do GitHub Projects (**Dayspot Devops**).
 Nenhum arquivo do repositório repete status — espelho em texto envelhece e dá
 conflito em todo PR.
 
@@ -135,9 +135,10 @@ dotnet format                     # o CI falha se sobrar diferença (--verify-no
   (`dotnet ef migrations add Nome --project src/Api`), com o SQL do `Up` e do `Down`
   escrito à mão em `migrationBuilder.Sql`. A classe em `src/Api/Dados/Modelos.cs` e o
   snapshot acompanham no mesmo PR: o CI roda `dotnet ef migrations has-pending-model-changes`.
-- Banco de dev migrado antes das EF Core Migrations (tem `goose_db_version`, não tem
-  `__EFMigrationsHistory`): recrie com `docker compose down -v` e `docker compose up -d`,
-  depois migrations e seed ([README](README.md#subindo-o-ambiente)). Apaga os dados locais.
+- Banco de dev migrado pela ferramenta antiga (sem a tabela `__EFMigrationsHistory`):
+  recrie com `docker compose down -v` e `docker compose up -d`, depois migrations e seed
+  ([README](README.md#subindo-o-ambiente)). Apaga os dados locais. No `.env`, troque as
+  variáveis antigas de migration pela `MIGRATIONS_DATABASE_URL` do `.env.example`.
 - No `web/`: `npm run lint` e `npm run build`.
 
 ---

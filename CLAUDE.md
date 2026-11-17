@@ -1,7 +1,7 @@
 # Dayspot — regras para o Claude Code
 
 1. **Card antes de código.** Só trabalhe em card que esteja em **Ready** ou
-   **In progress** no board (GitHub Projects › Smart Booking DevOps). Item do
+   **In progress** no board (GitHub Projects › Dayspot Devops). Item do
    backlog sem card não se começa. Lista dos cards em `docs/cards.md`; status,
    só no board.
 2. **O corpo da issue é o contrato**: critérios de aceite e dependências estão lá.

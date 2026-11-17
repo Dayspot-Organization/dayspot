@@ -3,8 +3,7 @@
 ![.NET](https://img.shields.io/badge/.NET%2010-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 ![EF Core](https://img.shields.io/badge/EF%20Core-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL%2016-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![React](https://img.shields.io/badge/React%2019-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![Angular](https://img.shields.io/badge/Angular%20%28em%20migra%C3%A7%C3%A3o%29-DD0031?style=for-the-badge&logo=angular&logoColor=white)
+![Angular](https://img.shields.io/badge/Angular%2022-DD0031?style=for-the-badge&logo=angular&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Telegram](https://img.shields.io/badge/Telegram%20Bot%20API-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)
@@ -16,7 +15,7 @@
 
 Cada organização (barbearia, clínica, estúdio) tem seus próprios usuários, serviços, horários e clientes, isolados das demais. O cliente final recebe confirmação e lembrete pelo Telegram, sem precisar de conta no sistema.
 
-> 🚧 Em desenvolvimento. Andamento no GitHub Projects (Smart Booking DevOps).
+> 🚧 Em desenvolvimento. Andamento no GitHub Projects (Dayspot Devops).
 
 ---
 
@@ -67,11 +66,9 @@ O isolamento entre organizações é garantido no banco, com Row Level Security,
 | Acesso a dados | EF Core + Npgsql |
 | Migrations | EF Core Migrations, com o SQL escrito à mão (`migrationBuilder.Sql`) |
 | Banco | PostgreSQL 16, com Row Level Security |
-| Frontend | React 19 + Vite + TypeScript, em migração para Angular |
+| Frontend | Angular 22 + TypeScript (Angular CLI, componentes standalone, signals, `@angular/router`) |
 | Notificações | Telegram Bot API |
 | Ambiente | Docker Compose |
-
-> 🔄 **Frontend em migração.** O `web/` continua em React 19 + Vite, e os comandos da seção [Frontend](#frontend) são os de hoje. A troca para Angular está em andamento; este README muda quando ela chegar ao `web/`.
 
 ---
 
@@ -80,8 +77,8 @@ O isolamento entre organizações é garantido no banco, com Row Level Security,
 ### Pré-requisitos
 
 - [Docker](https://docs.docker.com/get-docker/) com Compose
-- [.NET SDK](https://dotnet.microsoft.com/download) 10
-- [Node.js](https://nodejs.org/) 22+ — para o `web/`
+- [.NET SDK](https://dotnet.microsoft.com/download) 10 (`10.0.100` ou feature mais nova, conforme o `global.json`)
+- [Node.js](https://nodejs.org/) 22 — para o `web/` (a versão do CI)
 - `psql` (cliente do PostgreSQL) — para o seed e a verificação de isolamento
 
 O `dotnet-ef` (migrations) não se instala à parte: é ferramenta local, com versão fixa em
@@ -133,7 +130,7 @@ por `ROLLBACK`.
 
 > ⚠️ O `db/init/app_user.sh` só roda com o volume do banco vazio. Se o seu volume é anterior ao `db/init`, rode `docker compose down -v` uma vez antes do `up` — isso **apaga os dados locais** do banco.
 
-> ⚠️ **Banco de dev migrado pela ferramenta antiga.** Quem migrou o banco antes das EF Core Migrations tem a tabela `goose_db_version` e não tem `__EFMigrationsHistory`: o `dotnet ef database update` tentaria criar tudo de novo e falharia. Não há transição: recrie o banco com `docker compose down -v` e `docker compose up -d` (**apaga os dados locais**), depois aplique as migrations e o seed. No `.env`, troque as três variáveis `GOOSE_*` pela `MIGRATIONS_DATABASE_URL` do `.env.example`.
+> ⚠️ **Banco de dev migrado pela ferramenta antiga.** Quem migrou o banco antes das EF Core Migrations não tem a tabela `__EFMigrationsHistory`: o `dotnet ef database update` tentaria criar tudo de novo e falharia. Não há transição: recrie o banco com `docker compose down -v` e `docker compose up -d` (**apaga os dados locais**), depois aplique as migrations e o seed. No `.env`, troque as variáveis antigas de migration pela `MIGRATIONS_DATABASE_URL` do `.env.example`.
 
 ### Frontend
 
@@ -238,7 +235,8 @@ dayspot/
 ├── .config/dotnet-tools.json   # dotnet-ef em versão fixa, a do EF Core
 ├── .env.example
 ├── CLAUDE.md                   # regras para o Claude Code
-└── CONTRIBUTING.md
+├── CONTRIBUTING.md
+└── DESIGN.md                   # referência visual do web/
 ```
 
 Estrutura-alvo — cada pasta nasce no card que a usa:

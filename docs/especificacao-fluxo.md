@@ -562,7 +562,7 @@ para `agendamentos` com `ON DELETE CASCADE`.
   `disponibilidades`, `agendamentos`, `notificacoes` (009).
 - **Fora do RLS**, `WHERE` manual obrigatório: `usuarios`, `memberships`, `tenants`,
   `sessoes`, `convites`. São lidas antes de existir contexto de tenant.
-- Tenant por transação: `set_config('app.tenant_id', $1, true)` via `ComTenant`,
+- Tenant por transação: `set_config('app.tenant_id', $1, true)` via `AppDb.IniciarComTenant`,
   nunca `SET`. Sem tenant definido, a função devolve `NULL` e nenhuma linha volta.
 - O RLS não separa prestadores; isso é o `Escopo` (§2.2).
 - `app_user`: não é dono, sem `BYPASSRLS`. `REVOKE DELETE ON agendamentos FROM
