@@ -37,6 +37,19 @@
   box-sizing: border-box;
 }
 
+/* Elementos-hospedeiro dos componentes Angular não entram no layout: os filhos ficam
+   onde estariam no HTML (flex, grid e seletores como .lateral .menu continuam valendo). */
+app-root,
+app-menu,
+app-botao-tema,
+app-carregando,
+app-mensagem-erro,
+app-vazio,
+app-agendamentos,
+app-novo-agendamento {
+  display: contents;
+}
+
 body {
   margin: 0;
   background: var(--fundo);
