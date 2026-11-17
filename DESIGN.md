@@ -1,9 +1,10 @@
 # Design — Dayspot
 
-Referência visual do `web/`. A fonte é o canvas **Smart Booking — design system**
-(<https://claude.ai/artifact/5wVbMpoFcFtUr87MYhSVQc>), com os boards Sistema (claro e
-premium dark), Marca e as telas de referência. Mudou o canvas, muda este arquivo no
-mesmo PR que levar a mudança para o código.
+Referência visual do `web/`. A identidade é a **Dayspot** (folha de contato
+`assets-dev` e a "Identidade visual — referência rápida"): ameixa, ponto pêssego e
+Nunito. As telas de referência continuam as do canvas anterior (estrutura, medidas e
+componentes), agora com as cores e a fonte abaixo. Mudou a identidade, muda este
+arquivo no mesmo PR que levar a mudança para o código.
 
 Direção **Grade**: calma e precisa, como uma grade de horários. Cada região tem uma
 superfície, e a cor aparece só em ação, seleção e exceção.
@@ -15,8 +16,8 @@ superfície, e a cor aparece só em ação, seleção e exceção.
    não têm selo).
 3. **Um nível de cartão.** Dentro dele, separe com espaço e preenchimento. Borda só em
    campo.
-4. **Azul em ação e seleção; verde na marca, no sucesso e no hover.** O resto é marinho
-   e cinza.
+4. **Ameixa na marca, em ação e seleção; pêssego só no ponto do símbolo e no hover do
+   menu; verde só no sucesso.** O resto é tinta e cinza quente.
 5. A **nav** (menu lateral) é a única superfície de cor sólida.
 6. **Top-bar** em `superficie` com linha fina embaixo: branca no claro e um tom acima
    do fundo no escuro, para se destacar dele nos dois temas (o canvas usava a cor da
@@ -31,7 +32,7 @@ superfície, e a cor aparece só em ação, seleção e exceção.
 
 | | Celular (até 1023 px) | Desktop (1024 px ou mais) |
 |---|---|---|
-| Menu | Gaveta de 304 px (`<dialog>` modal) aberta pelo botão de menu; logo e "Fechar" no topo | Menu lateral fixo de 232 px em `nav`; logo (símbolo 28, nome 18) no topo |
+| Menu | Gaveta de 304 px (`<dialog>` modal) aberta pelo botão de menu; logo e "Fechar" no topo | Menu lateral fixo de 232 px em `nav`; logo (símbolo 28, nome 20) no topo |
 | Top-bar | 56 px: menu, título (16/500), tema, busca e conta | 64 px: título (15/500) à esquerda; tema, busca e conta à direita |
 | Ação principal | Botão flutuante de 56 px, raio 16, no canto inferior direito | Botão primário no cabeçalho da página |
 | Conteúdo | padding 16 × 20 | padding 24 × 40, centralizado em até 1040 px |
@@ -54,46 +55,49 @@ ou o tema escolhido no botão da top-bar).
 
 | Token | Claro | Escuro | Uso |
 |---|---|---|---|
-| `fundo` | `#F4F5F2` | `#060C17` | fundo do app |
-| `superficie` | `#FFFFFF` | `#0B1322` | cartão e folha |
-| `afundado` | `#ECEEEA` | `#121C2E` | trilho e botão secundário |
-| `linha` | `#E1E4DF` | `#1A2538` | divisória |
-| `linha-forte` | `#CDD2CB` | `#26334A` | borda de campo e ponto livre |
-| `texto` | `#0B1F3A` | `#E8ECF2` | texto principal (marinho do logo) |
-| `texto-2` | `#5B6878` | `#8A96A8` | secundário, rótulo de apoio |
-| `texto-3` | `#97A1AD` | `#5A677A` | placeholder, desabilitado |
-| `nav` | `#0B1F3A` | `#03070F` | menu lateral, logo branco |
-| `marca` | `#0F6E56` | `#0F6E56` | pílula do logo e sucesso (ícone no escuro: `#34A07E`) |
-| `sucesso-suave` | `#E3F1EC` | `#0E2E26` | fundo do aviso de sucesso |
-| `destaque` | `#1D4F91` | `#5B8BD6` | ação, seleção, "agora" |
-| `destaque-texto` | `#1D4F91` | `#8FB1E6` | link (hover em verde: `#0F6E56` / `#34A07E`) |
-| `agendado` | `#E8EEF7` | `#1A2B48` | bloco de agendamento (hora em `destaque`; no escuro `#A8C1E6`) |
-| `sobre-cor` | `#FFFFFF` | `#060C17` | texto sobre `destaque` ou `marca` |
+| `fundo` | `#FBF7F5` | `#140C10` | fundo do app (papel) |
+| `superficie` | `#FFFFFF` | `#1E1419` | cartão e folha |
+| `afundado` | `#F3ECE9` | `#2A1D23` | trilho e botão secundário |
+| `linha` | `#EFE4DF` | `#33242B` | divisória |
+| `linha-forte` | `#DCCFCB` | `#46333C` | borda de campo e ponto livre |
+| `texto` | `#1A1417` | `#F3E9EC` | texto principal (tinta) |
+| `texto-2` | `#6B5F64` | `#B3A2A9` | secundário, rótulo de apoio |
+| `texto-3` | `#A3979C` | `#75636B` | placeholder, desabilitado |
+| `nav` | `#86315C` | `#3A1A2B` | menu lateral, logo claro |
+| `marca` | `#86315C` | `#E07F9E` | traço do símbolo fora da nav |
+| `ponto` | `#F4A08A` | `#F4A08A` | ponto do símbolo, hover do ícone no menu |
+| `sucesso` | `#1F6B4A` | `#6FCB9C` | texto e ícone de sucesso |
+| `sucesso-suave` | `#E3F3EA` | `#12291F` | fundo do aviso de sucesso |
+| `destaque` | `#86315C` | `#E07F9E` | ação, seleção, "agora" |
+| `destaque-texto` | `#86315C` | `#EBA0BA` | link (hover: `#5E1F40` / `#F4A08A`) |
+| `agendado` | `#F7E6E3` | `#3A2230` | bloco de agendamento (hora em `destaque`) |
+| `sobre-cor` | `#FFFFFF` | `#140C10` | texto sobre `destaque` ou `nav` |
 | `atencao` | `#935A00` | `#E3B062` | ponto e texto de atenção |
 | `atencao-suave` | `#FCF1DC` | `#2B2214` | fundo do selo e aviso de atenção |
 | `perigo` | `#B3261E` | `#F0908A` | texto e ação destrutiva, erro |
 | `perigo-suave` | `#FBEAE8` | `#2E1A1D` | fundo do selo e aviso de erro |
 
-Foco: anel de 3 px em `destaque` com transparência (`rgba(29,79,145,.22)` no claro,
-`rgba(91,139,214,.32)` no escuro) e borda do campo em `destaque`.
+Na nav (ameixa nos dois temas) o texto do menu é `#F3DDE6`, o item ativo leva branco a
+16 % e o hover branco a 10 %.
+
+Foco: anel de 3 px em `destaque` com transparência (`rgba(134,49,92,.22)` no claro,
+`rgba(224,127,158,.32)` no escuro) e borda do campo em `destaque`.
 
 ## Tipografia
 
-**Sora** só no logo, título de tela sem top-bar (entrar) e número de destaque.
-**Inter** no resto.
+**Nunito** em tudo: logo, títulos e texto. Arredondada como o símbolo.
 
 | Papel | Fonte | Tamanho / altura |
 |---|---|---|
-| Título de página (top-bar) | Inter 500 | 15 / 24 no desktop, 16 / 24 no celular |
-| Título de tela sem top-bar | Sora 600 | 24 / 32, espaçamento −2% |
-| Número de destaque (dinheiro) | Sora | 28 |
-| Título de seção | Inter 600 | 15 / 22 |
-| Texto e controles | Inter 400 (500 em controle) | 14 / 20 |
-| Rótulo e descrição | Inter 500 | 13 / 18 |
-| Metadado e selo | Inter 500 | 12 |
+| Título de página (top-bar) | Nunito 700 | 15 / 24 no desktop, 16 / 24 no celular |
+| Título de tela sem top-bar | Nunito 800 | 24 / 32, espaçamento −2% |
+| Número de destaque (dinheiro) | Nunito 800 | 28 |
+| Título de seção | Nunito 700 | 15 / 22 |
+| Texto e controles | Nunito 400 (700 em botão) | 14 / 20 |
+| Rótulo e descrição | Nunito 600 | 13 / 18 |
+| Metadado e selo | Nunito 600 | 12 |
 
-Hora e dinheiro com algarismos tabulares (`font-variant-numeric: tabular-nums`). No
-escuro, o peso 300 do logo só a partir de 18 px.
+Hora e dinheiro com algarismos tabulares (`font-variant-numeric: tabular-nums`).
 
 ## Forma
 
@@ -128,19 +132,21 @@ escuro, o peso 300 do logo só a partir de 18 px.
 
 ## Marca
 
-Símbolo: grade 3 × 3 de pontos (quadro de 120, raio 11 nos eixos 22, 60 e 98) com uma
-pílula de 60 × 22 no lugar do ponto central e do da direita: uma semana vista de cima,
-com um horário reservado. Nome em Sora minúsculo, colado, `smart` 300 + `booking` 700,
-espaçamento −3%.
+Símbolo: um "d" arredondado (haste, base e curva subindo à direita) com um ponto pêssego
+em cima: um lugar marcado no dia. Traço de 13 no quadro de 100, pontas e cantos
+redondos. Nome **dayspot** em Nunito 800, minúsculo, espaçamento −2%. Tagline: "O seu
+lugar no dia."
 
-- Pílula sempre em `marca`, em qualquer fundo. Pontos em marinho sobre fundo claro e
-  brancos sobre fundo escuro, inclusive no menu lateral e na gaveta (`nav`).
-- Favicon (aba do navegador): o ícone de app, isto é, fundo marinho com canto de 23%
-  e o símbolo a 58% do quadro, com pontos brancos. Lê em aba clara e escura.
-- Tamanhos: 16 (aba), 24 (barra do celular), 28 (menu lateral, nome a 18, 8 px entre os
+- Ponto sempre em `ponto` (pêssego). Traço em `marca` sobre fundo claro e em `#FBF7F5`
+  sobre ameixa ou escuro, inclusive no menu lateral e na gaveta (`nav`).
+- Favicon (aba do navegador): o ícone de app, isto é, fundo ameixa com canto de 23% e
+  o símbolo claro com o ponto pêssego. Lê em aba clara e escura.
+- Tamanhos: 16 (aba), 24 (barra do celular), 28 (menu lateral, nome a 20, 8 px entre os
   dois), 48 (entrar, versão empilhada com nome a 24).
-- Não pode: girar a grade, mudar a pílula de linha, pílula em âmbar ou vermelho (são
-  cores de estado), degradê, sombra, contorno ou nome esticado.
+- O degradê da marca (pêssego claro `#FDD4B1` → `#F4A08A` → `#C95F7C` → ameixa) é das
+  peças de divulgação, login e Telegram; no app ele não entra (regra 8).
+- Não pode: girar o símbolo, mudar o ponto de lugar ou de cor, ponto em âmbar ou
+  vermelho (são cores de estado), sombra, contorno ou nome esticado.
 
 ## Telas de referência
 
@@ -166,7 +172,7 @@ componentes acima (campos, botão primário, aviso de erro para o 409). A estrut
 ## Acessibilidade
 
 - Texto com contraste AA (4,5:1). Os pares de texto e estado acima passam, conferidos
-  em 17/10/2026. A exceção é `texto-3` (2,6:1 no claro, 3,2:1 no escuro), que fica
+  em 16/11/2026. A exceção é `texto-3` (2,8:1 no claro, 3,2:1 no escuro), que fica
   só em placeholder e desabilitado e nunca em texto que precisa ser lido. Cor nova
   precisa ser conferida.
 - Estado nunca só por cor: selo tem texto, cancelado é riscado e concluído tem ícone.

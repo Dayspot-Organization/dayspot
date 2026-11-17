@@ -3,32 +3,27 @@ import { ChangeDetectionStrategy, Component, input, output } from "@angular/core
 import { RouterLink, RouterLinkActive } from "@angular/router";
 import type { Tema } from "./tema";
 
-/** Símbolo (grade de horários com a pílula reservada) e nome. Sobre a nav: pontos brancos. */
+/** Símbolo (o "d" com o ponto: um lugar no dia) e nome. Sobre a nav: traço claro, ponto pêssego. */
 @Component({
   selector: "app-logo",
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: "logo" },
   template: `
-    <svg width="28" height="28" viewBox="0 0 120 120" aria-hidden="true">
-      @for (p of pontos; track p) {
-        <circle [attr.cx]="p[0]" [attr.cy]="p[1]" r="11" fill="#ffffff" />
-      }
-      <rect x="49" y="49" width="60" height="22" rx="11" fill="var(--marca)" />
+    <svg width="28" height="28" viewBox="20 16 64 64" aria-hidden="true">
+      <path
+        d="M32 29V70H50A20 20 0 0 0 70 50V44"
+        fill="none"
+        stroke="#fbf7f5"
+        stroke-width="13"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <circle cx="52.5" cy="29" r="7.8" fill="var(--ponto)" />
     </svg>
-    <span>smart<b>booking</b></span>
+    <span>dayspot</span>
   `,
 })
-export class Logo {
-  protected readonly pontos = [
-    [22, 22],
-    [60, 22],
-    [98, 22],
-    [22, 60],
-    [22, 98],
-    [60, 98],
-    [98, 98],
-  ];
-}
+export class Logo {}
 
 /** O menu só lista telas que existem. `navegar` avisa a gaveta para fechar. */
 @Component({

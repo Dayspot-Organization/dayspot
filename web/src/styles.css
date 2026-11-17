@@ -2,27 +2,29 @@
 :root {
   /* light-dark(claro, escuro): o color-scheme escolhe o lado. Sem data-tema, segue o sistema. */
   color-scheme: light dark;
-  --fundo: light-dark(#f4f5f2, #060c17);
-  --superficie: light-dark(#ffffff, #0b1322);
-  --afundado: light-dark(#eceeea, #121c2e);
-  --linha: light-dark(#e1e4df, #1a2538);
-  --linha-forte: light-dark(#cdd2cb, #26334a);
-  --texto: light-dark(#0b1f3a, #e8ecf2);
-  --texto-2: light-dark(#5b6878, #8a96a8);
-  --texto-3: light-dark(#97a1ad, #5a677a);
-  --nav: light-dark(#0b1f3a, #03070f);
-  --marca: #0f6e56;
-  --sucesso-suave: light-dark(#e3f1ec, #0e2e26);
-  --destaque: light-dark(#1d4f91, #5b8bd6);
-  --destaque-texto: light-dark(#1d4f91, #8fb1e6);
-  --agendado: light-dark(#e8eef7, #1a2b48);
-  --sobre-cor: light-dark(#ffffff, #060c17);
+  --fundo: light-dark(#fbf7f5, #140c10);
+  --superficie: light-dark(#ffffff, #1e1419);
+  --afundado: light-dark(#f3ece9, #2a1d23);
+  --linha: light-dark(#efe4df, #33242b);
+  --linha-forte: light-dark(#dccfcb, #46333c);
+  --texto: light-dark(#1a1417, #f3e9ec);
+  --texto-2: light-dark(#6b5f64, #b3a2a9);
+  --texto-3: light-dark(#a3979c, #75636b);
+  --nav: light-dark(#86315c, #3a1a2b);
+  --marca: light-dark(#86315c, #e07f9e);
+  --ponto: #f4a08a;
+  --sucesso: light-dark(#1f6b4a, #6fcb9c);
+  --sucesso-suave: light-dark(#e3f3ea, #12291f);
+  --destaque: light-dark(#86315c, #e07f9e);
+  --destaque-texto: light-dark(#86315c, #eba0ba);
+  --agendado: light-dark(#f7e6e3, #3a2230);
+  --sobre-cor: light-dark(#ffffff, #140c10);
   --atencao: light-dark(#935a00, #e3b062);
   --atencao-suave: light-dark(#fcf1dc, #2b2214);
   --perigo: light-dark(#b3261e, #f0908a);
   --perigo-suave: light-dark(#fbeae8, #2e1a1d);
-  --foco: light-dark(rgba(29, 79, 145, 0.22), rgba(91, 139, 214, 0.32));
-  --hover: light-dark(#0f6e56, #34a07e);
+  --foco: light-dark(rgba(134, 49, 92, 0.22), rgba(224, 127, 158, 0.32));
+  --hover: light-dark(#5e1f40, #f4a08a);
 }
 
 :root[data-tema="claro"] {
@@ -54,7 +56,7 @@ body {
   margin: 0;
   background: var(--fundo);
   color: var(--texto);
-  font: 14px/20px Inter, system-ui, sans-serif;
+  font: 14px/20px Nunito, system-ui, sans-serif;
 }
 
 button,
@@ -119,7 +121,7 @@ a:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: inherit;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .icone {
@@ -144,7 +146,7 @@ a:hover {
   padding: 16px 20px 96px;
 }
 
-/* Menu (gaveta e lateral): sempre sobre a nav marinho, nos dois temas. */
+/* Menu (gaveta e lateral): sempre sobre a nav ameixa, nos dois temas. */
 .gaveta,
 .lateral {
   flex-direction: column;
@@ -167,7 +169,7 @@ a:hover {
 }
 
 .gaveta::backdrop {
-  background: rgba(3, 7, 15, 0.55);
+  background: rgba(20, 12, 16, 0.55);
 }
 
 .gaveta-topo {
@@ -179,23 +181,15 @@ a:hover {
 }
 
 .gaveta-topo .icone {
-  color: #a9b6c7;
+  color: #e9d3dc;
 }
 
 .logo {
   display: flex;
   align-items: center;
   gap: 8px;
-  font: 17px/1 Sora, system-ui, sans-serif;
-  letter-spacing: -0.03em;
-}
-
-.logo b {
-  font-weight: 700;
-}
-
-.logo span {
-  font-weight: 300;
+  font: 800 19px/1 Nunito, system-ui, sans-serif;
+  letter-spacing: -0.02em;
 }
 
 .menu {
@@ -212,23 +206,23 @@ a:hover {
   height: 48px;
   padding: 0 12px;
   border-radius: 10px;
-  color: #c6d0dc;
+  color: #f3dde6;
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
 }
 
 .menu a:hover {
-  background: #132a4a;
+  background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
 }
 
 .menu a:hover svg {
-  color: #34a07e;
+  color: var(--ponto);
 }
 
 .menu a.active {
-  background: #1c3354;
+  background: rgba(255, 255, 255, 0.16);
   color: #ffffff;
 }
 
@@ -265,7 +259,7 @@ a:hover {
   border-radius: 8px;
   background: var(--destaque);
   color: var(--sobre-cor);
-  font-weight: 500;
+  font-weight: 700;
   text-decoration: none;
   cursor: pointer;
 }
@@ -288,7 +282,7 @@ a:hover {
   height: 56px;
   padding: 0;
   border-radius: 16px;
-  box-shadow: 0 12px 28px -10px rgba(11, 31, 58, 0.5);
+  box-shadow: 0 12px 28px -10px rgba(134, 49, 92, 0.5);
 }
 
 /* No celular o texto some da tela, mas continua sendo o nome acessível do botão. */
@@ -304,7 +298,7 @@ label {
   display: block;
   margin-bottom: 6px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 input,
@@ -449,7 +443,7 @@ select:focus-visible {
   .lateral .logo {
     height: 36px;
     padding: 0 10px;
-    font-size: 18px;
+    font-size: 20px;
   }
 
   .lateral .menu {
@@ -461,7 +455,7 @@ select:focus-visible {
     height: 36px;
     padding: 0 10px;
     border-radius: 8px;
-    color: #a9b6c7;
+    color: #f3dde6;
     font-size: 14px;
   }
 
