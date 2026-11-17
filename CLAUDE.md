@@ -7,10 +7,12 @@
 2. **O corpo da issue é o contrato**: critérios de aceite e dependências estão lá.
    Se o card depende de decisão em aberto, pare e pergunte.
 3. **Banco:** leia `docs/guia-banco-de-dados.md` antes de migration ou acesso a
-   dados. Sem ORM: SQL em `db/queries/`, Go gerado pelo sqlc. Tenant só por
-   `set_config('app.tenant_id', $1, true)` dentro de transação, nunca `SET`.
+   dados. Migrations no EF Core (`src/Api/Migrations/`), com SQL via
+   `migrationBuilder.Sql`; acesso a dados via EF Core em `src/Api/Dados/` (consultas
+   em `Consultas.cs`). Tenant só por `set_config('app.tenant_id', {tenantId}, true)`
+   dentro de transação, nunca `SET`.
 4. **API:** erros no formato de `docs/erros-api.md`, pelos helpers de
-   `internal/api/erros.go`.
+   `src/Api/Erros.cs`.
 5. **Git:** `CONTRIBUTING.md`. Branch a partir da `main`, um PR por card com
    `Closes #N`, nada de push direto na `main`.
 6. **Sem referência ao Claude no que vai para o GitHub.** Commits, PRs, comentários

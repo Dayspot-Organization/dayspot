@@ -28,12 +28,12 @@ Toda resposta de erro (status 4xx/5xx) tem `Content-Type: application/json` e es
 | 409    | `conflito_horario`    | Agendamento sobrepõe outro (SQLSTATE `23P01`). |
 | 500    | `erro_interno`        | Falha inesperada. Mensagem sempre genérica; o detalhe fica só no log do servidor. |
 
-Código novo entra aqui e em `internal/api/erros.go` no mesmo PR.
+Código novo entra aqui e em `src/Api/Erros.cs` no mesmo PR.
 
 ## Códigos previstos
 
-Decididos em 02/10/2026 e 23/10/2026; ainda não existem em `internal/api/erros.go`. Cada um
-sobe para a tabela de cima, junto com a constante no `erros.go`, no PR do card
+Decididos em 02/10/2026 e 23/10/2026; ainda não existem em `src/Api/Erros.cs`. Cada um
+sobe para a tabela de cima, junto com a constante no `Erros.cs`, no PR do card
 que o introduz.
 
 | Status | `codigo`           | Quando | Entra em |
@@ -65,11 +65,15 @@ ver); de outro prestador do **mesmo** tenant, para quem não é administrador,
 
 ## Backend
 
-Em `internal/api`:
+Em `src/Api/Erros.cs`:
 
-```go
-responderErro(w, http.StatusNotFound, CodigoNaoEncontrado, "Cliente não encontrado.", nil)
-responderErroInterno(w, r, err) // loga err, responde 500 genérico
+```csharp
+return Erros.Responder(StatusCodes.Status404NotFound, Erros.NaoEncontrado, "Cliente não encontrado.");
+return Erros.CampoInvalido("nome", "Informe o nome (até 200 caracteres)."); // 400 com detalhes.campo
+Erros.Interno(ctx, erro); // loga o erro, responde 500 genérico
 ```
 
-Nunca passe `err.Error()` como mensagem: erros do Postgres/pgx vão só para o log.
+O handler não precisa capturar exceção para responder 500: o middleware de transação
+(`src/Api/Transacao.cs`) captura, desfaz a transação e responde com `Erros.Interno`.
+
+Nunca passe `e.Message` como mensagem: erros do Postgres/Npgsql vão só para o log.
