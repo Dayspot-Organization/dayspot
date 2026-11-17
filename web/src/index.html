@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <base href="/" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#86315C" />
+    <meta name="description" content="Agenda com hora marcada. O lembrete vai pelo Telegram." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Dayspot" />
+    <meta property="og:title" content="Dayspot · O seu lugar no dia." />
+    <meta property="og:description" content="Agenda com hora marcada. O lembrete vai pelo Telegram." />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="/twitter-card.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400..900&display=swap" />
+    <title>Dayspot</title>
+    <!-- Tema salvo (seletor do menu) antes do primeiro desenho, para não piscar o claro. -->
+    <script>
+      try {
+        const t = localStorage.getItem("tema");
+        if (t === "claro" || t === "escuro") document.documentElement.dataset.tema = t;
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <app-root></app-root>
+  </body>
+</html>

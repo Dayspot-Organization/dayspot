@@ -500,9 +500,9 @@ O `tenant_id` fica **na sessão**, não no token, e é revalidado contra
 elimina a classe de bug do "token continua válido para o tenant antigo" — e a
 remoção de um membro corta o acesso na hora.
 
-**Cookie e origem em desenvolvimento.** Com o Vite em `:5173` e a API em `:8080`,
-o cookie `SameSite=Lax` não é enviado nas chamadas da SPA. Use o proxy do Vite
-(`server.proxy`) para a API responder na mesma origem — a alternativa
+**Cookie e origem em desenvolvimento.** Com o `ng serve` em `:4200` e a API em `:8080`,
+o cookie `SameSite=Lax` não é enviado nas chamadas da SPA. Use o proxy do `ng serve`
+(`web/proxy.conf.json`) para a API responder na mesma origem — a alternativa
 (`SameSite=None` + CORS com credenciais) obriga a implementar CSRF já no MVP.
 
 ## 10. Fatias

@@ -109,7 +109,7 @@ cp .env.example .env
 | `MIGRATIONS_DATABASE_URL` | Conexão do **dono das tabelas** — só migrations (`dotnet ef`) e seed. Ignora o RLS. |
 | `DATABASE_URL` | Conexão do **`app_user`** — a única que a API usa. Sujeita ao RLS. |
 | `TENANT_FIXO`, `PRESTADOR_FIXO`, `SERVICO_FIXO` | Sessão e serviço da Fatia 1, sem login (UUIDs do seed, tabela abaixo). Temporárias: saem na 2.12 e na 6.6 |
-| `PORTA_HTTP` | Porta da API; opcional, padrão `8080` (a do proxy do Vite) |
+| `PORTA_HTTP` | Porta da API; opcional, padrão `8080` (a do proxy do `ng serve`) |
 
 > São duas conexões de propósito. Se a API conectar como dono das tabelas, todas as policies de RLS viram decoração e o isolamento entre organizações deixa de existir.
 
@@ -140,14 +140,14 @@ por `ROLLBACK`.
 ```bash
 cd web
 npm install
-npm run dev     # http://localhost:5173 (abre em /agendamentos)
+npm run dev     # ng serve em http://localhost:4200 (abre em /agendamentos)
 npm run lint    # o CI roda lint e build em todo PR
-npm run build   # tsc em modo strict + build do Vite
+npm run build   # ng build (TypeScript strict e templates strict)
 ```
 
-As rotas ficam em `web/src/route.ts` (React Router); `App.tsx` é o layout com a navegação e o `<Outlet />` onde cada tela aparece.
+Componentes standalone com signals. As rotas ficam em `web/src/app/app.routes.ts` (`@angular/router`); `app.ts`/`app.html` é o layout com a navegação e o `<router-outlet />` onde cada tela aparece. Chamadas à API passam pelo serviço `Api` (`web/src/app/api/`), com o `HttpClient` e um interceptor que converte as respostas de erro (`docs/erros-api.md`).
 
-Em dev, o Vite repassa tudo que começa com `/api` para a API em `localhost:8080`, sem reescrever o caminho: a SPA chama `/api/agendamentos` na mesma origem e não precisa de CORS.
+Em dev, o `ng serve` repassa (`web/proxy.conf.json`) tudo que começa com `/api` para a API em `localhost:8080`, sem reescrever o caminho: a SPA chama `/api/agendamentos` na mesma origem e não precisa de CORS.
 
 ---
 
@@ -230,7 +230,7 @@ dayspot/
 ├── tests/Api.Tests/            # xUnit: API, config, auth e banco (isolamento por RLS, exclusão de tenant, consultas)
 ├── db/seed.sql                 # dois tenants fictícios (alfa e beta)
 ├── db/init/                    # app_user.sh: cria o app_user no primeiro up do compose
-├── web/                        # frontend React 19 + Vite (migração para Angular em andamento)
+├── web/                        # frontend Angular
 ├── docs/
 ├── compose.yml                 # PostgreSQL 16 + Adminer
 ├── Dayspot.slnx                # solução .NET (API + testes)
