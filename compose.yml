@@ -1,3 +1,6 @@
+# Nome fixo do projeto: containers e volume (dayspot_postgres_data) não dependem da pasta do clone.
+name: dayspot
+
 services:
   db:
     image: postgres:16-alpine
