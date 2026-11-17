@@ -1,9 +1,17 @@
 # Requisitos — Dayspot
 
 Sistema de agendamentos multi-tenant com notificação via Telegram.
-Documento de requisitos e decisões técnicas — **v0.10** · 23/10/2026
+Documento de requisitos e decisões técnicas — **v0.11** · 16/11/2026
 
 > Fonte da verdade: este arquivo. A pasta do Drive é histórico.
+
+## Mudanças desde a v0.10
+
+Migração do frontend (#146), 16/11/2026.
+
+| # | O que mudou | Onde |
+|---|---|---|
+| 1 | Frontend passa de React + Vite para Angular; proxy de dev do `ng serve` em `:4200` | 1, 5, 9, 12 |
 
 ## Mudanças desde a v0.9
 
@@ -89,7 +97,7 @@ Plataforma web multi-tenant para gestão de agendamentos. Cada tenant (empresa)
 tem seus próprios usuários (administradores e prestadores), serviços, horários e clientes,
 isolados dos demais. Notificações de lembrete enviadas via bot do Telegram.
 
-**Stack:** API em Go, frontend em React, banco PostgreSQL (acesso via pgx v5 +
+**Stack:** API em Go, frontend em Angular, banco PostgreSQL (acesso via pgx v5 +
 sqlc), worker de notificações em Go, Telegram Bot API.
 
 ## 2. Ordem de execução
@@ -159,7 +167,7 @@ agendam os mesmos clientes. Só o administrador gerencia serviços e preços.
 ## 5. Arquitetura
 
 ```
-[React SPA] --HTTPS/JSON--> [API Go] ---> [PostgreSQL + RLS]
+[Angular SPA] --HTTPS/JSON--> [API Go] ---> [PostgreSQL + RLS]
                                 |            ^
                                 v            |
                        [Worker Go (scheduler)]
@@ -482,9 +490,9 @@ O `tenant_id` fica **na sessão**, não no token, e é revalidado contra
 elimina a classe de bug do "token continua válido para o tenant antigo" — e a
 remoção de um membro corta o acesso na hora.
 
-**Cookie e origem em desenvolvimento.** Com o Vite em `:5173` e a API em `:8080`,
-o cookie `SameSite=Lax` não é enviado nas chamadas da SPA. Use o proxy do Vite
-(`server.proxy`) para a API responder na mesma origem — a alternativa
+**Cookie e origem em desenvolvimento.** Com o `ng serve` em `:4200` e a API em `:8080`,
+o cookie `SameSite=Lax` não é enviado nas chamadas da SPA. Use o proxy do `ng serve`
+(`web/proxy.conf.json`) para a API responder na mesma origem — a alternativa
 (`SameSite=None` + CORS com credenciais) obriga a implementar CSRF já no MVP.
 
 ## 10. Fatias
@@ -536,7 +544,7 @@ usuário do tenant A e verificar que nenhum endpoint retorna dado do tenant B (i
 | Papéis | `text` + `CHECK`, não `ENUM` |
 | Acesso a dados | pgx v5 (`pgxpool`) + sqlc; sem ORM (motivo no guia de banco, §Acesso a dados) |
 | UUID no Go | `google/uuid` via `overrides` do sqlc |
-| Rotas da API | Tudo sob `/api`; proxy do Vite sem reescrita |
+| Rotas da API | Tudo sob `/api`; proxy do `ng serve` sem reescrita |
 | Serviço na Fatia 1 | `SERVICO_FIXO` no config até a 6.6 |
 | Sessão na Fatia 1 | `TENANT_FIXO` e `PRESTADOR_FIXO` no config até a 2.12 |
 | Configuração | Só `internal/config` lê o ambiente; `.env` via `godotenv`, ambiente real vence o arquivo |

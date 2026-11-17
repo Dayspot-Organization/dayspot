@@ -58,7 +58,7 @@ ver); de outro prestador do **mesmo** tenant, para quem não é administrador,
 
 - Resposta não-2xx: ler `erro.codigo` e `erro.mensagem`.
 - Corpo fora desse formato com status 502/503/504: tratar como erro de rede (`ErroRede`),
-  porque é o proxy sem alcançar a API (o do Vite responde 502 com ela fora do ar).
+  porque é o proxy sem alcançar a API (o do `ng serve` responde 502 com ela fora do ar).
 - Corpo fora desse formato com outro status (HTML de erro etc.): tratar como `erro_interno`.
 - Falha do próprio `fetch` (sem resposta): erro de rede (`ErroRede`).
 - Código desconhecido: exibir `mensagem`.

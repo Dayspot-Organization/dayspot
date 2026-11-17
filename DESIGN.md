@@ -44,7 +44,7 @@ superfície, e a cor aparece só em ação, seleção e exceção.
 - **Tema:** botão redondo de 36 px (`afundado`) no canto direito da top-bar, com o
   ícone do tema em uso (sol ou lua); o clique alterna entre claro e escuro. Sem
   escolha, segue o sistema (`prefers-color-scheme`). A escolha fica no `localStorage`
-  e é aplicada em `<html data-tema>` antes do React montar, para não piscar.
+  e é aplicada em `<html data-tema>` antes do Angular montar, para não piscar.
 
 ## Tokens de cor
 

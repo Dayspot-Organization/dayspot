@@ -2,7 +2,7 @@
 
 ![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL%2016-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Angular](https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Telegram](https://img.shields.io/badge/Telegram%20Bot%20API-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)
@@ -62,7 +62,7 @@ O isolamento entre organizações é garantido no banco, com Row Level Security,
 | Camada | Tecnologia |
 | --- | --- |
 | API e worker | Go |
-| Frontend | React + Vite + TypeScript |
+| Frontend | Angular + TypeScript |
 | Banco | PostgreSQL 16 |
 | Migrations | goose v3.28.0 |
 | Acesso a dados | pgx v5 + sqlc |
@@ -111,7 +111,7 @@ cp .env.example .env
 | `DATABASE_URL` | Conexão do **`app_user`** — a única que a API usa. Sujeita ao RLS. |
 | `GOOSE_DRIVER`, `GOOSE_MIGRATION_DIR` | Lidas pelo goose automaticamente |
 | `TENANT_FIXO`, `PRESTADOR_FIXO`, `SERVICO_FIXO` | Sessão e serviço da Fatia 1, sem login (UUIDs do seed, tabela abaixo). Temporárias: saem na 2.12 e na 6.6 |
-| `PORTA_HTTP` | Porta da API; opcional, padrão `8080` (a do proxy do Vite) |
+| `PORTA_HTTP` | Porta da API; opcional, padrão `8080` (a do proxy do `ng serve`) |
 
 > São duas conexões de propósito. Se a API conectar como dono das tabelas, todas as policies de RLS viram decoração e o isolamento entre organizações deixa de existir.
 
@@ -134,14 +134,14 @@ go test ./...
 ```bash
 cd web
 npm install
-npm run dev     # http://localhost:5173 (abre em /agendamentos)
+npm run dev     # ng serve em http://localhost:4200 (abre em /agendamentos)
 npm run lint    # o CI roda lint e build em todo PR
-npm run build   # tsc em modo strict + build do Vite
+npm run build   # ng build (TypeScript strict e templates strict)
 ```
 
-As rotas ficam em `web/src/route.ts` (React Router); `App.tsx` é o layout com a navegação e o `<Outlet />` onde cada tela aparece.
+Componentes standalone com signals. As rotas ficam em `web/src/app/app.routes.ts` (`@angular/router`); `app.ts`/`app.html` é o layout com a navegação e o `<router-outlet />` onde cada tela aparece. Chamadas à API passam pelo serviço `Api` (`web/src/app/api/`), com o `HttpClient` e um interceptor que converte as respostas de erro (`docs/erros-api.md`).
 
-Em dev, o Vite repassa tudo que começa com `/api` para a API em `localhost:8080`, sem reescrever o caminho: a SPA chama `/api/agendamentos` na mesma origem e não precisa de CORS.
+Em dev, o `ng serve` repassa (`web/proxy.conf.json`) tudo que começa com `/api` para a API em `localhost:8080`, sem reescrever o caminho: a SPA chama `/api/agendamentos` na mesma origem e não precisa de CORS.
 
 ---
 
@@ -224,7 +224,7 @@ thesmartbooking/
 ├── db/queries/                 # queries SQL anotadas para o sqlc
 ├── db/seed.sql                 # dois tenants fictícios (alfa e beta)
 ├── db/init/                    # app_user.sh: cria o app_user no primeiro up do compose
-├── web/                        # frontend React + Vite
+├── web/                        # frontend Angular
 ├── docs/
 ├── compose.yml                 # PostgreSQL 16 + Adminer
 ├── sqlc.yaml                   # configuração do sqlc (pgx v5, schema = db/migrations)
