@@ -1,8 +1,10 @@
 # 📅 Dayspot
 
-![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)
+![.NET](https://img.shields.io/badge/.NET%2010-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
+![EF Core](https://img.shields.io/badge/EF%20Core-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL%2016-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![React](https://img.shields.io/badge/React%2019-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Angular](https://img.shields.io/badge/Angular%20%28em%20migra%C3%A7%C3%A3o%29-DD0031?style=for-the-badge&logo=angular&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Telegram](https://img.shields.io/badge/Telegram%20Bot%20API-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)
@@ -61,13 +63,15 @@ O isolamento entre organizações é garantido no banco, com Row Level Security,
 
 | Camada | Tecnologia |
 | --- | --- |
-| API e worker | Go |
-| Frontend | React + Vite + TypeScript |
-| Banco | PostgreSQL 16 |
-| Migrations | goose v3.28.0 |
-| Acesso a dados | pgx v5 + sqlc |
+| API e worker | C# — ASP.NET Core (.NET 10), minimal APIs |
+| Acesso a dados | EF Core + Npgsql |
+| Migrations | EF Core Migrations, com o SQL escrito à mão (`migrationBuilder.Sql`) |
+| Banco | PostgreSQL 16, com Row Level Security |
+| Frontend | React 19 + Vite + TypeScript, em migração para Angular |
 | Notificações | Telegram Bot API |
 | Ambiente | Docker Compose |
+
+> 🔄 **Frontend em migração.** O `web/` continua em React 19 + Vite, e os comandos da seção [Frontend](#frontend) são os de hoje. A troca para Angular está em andamento; este README muda quando ela chegar ao `web/`.
 
 ---
 
@@ -76,17 +80,12 @@ O isolamento entre organizações é garantido no banco, com Row Level Security,
 ### Pré-requisitos
 
 - [Docker](https://docs.docker.com/get-docker/) com Compose
-- [Go](https://go.dev/dl/) 1.27+
+- [.NET SDK](https://dotnet.microsoft.com/download) 10
 - [Node.js](https://nodejs.org/) 22+ — para o `web/`
-- [goose](https://github.com/pressly/goose) v3.28.0
-- [sqlc](https://sqlc.dev/) v1.31.1
 - `psql` (cliente do PostgreSQL) — para o seed e a verificação de isolamento
 
-```bash
-go install github.com/pressly/goose/v3/cmd/goose@v3.28.0
-go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
-# instalam em ~/go/bin, que precisa estar no PATH
-```
+O `dotnet-ef` (migrations) não se instala à parte: é ferramenta local, com versão fixa em
+`.config/dotnet-tools.json` (a mesma do EF Core). `dotnet tool restore` baixa.
 
 ### Clonando
 
@@ -107,9 +106,8 @@ cp .env.example .env
 | --- | --- |
 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Criam o banco e o **dono das tabelas** no container do `compose.yml` |
 | `APP_USER_PASSWORD` | Senha do `app_user`, criado por `db/init/app_user.sh`; a mesma da `DATABASE_URL` |
-| `GOOSE_DBSTRING` | Conexão do **dono das tabelas** — migrations e seed. Ignora o RLS. |
+| `MIGRATIONS_DATABASE_URL` | Conexão do **dono das tabelas** — só migrations (`dotnet ef`) e seed. Ignora o RLS. |
 | `DATABASE_URL` | Conexão do **`app_user`** — a única que a API usa. Sujeita ao RLS. |
-| `GOOSE_DRIVER`, `GOOSE_MIGRATION_DIR` | Lidas pelo goose automaticamente |
 | `TENANT_FIXO`, `PRESTADOR_FIXO`, `SERVICO_FIXO` | Sessão e serviço da Fatia 1, sem login (UUIDs do seed, tabela abaixo). Temporárias: saem na 2.12 e na 6.6 |
 | `PORTA_HTTP` | Porta da API; opcional, padrão `8080` (a do proxy do Vite) |
 
@@ -119,15 +117,23 @@ cp .env.example .env
 
 ```bash
 docker compose up -d      # PostgreSQL em localhost:5467, Adminer em localhost:8088
-goose up                  # aplica as migrations
-set -a; . ./.env; set +a  # exporta o .env para o psql e o go test
-psql "$GOOSE_DBSTRING" -f db/seed.sql   # o teste de repositório lê o seed
+dotnet tool restore       # dotnet-ef na versão do .config/dotnet-tools.json
+dotnet ef database update --project src/Api   # aplica as migrations (MIGRATIONS_DATABASE_URL do .env)
+set -a; . ./.env; set +a  # exporta o .env para o psql e o dotnet test
+psql "$MIGRATIONS_DATABASE_URL" -f db/seed.sql   # os testes de banco leem o seed
 
-go run ./cmd/api          # sobe em :8080 lendo o .env; sem variável obrigatória, não sobe
-go test ./...
+dotnet run --project src/Api   # sobe em :8080 lendo o .env; sem variável obrigatória, não sobe
+dotnet test                    # sem DATABASE_URL e MIGRATIONS_DATABASE_URL exportadas, os testes de banco são pulados
+dotnet format                  # o CI roda com --verify-no-changes
 ```
 
+Os testes de banco rodam contra o Postgres do `compose.yml`, com as migrations
+e o seed aplicados: gravam e apagam os próprios dados (UUIDs `f…`) e desfazem o resto
+por `ROLLBACK`.
+
 > ⚠️ O `db/init/app_user.sh` só roda com o volume do banco vazio. Se o seu volume é anterior ao `db/init`, rode `docker compose down -v` uma vez antes do `up` — isso **apaga os dados locais** do banco.
+
+> ⚠️ **Banco de dev migrado pela ferramenta antiga.** Quem migrou o banco antes das EF Core Migrations tem a tabela `goose_db_version` e não tem `__EFMigrationsHistory`: o `dotnet ef database update` tentaria criar tudo de novo e falharia. Não há transição: recrie o banco com `docker compose down -v` e `docker compose up -d` (**apaga os dados locais**), depois aplique as migrations e o seed. No `.env`, troque as três variáveis `GOOSE_*` pela `MIGRATIONS_DATABASE_URL` do `.env.example`.
 
 ### Frontend
 
@@ -149,24 +155,25 @@ Em dev, o Vite repassa tudo que começa com `/api` para a API em `localhost:8080
 
 ### Migrations
 
-O goose lê `GOOSE_DRIVER`, `GOOSE_DBSTRING` e `GOOSE_MIGRATION_DIR` do `.env` sozinho, então os comandos abaixo rodam contra o Postgres do `compose.yml`, com ele de pé:
+EF Core Migrations em `src/Api/Migrations/`: uma classe por migration, com o SQL escrito à mão em `migrationBuilder.Sql(...)` no `Up` e no `Down`. O `dotnet ef` conecta como dono das tabelas pela `MIGRATIONS_DATABASE_URL`, lida do ambiente ou do `.env`, então os comandos abaixo rodam contra o Postgres do `compose.yml`, com ele de pé:
 
 | Comando | O que faz |
 | --- | --- |
-| `goose status` | O que já rodou e o que falta |
-| `goose up` | Aplica todas as pendentes |
-| `goose down` | Desfaz só a última |
-| `goose down-to 0` | Desfaz todas |
-| `goose -s create nome sql` | Nova migration com o próximo número sequencial (ex.: `00010_nome.sql`; `-s` = numeração sequencial) |
+| `dotnet ef migrations list --project src/Api` | O que já rodou e o que falta |
+| `dotnet ef database update --project src/Api` | Aplica todas as pendentes |
+| `dotnet ef database update <migration> --project src/Api` | Volta até a migration dada, desfazendo as posteriores |
+| `dotnet ef database update 0 --project src/Api` | Desfaz todas |
+| `dotnet ef migrations add NomeDaMigration --project src/Api` | Nova migration e snapshot atualizado; troque o corpo gerado pelo SQL em `migrationBuilder.Sql` |
+| `dotnet ef migrations has-pending-model-changes --project src/Api` | Falha se o modelo do `AppDb` mudou sem migration (o CI roda) |
 
-Toda migration tem `Up` e `Down`, e os dois são testados: `goose up`, `goose down-to 0`, `goose up`.
+Toda migration tem `Up` e `Down`, e os dois são testados: `database update`, `database update 0`, `database update`.
 
 ### Seed e verificação de isolamento
 
 ```bash
 set -a; source .env; set +a   # exporta as variáveis para o psql
-goose up                      # o seed exige o banco migrado
-psql "$GOOSE_DBSTRING" -f db/seed.sql   # como dono das tabelas: ignora o RLS
+dotnet ef database update --project src/Api   # o seed exige o banco migrado
+psql "$MIGRATIONS_DATABASE_URL" -f db/seed.sql   # como dono das tabelas: ignora o RLS
 
 # sem psql instalado, pelo container do compose:
 docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < db/seed.sql
@@ -174,7 +181,7 @@ docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < d
 
 O seed roda numa transação só e para no primeiro erro. Pode rodar de novo: o que já
 existe (mesmo `id`) é pulado. No CI, com o Postgres do workflow (0.17), o passo é o
-mesmo, depois do `goose up`: `psql "$GOOSE_DBSTRING" -f db/seed.sql`.
+mesmo, depois das migrations: `psql "$MIGRATIONS_DATABASE_URL" -f db/seed.sql`.
 
 O seed cria dois tenants fictícios (`alfa` e `beta`). São dois de propósito: com um só não é possível testar isolamento entre tenants. UUIDs fixos usados no config da T1 (1.1):
 
@@ -213,21 +220,22 @@ Hoje:
 ```
 dayspot/
 ├── .github/
-│   ├── workflows/ci.yml        # em push e PR para a main: Go (gofmt, build, vet; Postgres 16 com migrations up, down e up de novo; testes, inclusive os de banco) e web (lint, build)
+│   ├── workflows/ci.yml        # em push e PR para a main: .NET (dotnet format, build; Postgres 16 com migrations up, down e up de novo; testes, inclusive os de banco) e web (lint, build)
 │   └── pull_request_template.md
-├── cmd/api/                    # entrada da API
-├── internal/api/               # handlers e formato de erro (docs/erros-api.md)
-├── internal/config/            # leitura das variáveis de ambiente e do .env
-├── internal/storage/           # repositórios — todo método recebe tenantID; testes de isolamento (RLS), exclusão de tenant e repositório
-├── internal/storage/db/        # código gerado pelo sqlc — não editar à mão
-├── db/migrations/              # goose, SQL puro
-├── db/queries/                 # queries SQL anotadas para o sqlc
+├── src/Api/                    # a API (ASP.NET Core): Program.cs, rotas e handlers, Erros.cs (docs/erros-api.md), Transacao.cs
+├── src/Api/Config.cs           # leitura das variáveis de ambiente e do .env — só ele lê o ambiente
+├── src/Api/Auth/               # hash de senha (Argon2id) e normalização de e-mail
+├── src/Api/Dados/              # EF Core: AppDb (mapeia o schema das migrations), Modelos e Consultas — toda consulta recebe tenantId
+├── src/Api/Migrations/         # EF Core Migrations: SQL em migrationBuilder.Sql (Up e Down) e o snapshot do modelo
+├── tests/Api.Tests/            # xUnit: API, config, auth e banco (isolamento por RLS, exclusão de tenant, consultas)
 ├── db/seed.sql                 # dois tenants fictícios (alfa e beta)
 ├── db/init/                    # app_user.sh: cria o app_user no primeiro up do compose
-├── web/                        # frontend React + Vite
+├── web/                        # frontend React 19 + Vite (migração para Angular em andamento)
 ├── docs/
 ├── compose.yml                 # PostgreSQL 16 + Adminer
-├── sqlc.yaml                   # configuração do sqlc (pgx v5, schema = db/migrations)
+├── Dayspot.slnx                # solução .NET (API + testes)
+├── global.json                 # versão do SDK e runner de testes
+├── .config/dotnet-tools.json   # dotnet-ef em versão fixa, a do EF Core
 ├── .env.example
 ├── CLAUDE.md                   # regras para o Claude Code
 └── CONTRIBUTING.md
@@ -236,8 +244,8 @@ dayspot/
 Estrutura-alvo — cada pasta nasce no card que a usa:
 
 ```
-cmd/worker/            # consumidor da fila de notificações (T3)
-internal/notificador/  # interface Notificador + implementação Telegram (T3)
+src/Worker/            # consumidor da fila de notificações (T3)
+src/Api/Notificador/   # interface Notificador + implementação Telegram (T3)
 ```
 
 ---
@@ -277,7 +285,7 @@ Especificação completa em [`docs/erros-api.md`](docs/erros-api.md).
 
 🔑 **Contexto de tenant.** Toda requisição abre transação e define `app.tenant_id` via `set_config(..., true)`. Nunca `SET` sem escopo local — com pool de conexões, a variável vaza para a requisição seguinte e vira vazamento de dados entre organizações.
 
-📦 **Repositórios.** SQL mora em `db/queries/` e vira Go pelo sqlc (driver pgx v5). O código gerado nunca é chamado direto dos handlers: passa por `internal/storage`, onde nenhuma função aceita query sem receber `tenantID`. O RLS é a rede de segurança; a camada de repositório é a primeira barreira.
+📦 **Acesso a dados.** EF Core com Npgsql. O schema nasce das EF Core Migrations, com SQL escrito à mão; o `AppDb` só o mapeia. As consultas ficam em `src/Api/Dados/Consultas.cs`, e toda uma recebe `tenantId` e filtra por ele. O RLS é a rede de segurança; o filtro na consulta é a primeira barreira.
 
 🕐 **Fuso horário.** Tudo em UTC no banco (`timestamptz`). Conversão apenas na borda, usando `tenants.fuso_horario`.
 
