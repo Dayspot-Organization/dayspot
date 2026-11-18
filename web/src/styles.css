@@ -1,5 +1,46 @@
-/* Tokens: tokens.css (fonte única, v2.1). Regras: DESIGN.md e docs/design-system/README.md. Mobile first: a base é o celular, min-width cresce. */
-@import "./tokens.css";
+/* Tokens, estrutura e regras: DESIGN.md. Mobile first: a base é o celular, min-width cresce. */
+:root {
+  /* light-dark(claro, escuro): o color-scheme escolhe o lado. Sem data-tema, segue o sistema. */
+  color-scheme: light dark;
+  --fundo: light-dark(#fbf7f5, #1a1417);
+  --superficie: light-dark(#ffffff, #251d21);
+  --afundado: light-dark(#f4ecea, #30272b);
+  --linha: light-dark(#eee3e0, #3a3035);
+  --linha-forte: light-dark(#dccfcb, #463a40);
+  --texto: light-dark(#1a1417, #f3e9ec);
+  --texto-2: light-dark(#6b5f64, #b3a2a9);
+  --texto-3: light-dark(#8e807f, #857880);
+  --nav: light-dark(#86315c, #3a1a2b);
+  --marca: light-dark(#86315c, #ee9dbf);
+  --ponto: #f4a08a;
+  --sucesso: light-dark(#1f6b4a, #6fcb9c);
+  --sucesso-suave: light-dark(#e3f3ea, #12291f);
+  --destaque: light-dark(#86315c, #ee9dbf);
+  --destaque-texto: light-dark(#86315c, #ee9dbf);
+  --agendado: light-dark(#f7e6e3, #3d2632);
+  --sobre-cor: light-dark(#ffffff, #1a1417);
+  --atencao: light-dark(#935a00, #e3b062);
+  --atencao-suave: light-dark(#fcf1dc, #2b2214);
+  --perigo: light-dark(#b3261e, #f0908a);
+  --perigo-suave: light-dark(#fbeae8, #2e1a1d);
+  --foco: light-dark(rgba(134, 49, 92, 0.22), rgba(238, 157, 191, 0.32));
+  --hover: light-dark(#5e1f40, #f4a08a);
+  /* Ilustrações de estado (assets da marca): as cores entram por variável. */
+  --ilu-traco: light-dark(#8e807f, #857880);
+  --ilu-linha: light-dark(#eee3e0, #463a40);
+  --ilu-preenchimento: light-dark(#f4ecea, #30272b);
+  --ilu-superficie: light-dark(#ffffff, #251d21);
+  --ilu-ponto: light-dark(#86315c, #ee9dbf);
+  --ilu-acento: light-dark(#f4a08a, #f4b49a);
+}
+
+:root[data-tema="claro"] {
+  color-scheme: light;
+}
+
+:root[data-tema="escuro"] {
+  color-scheme: dark;
+}
 
 * {
   box-sizing: border-box;
@@ -20,9 +61,9 @@ app-novo-agendamento {
 
 body {
   margin: 0;
-  background: var(--ds-fundo);
-  color: var(--ds-texto);
-  font: 16px/24px var(--ds-texto-fonte);
+  background: var(--fundo);
+  color: var(--texto);
+  font: 14px/20px Nunito, system-ui, sans-serif;
 }
 
 button,
@@ -36,15 +77,15 @@ h1 {
 }
 
 a {
-  color: var(--ds-acao);
+  color: var(--destaque-texto);
 }
 
 a:hover {
-  color: var(--ds-acao-pressionada);
+  color: var(--hover);
 }
 
 :focus-visible {
-  outline: 3px solid var(--ds-foco);
+  outline: 2px solid var(--destaque);
   outline-offset: 2px;
 }
 
@@ -63,8 +104,8 @@ a:hover {
   height: 56px;
   padding: 0 8px;
   /* Um tom acima do fundo nos dois temas (branca no claro). */
-  background: var(--ds-superficie);
-  border-bottom: 1px solid var(--ds-divisoria);
+  background: var(--superficie);
+  border-bottom: 1px solid var(--linha);
 }
 
 .trilha {
@@ -79,7 +120,7 @@ a:hover {
 }
 
 .trilha a {
-  color: var(--ds-texto-2);
+  color: var(--texto-2);
   text-decoration: none;
 }
 
@@ -99,25 +140,25 @@ a:hover {
   height: 44px;
   padding: 0;
   border: none;
-  border-radius: 999px;
+  border-radius: 10px;
   background: transparent;
   color: inherit;
   cursor: pointer;
 }
 
 .conteudo {
-  max-width: 1240px;
+  max-width: 1040px;
   margin: 0 auto;
   /* Embaixo, espaço para o botão flutuante não cobrir o fim da lista. */
   padding: 16px 20px 96px;
 }
 
-/* Menu (gaveta e lateral) em superfície, como as telas de trabalho; cor só no item ativo. */
+/* Menu (gaveta e lateral): sempre sobre a nav ameixa, nos dois temas. */
 .gaveta,
 .lateral {
   flex-direction: column;
-  background: var(--ds-superficie);
-  color: var(--ds-texto);
+  background: var(--nav);
+  color: #ffffff;
 }
 
 .gaveta {
@@ -135,7 +176,7 @@ a:hover {
 }
 
 .gaveta::backdrop {
-  background: var(--ds-veu);
+  background: rgba(20, 12, 16, 0.55);
 }
 
 .gaveta-topo {
@@ -147,41 +188,15 @@ a:hover {
 }
 
 .gaveta-topo .icone {
-  color: var(--ds-texto-2);
+  color: #e9d3dc;
 }
 
-/* Logo: sempre o SVG da marca; a versão escura entra no tema escuro. */
 .logo {
   display: flex;
   align-items: center;
-}
-
-.logo img {
-  display: block;
-  height: 26px;
-  width: auto;
-}
-
-.logo .logo-escuro {
-  display: none;
-}
-
-:root[data-tema="escuro"] .logo .logo-claro {
-  display: none;
-}
-
-:root[data-tema="escuro"] .logo .logo-escuro {
-  display: block;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-tema="claro"]) .logo .logo-claro {
-    display: none;
-  }
-
-  :root:not([data-tema="claro"]) .logo .logo-escuro {
-    display: block;
-  }
+  gap: 8px;
+  font: 800 19px/1 Nunito, system-ui, sans-serif;
+  letter-spacing: -0.02em;
 }
 
 .menu {
@@ -195,23 +210,27 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 44px;
-  padding: 0 14px;
-  border-radius: 999px;
-  color: var(--ds-texto);
+  height: 48px;
+  padding: 0 12px;
+  border-radius: 10px;
+  color: #f3dde6;
   font-size: 15px;
   font-weight: 600;
   text-decoration: none;
 }
 
-/* Hover mais discreto que o ativo; o ativo não muda o peso. */
 .menu a:hover {
-  background: var(--ds-fundo);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.menu a:hover svg {
+  color: var(--ponto);
 }
 
 .menu a.active {
-  background: var(--ds-hover);
-  color: var(--ds-acao);
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
 }
 
 /* Tema: botão redondo no canto direito da top-bar. */
@@ -220,19 +239,19 @@ a:hover {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   margin: 0 4px 0 auto;
   padding: 0;
   border: none;
   border-radius: 999px;
-  background: var(--ds-hover);
-  color: var(--ds-texto);
+  background: var(--afundado);
+  color: var(--texto);
   cursor: pointer;
 }
 
 .botao-tema:hover {
-  background: color-mix(in srgb, var(--ds-texto) 6%, var(--ds-hover));
+  color: var(--hover);
 }
 
 /* Botão primário; na página da Agenda vira flutuante no celular (.novo). */
@@ -240,27 +259,26 @@ a:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  height: 44px;
-  padding: 0 20px;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
   border: none;
-  border-radius: 999px;
-  background: var(--ds-acao);
-  color: var(--ds-acao-texto);
-  font-weight: 600;
+  border-radius: 8px;
+  background: var(--destaque);
+  color: var(--sobre-cor);
+  font-weight: 700;
   text-decoration: none;
   cursor: pointer;
 }
 
 .botao:hover {
-  background: var(--ds-acao-pressionada);
-  color: var(--ds-acao-texto);
+  color: var(--sobre-cor);
 }
 
 .botao:disabled {
-  background: var(--ds-hover);
-  color: var(--ds-texto-3);
-  cursor: not-allowed;
+  background: var(--afundado);
+  color: var(--texto-3);
+  cursor: default;
 }
 
 .novo {
@@ -271,7 +289,7 @@ a:hover {
   height: 56px;
   padding: 0;
   border-radius: 16px;
-  box-shadow: var(--ds-sombra-forte);
+  box-shadow: 0 12px 28px -10px rgba(134, 49, 92, 0.5);
 }
 
 /* No celular o texto some da tela, mas continua sendo o nome acessível do botão. */
@@ -286,47 +304,36 @@ a:hover {
 label {
   display: block;
   margin-bottom: 6px;
-  font-size: 15px;
-  line-height: 22px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 input,
 select {
   width: 100%;
-  height: 48px;
-  padding: 0 16px;
-  border: 1.5px solid var(--ds-borda);
-  border-radius: 16px;
-  background: var(--ds-superficie);
-  color: var(--ds-texto);
-}
-
-input:hover,
-select:hover {
-  border-color: var(--ds-texto-2);
-}
-
-input::placeholder {
-  color: var(--ds-texto-3);
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--linha-forte);
+  border-radius: 8px;
+  background: var(--superficie);
+  color: var(--texto);
 }
 
 input:focus-visible,
 select:focus-visible {
   outline: none;
-  border-color: var(--ds-acao);
-  box-shadow: 0 0 0 3px var(--ds-foco);
+  border-color: var(--destaque);
+  box-shadow: 0 0 0 3px var(--foco);
 }
 
 .cartao {
-  background: var(--ds-superficie);
-  border: 1px solid var(--ds-divisoria);
-  border-radius: 24px;
+  background: var(--superficie);
+  border-radius: 12px;
   padding: 8px;
 }
 
 .secundario {
-  color: var(--ds-texto-2);
+  color: var(--texto-2);
 }
 
 /* Estado vazio: ilustração da marca e o texto embaixo, centralizados. */
@@ -337,7 +344,7 @@ select:focus-visible {
   gap: 8px;
   padding: 24px 16px;
   text-align: center;
-  color: var(--ds-texto-2);
+  color: var(--texto-2);
 }
 
 .vazio svg {
@@ -384,17 +391,17 @@ select:focus-visible {
   align-items: center;
   justify-content: space-between;
   margin: 0;
-  padding: 12px 16px;
-  border-radius: 16px;
-  background: var(--ds-erro-chip);
-  color: var(--ds-erro-texto);
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--perigo-suave);
+  color: var(--perigo);
 }
 
 .botao-texto {
-  height: 36px;
+  height: 28px;
   padding: 0 8px;
   border: none;
-  border-radius: 999px;
+  border-radius: 8px;
   background: transparent;
   color: inherit;
   font-weight: 600;
@@ -429,7 +436,7 @@ select:focus-visible {
   grid-template-columns: 1fr auto;
   gap: 4px 12px;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: 8px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -438,7 +445,7 @@ select:focus-visible {
 }
 
 .lista li:nth-child(even) {
-  background: var(--ds-fundo);
+  background: var(--fundo);
 }
 
 .formulario {
@@ -477,7 +484,7 @@ select:focus-visible {
 @media (min-width: 1024px) {
   .app {
     display: grid;
-    grid-template-columns: 248px minmax(0, 1fr);
+    grid-template-columns: 232px minmax(0, 1fr);
   }
 
   .lateral {
@@ -485,18 +492,32 @@ select:focus-visible {
     top: 0;
     display: flex;
     height: 100dvh;
-    padding: 24px 14px;
-    border-right: 1px solid var(--ds-divisoria);
+    padding: 14px 16px 24px;
   }
 
   .lateral .logo {
-    padding: 4px 14px 0;
+    height: 36px;
+    padding: 0 10px;
+    font-size: 20px;
   }
 
   .lateral .menu {
     margin-top: 24px;
   }
 
+  .lateral .menu a {
+    gap: 10px;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 8px;
+    color: #f3dde6;
+    font-size: 14px;
+  }
+
+  .lateral .menu a:hover,
+  .lateral .menu a.active {
+    color: #ffffff;
+  }
 
   .abrir-menu {
     display: none;
@@ -504,7 +525,7 @@ select:focus-visible {
 
   .topo {
     height: 64px;
-    padding: 0 32px;
+    padding: 0 40px;
   }
 
   .trilha {
@@ -513,15 +534,15 @@ select:focus-visible {
   }
 
   .conteudo {
-    padding: 28px 32px 48px;
+    padding: 24px 40px;
   }
 
   .novo {
     position: static;
     width: auto;
-    height: 44px;
-    padding: 0 20px;
-    border-radius: 999px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 8px;
     box-shadow: none;
   }
 

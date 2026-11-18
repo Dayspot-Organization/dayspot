@@ -3,14 +3,21 @@ import { ChangeDetectionStrategy, Component, input, output } from "@angular/core
 import { RouterLink, RouterLinkActive } from "@angular/router";
 import type { Tema } from "./tema";
 
-/** Logo horizontal da marca (SVG, nunca redigitado); a versão escura entra no tema escuro. */
+/** Símbolo (simbolo-negativo.svg dos assets da marca, sobre a nav) e nome. */
 @Component({
   selector: "app-logo",
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: "logo" },
   template: `
-    <img class="logo-claro" src="/logo-horizontal.svg" alt="Dayspot" width="125" height="26" />
-    <img class="logo-escuro" src="/logo-horizontal-escuro.svg" alt="Dayspot" width="125" height="26" />
+    <svg width="25" height="28" viewBox="4 0 56 64" aria-hidden="true">
+      <path d="M15 6A6 6 0 0 1 21 12V52A6 6 0 0 1 9 52V12A6 6 0 0 1 15 6Z" fill="#fbf7f5" />
+      <path
+        d="M15 58H30A26 26 0 0 0 54.727 23.966A5.976 5.976 0 0 0 43.361 27.659A15 15 0 0 1 29 47H15Z"
+        fill="#fbf7f5"
+      />
+      <path d="M27.25 12.75A7.25 7.25 0 1 0 41.75 12.75A7.25 7.25 0 1 0 27.25 12.75Z" fill="var(--ponto)" />
+    </svg>
+    <span>dayspot</span>
   `,
 })
 export class Logo {}
@@ -28,7 +35,7 @@ export class Logo {}
             <path d="M14.5 4.5H7.5a4 4 0 0 0-4 4v8a4 4 0 0 0 4 4h9a4 4 0 0 0 4-4v-5.5" />
             <path d="M8 11.5h4M8 15.5h7.5" />
           </g>
-          <circle cx="19" cy="5.5" r="2.1" fill="var(--ds-acao)" />
+          <circle cx="19" cy="5.5" r="2.1" fill="var(--ponto)" />
         </svg>
         Agenda
       </a>
