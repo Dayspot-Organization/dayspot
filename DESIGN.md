@@ -20,6 +20,9 @@ clientes isolados.
   disponibilidade, equipe; veem o financeiro do mês.
 - **Página do cliente (sem conta):** aberta pelo link da mensagem do WhatsApp; mostra os
   próprios horários com "Vou sim" / "Preciso cancelar". A grade é só do estabelecimento.
+- **Página pública da empresa (sem conta):** o cliente final agenda sozinho em
+  `/agendar/:slug`, escolhendo serviço, profissional e horário e informando nome e
+  telefone. Vê só os horários ocupados, nunca dados de outros clientes.
 - **Avisos:** confirmação, lembrete e cancelamento vão pelo **WhatsApp**, por um job que
   chama a API. O Telegram saiu.
 - **Trabalho principal da tela mais usada (Agenda):** ver o dia/semana de relance e marcar
