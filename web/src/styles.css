@@ -506,6 +506,7 @@ select:disabled {
   flex-direction: column;
   gap: var(--ds-e-4);
   padding: var(--ds-e-6);
+  scroll-margin-top: calc(var(--ds-l-topbar) + var(--ds-e-4)); /* não para atrás da top-bar fixa */
 }
 
 @media (min-width: 1024px) {

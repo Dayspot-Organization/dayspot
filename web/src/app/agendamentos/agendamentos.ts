@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from "@angular/core";
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  signal,
+} from "@angular/core";
 import { rxResource } from "@angular/core/rxjs-interop";
 import { RouterLink } from "@angular/router";
 import { Api, type Agendamento, ErroRede, mensagemDeErro } from "../api";
@@ -81,6 +90,7 @@ interface Coluna {
 })
 export class Agendamentos {
   private readonly api = inject(Api);
+  private readonly injector = inject(Injector);
 
   /** Relógio da linha "agora" e de "hoje": anda de minuto em minuto. */
   protected readonly agora = signal(new Date());
@@ -260,7 +270,22 @@ export class Agendamentos {
   }
 
   protected selecionar(id: string) {
-    this.selecionadoId.update((atual) => (atual === id ? null : id));
+    if (this.selecionadoId() === id) {
+      this.fecharDetalhe();
+      return;
+    }
+    this.selecionadoId.set(id);
+    // Abaixo de 1024 px o painel fica depois da grade: leva o usuário até ele.
+    if (window.matchMedia("(min-width: 1024px)").matches) return;
+    afterNextRender(
+      () => {
+        const painel = document.getElementById("painel-detalhe");
+        const semAnimacao = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        painel?.focus({ preventScroll: true });
+        painel?.scrollIntoView({ behavior: semAnimacao ? "auto" : "smooth", block: "start" });
+      },
+      { injector: this.injector },
+    );
   }
 
   /** Esc ou o botão fechar: some o painel e o foco volta ao bloco de origem. */
