@@ -496,6 +496,7 @@ select:disabled {
 
 .com-painel {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--ds-e-5);
   align-items: start;
 }
