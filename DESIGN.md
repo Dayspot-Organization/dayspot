@@ -60,8 +60,8 @@ cliente"). Telas de trabalho são neutras; a cor aparece em ação, seleção e 
 - **Ícones:** traço 2,25, pontas redondas, grade 24, um ponto cheio por ícone em ameixa.
 - **Ilustrações de estado:** traço e preenchimento em cinza quente, ponto em ameixa.
 - Sistema de design: [`docs/design-system/README.md`](docs/design-system/README.md). Tokens:
-  [`docs/design-system/tokens.css`](docs/design-system/tokens.css). O código (`web/src/styles.css`) ainda usa os
-  tokens v1; a migração está descrita na seção 8 do README do sistema.
+  [`docs/design-system/tokens.css`](docs/design-system/tokens.css). O código usa os mesmos tokens
+  (`web/src/tokens.css`, carregado antes de `web/src/styles.css`); a migração está na seção 8 do README do sistema.
 
 ## Referências
 
@@ -124,11 +124,13 @@ referência. Pendente (ver Perguntas abertas).
   todos passam AA.
 - 2026-11-17 — Tokens v2.1 com fonte única num arquivo (`docs/design-system/tokens.css`, depois
   `web/src/tokens.css`); o menu deixa de ser ameixa sólido e o logo passa a ser sempre o SVG da
-  marca — regra da identidade. Implementação no código pendente.
+  marca — regra da identidade.
+- 2026-11-17 — Código migrado para a v2.1 junto com a adaptação da Agenda: `web/src/tokens.css`,
+  casca nova (menu em superfície, top-bar 64 px), Hanken Grotesk + Nunito, logo com os traços do SVG
+  da marca. Status na grade: `confirmado` aparece como Aguardando até existir `presenca_confirmada_em`.
 
 ## Perguntas abertas
 
-- **Migração do código para a v2.1:** tokens, casca (menu, top-bar), fontes e logo. Precisa de card.
 - **Referências externas:** há produtos para seguir (ou evitar) nas próximas telas?
 - **Telas sem desenho:** escolha de empresa no login, aceite de convite, versões de celular.
 - **Faltou e Aguardando × Confirmado** dependem de mudança no banco

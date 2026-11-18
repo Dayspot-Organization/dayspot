@@ -21,13 +21,20 @@ export function mensagemDeErro(e: unknown): string {
   return "Erro inesperado. Tente de novo.";
 }
 
+/** Valores da coluna agendamentos.status (migration 00007). */
+export type StatusAgendamento = "confirmado" | "cancelado" | "concluido";
+
 /** Datas em ISO 8601 UTC com offset, ex.: "2026-10-09T13:00:00Z". */
 export interface Agendamento {
   id: string;
   cliente_id: string;
   cliente_nome: string;
+  servico_id: string;
+  prestador_id: string;
   inicio: string;
   fim: string;
+  status: StatusAgendamento;
+  valor_centavos: number;
 }
 
 export type NovoAgendamento = Pick<Agendamento, "cliente_id" | "inicio" | "fim">;

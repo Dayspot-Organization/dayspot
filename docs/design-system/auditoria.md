@@ -9,7 +9,7 @@ raios só 12 / 16 / 24 / pílula (4 nas marcas do gráfico e 50 % no avatar).
 | # | Gravidade | Achado | Status | Onde mudou |
 |---|---|---|---|---|
 | 1 | Alta | Iniciais do avatar com 11 e 12 px | **Corrigido**: 13 px | Agenda, Financeiro, Disponibilidade |
-| 2 | Alta | Tokens do código na v1 (borda de campo 1,4:1, menu ameixa, Nunito em tudo) | **Proposto, pendente no código**: tokens em [`tokens.css`](tokens.css), menu em superfície, Hanken + Nunito, logo em SVG ([README](README.md) §8) | a mudar: `web/src/styles.css`, `app/layout.ts`, `index.html`, `public/` |
+| 2 | Alta | Tokens do código na v1 (borda de campo 1,4:1, menu ameixa, Nunito em tudo) | **Corrigido** na adaptação da Agenda: `web/src/tokens.css`, menu em superfície, Hanken + Nunito, logo com os traços do SVG ([README](README.md) §8) | `web/src/tokens.css`, `web/src/styles.css`, `app/layout.ts`, `index.html` |
 | 3 | Alta | Foco e desabilitado sem desenho na maioria dos controles | **Corrigido**: regras de hover, foco (só teclado), desabilitado e carregando no CSS das 13 telas; nova seção "Estados de interação" em `telas/Main.dc.html` | 13 telas |
 | 4 | Alta | Carregando = desabilitado com o texto trocado ("Salvando…") | **Corrigido**: mantém a largura, indicador por cima, `aria-busy`; desabilitado é outro estado | `Main`; CSS das 13 telas |
 | 5 | Média | Hex soltos em todas as telas | **Corrigido**: 100 % `var(--ds-*)`, inclusive SVG e gráfico; a seção escura de `Main` usa `data-tema="escuro"` com os mesmos tokens | 13 telas |
@@ -34,7 +34,6 @@ raios só 12 / 16 / 24 / pílula (4 nas marcas do gráfico e 50 % no avatar).
 
 ### Ainda em aberto
 
-- Migrar o código para a v2.1 (item 2).
 - Descrição e `og:description` de `web/src/index.html` ainda citam Telegram.
 - Na tabela de Clientes (1440 px com o painel aberto), nome e WhatsApp quebram em duas linhas.
   Proposta: telefone sem quebra e a coluna "Última visita" escondida quando o painel abre.

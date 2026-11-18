@@ -6,7 +6,7 @@ identidade), com as correções da auditoria aplicadas. Leia o [`DESIGN.md`](../
 | O quê | Onde |
 |---|---|
 | Brief (produto, voz, marca, decisões) | [`DESIGN.md`](../../DESIGN.md) |
-| Tokens (fonte única) | [`tokens.css`](tokens.css) (ainda não aplicado no código: seção 8) |
+| Tokens (fonte única) | [`tokens.css`](tokens.css) (também em `web/src/tokens.css`: seção 8) |
 | Logos usados nas telas | [`assets/`](assets/) |
 | Telas de referência v2.1 | [`telas/`](telas/) (abra o `.dc.html` no navegador) |
 | Auditoria e correções | [`auditoria.md`](auditoria.md) |
@@ -434,28 +434,28 @@ sem texto.
 
 | Peça | Onde os estados estão desenhados (`telas/`) | Código | Situação |
 |---|---|---|---|
-| Botão | §4.1 · `Main` | `web/src/styles.css` (`.botao`) | v1 no código |
-| Campo | §4.2 · `Main` | `web/src/styles.css` (`input`, `select`) | v1 no código |
+| Botão | §4.1 · `Main` | `web/src/styles.css` (`.botao`, `.botao-secundario`, `.botao-terciario`, `.botao-pequeno`, `.botao-icone`) | no código |
+| Campo | §4.2 · `Main` | `web/src/styles.css` (`.campo`, `input`, `select`, `.busca`) | no código |
 | Horário | §4.3 · `Novo-agendamento-web` | — | só design |
 | Dia | §4.4 · `Novo-agendamento-web` | — | só design |
 | Opção em cartão | §4.5 · `Novo-agendamento-web` | — | só design |
-| Segmento | §4.6 · `Main`, `Agenda-semana` | — | só design |
-| Interruptor | §4.7 · `Main`, `Disponibilidade` | — | só design |
+| Segmento | §4.6 · `Main`, `Agenda-semana` | `web/src/styles.css` (`.segmento`) | no código |
+| Interruptor | §4.7 · `Main`, `Disponibilidade` | `web/src/styles.css` (`.interruptor`) | no código |
 | Filtro de pessoa / abas | §4.8 · `Agenda-semana`, `Financeiro`, `Disponibilidade` | — | só design |
-| Chip de status | §4.9 · `Main` | — | só design |
-| Bloco da agenda | §4.10 · `Main`, `Agenda-semana` | — | só design |
-| Aviso | §4.11 · `Main`, `Clientes` | `app-mensagem-erro` | v1 no código |
+| Chip de status | §4.9 · `Main` | `web/src/styles.css` (`.chip`, `.st-*`) | no código |
+| Bloco da agenda | §4.10 · `Main`, `Agenda-semana` | `app/agendamentos` (`.bloco`) | no código |
+| Aviso | §4.11 · `Main`, `Clientes` | `app-mensagem-erro` (`.aviso`) | no código (erro) |
 | Diálogo de confirmação | §4.12 · `Meus-horarios-cliente`, `Prestadores` | — | só design |
-| Cartão / painel lateral | §4.13 · todas | — | só design |
+| Cartão / painel lateral | §4.13 · todas | `web/src/styles.css` (`.cartao`, `.painel`, `.com-painel`) | no código |
 | Tabela | §4.14 · `Clientes`, `Servicos`, `Financeiro` | — | só design |
-| Lista de pares | §4.15 · `Agenda-semana` | — | só design |
-| Avatar | §4.16 · todas | — | só design |
+| Lista de pares | §4.15 · `Agenda-semana` | `web/src/styles.css` (`.pares`) | no código |
+| Avatar | §4.16 · todas | `web/src/styles.css` (`.avatar`) | no código |
 | Passo numerado | §4.17 · `Novo-agendamento-web` | — | só design |
 | Faixa de horário | §4.18 · `Disponibilidade` | — | só design |
-| Estado vazio | §4.19 · `Estados` | `app-vazio` | v1 no código |
-| Esqueleto | §4.20 · `Estados` | `app-carregando` | v1 no código |
+| Estado vazio | §4.19 · `Estados` | `app-vazio` | no código |
+| Esqueleto | §4.20 · `Estados` | `.esqueleto`; `app-carregando` (genérico) | no código |
 | Gráfico de barras | §4.21 · `Financeiro` | — | só design |
-| Casca (menu, top-bar, cabeçalho) | §4.22 · todas | `web/src/app/layout.ts` | v1 no código |
+| Casca (menu, top-bar, cabeçalho) | §4.22 · todas | `web/src/app/layout.ts`, `app.html` (`.cabecalho-tela`) | no código, sem seletor de empresa nem rodapé de usuário (ainda não há login) |
 | Painel de marca | §4.23 · `Entrar`, `Cadastro` | — | só design |
 
 ---
@@ -510,10 +510,11 @@ Escreva para cada item: aplica (e o que mostra), não aplica (por quê) ou pergu
 
 ## 8. Migração dos tokens do código (v1 → v2.1)
 
-**Ainda não feita.** O código continua nos tokens v1, dentro de `web/src/styles.css`. A proposta,
-para um card próprio: copiar [`tokens.css`](tokens.css) para `web/src/tokens.css`, importar em
-`styles.css`, trocar os nomes pelo mapa abaixo, levar o menu para superfície, carregar Hanken
-Grotesk + Nunito 700–800 e usar os logos de [`assets/`](assets/) em `web/public/`.
+**Feita na adaptação da Agenda.** [`tokens.css`](tokens.css) foi copiado para `web/src/tokens.css`
+(carregado antes de `styles.css` pelo `angular.json`), os nomes seguem o mapa abaixo, o menu foi para
+superfície, Hanken Grotesk + Nunito 700–800 entram pelo `index.html` e o logo usa os traços de
+`logo-horizontal.svg` direto no componente, com as cores pelos tokens (`--ds-acao` no símbolo,
+`--ds-texto` no nome: os mesmos valores das versões clara e escura).
 
 | v1 (código) | v2.1 | Mudança |
 |---|---|---|

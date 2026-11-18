@@ -1,46 +1,6 @@
-/* Tokens, estrutura e regras: DESIGN.md. Mobile first: a base é o celular, min-width cresce. */
-:root {
-  /* light-dark(claro, escuro): o color-scheme escolhe o lado. Sem data-tema, segue o sistema. */
-  color-scheme: light dark;
-  --fundo: light-dark(#fbf7f5, #1a1417);
-  --superficie: light-dark(#ffffff, #251d21);
-  --afundado: light-dark(#f4ecea, #30272b);
-  --linha: light-dark(#eee3e0, #3a3035);
-  --linha-forte: light-dark(#dccfcb, #463a40);
-  --texto: light-dark(#1a1417, #f3e9ec);
-  --texto-2: light-dark(#6b5f64, #b3a2a9);
-  --texto-3: light-dark(#8e807f, #857880);
-  --nav: light-dark(#86315c, #3a1a2b);
-  --marca: light-dark(#86315c, #ee9dbf);
-  --ponto: #f4a08a;
-  --sucesso: light-dark(#1f6b4a, #6fcb9c);
-  --sucesso-suave: light-dark(#e3f3ea, #12291f);
-  --destaque: light-dark(#86315c, #ee9dbf);
-  --destaque-texto: light-dark(#86315c, #ee9dbf);
-  --agendado: light-dark(#f7e6e3, #3d2632);
-  --sobre-cor: light-dark(#ffffff, #1a1417);
-  --atencao: light-dark(#935a00, #e3b062);
-  --atencao-suave: light-dark(#fcf1dc, #2b2214);
-  --perigo: light-dark(#b3261e, #f0908a);
-  --perigo-suave: light-dark(#fbeae8, #2e1a1d);
-  --foco: light-dark(rgba(134, 49, 92, 0.22), rgba(238, 157, 191, 0.32));
-  --hover: light-dark(#5e1f40, #f4a08a);
-  /* Ilustrações de estado (assets da marca): as cores entram por variável. */
-  --ilu-traco: light-dark(#8e807f, #857880);
-  --ilu-linha: light-dark(#eee3e0, #463a40);
-  --ilu-preenchimento: light-dark(#f4ecea, #30272b);
-  --ilu-superficie: light-dark(#ffffff, #251d21);
-  --ilu-ponto: light-dark(#86315c, #ee9dbf);
-  --ilu-acento: light-dark(#f4a08a, #f4b49a);
-}
-
-:root[data-tema="claro"] {
-  color-scheme: light;
-}
-
-:root[data-tema="escuro"] {
-  color-scheme: dark;
-}
+/* Estilos globais v2.1. Tokens em tokens.css (carregado antes, pelo angular.json); regras e
+   componentes em docs/design-system/README.md. Nenhum hex aqui: tudo por var(--ds-*).
+   Web primeiro (1440 px); abaixo de 1024 px o menu vira gaveta. */
 
 * {
   box-sizing: border-box;
@@ -61,114 +21,184 @@ app-novo-agendamento {
 
 body {
   margin: 0;
-  background: var(--fundo);
-  color: var(--texto);
-  font: 14px/20px Nunito, system-ui, sans-serif;
+  background: var(--ds-fundo);
+  color: var(--ds-texto);
+  font: var(--ds-tx-corpo);
 }
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
+  color: inherit;
 }
 
-h1 {
+h1,
+h2,
+h3,
+p {
   margin: 0;
 }
 
 a {
-  color: var(--destaque-texto);
+  color: var(--ds-acao);
 }
 
 a:hover {
-  color: var(--hover);
+  color: var(--ds-acao-pressionada);
 }
 
+/* Foco só pelo teclado: anel de 3 px afastado 2 px (campos: 1 px, com a borda em ameixa). */
 :focus-visible {
-  outline: 2px solid var(--destaque);
+  outline: 3px solid var(--ds-foco);
   outline-offset: 2px;
 }
 
-/* Estrutura: celular com top-bar e gaveta; desktop com menu lateral fixo. */
+.so-leitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.secundario {
+  color: var(--ds-texto-2);
+}
+
+.legenda {
+  font: var(--ds-tx-legenda);
+  color: var(--ds-texto-2);
+}
+
+.numeros {
+  font-variant-numeric: tabular-nums;
+}
+
+.titulo-cartao {
+  font: var(--ds-tx-h3);
+}
+
+.ponto {
+  fill: var(--ds-acao);
+}
+
+/* ── Casca: menu lateral, top-bar e conteúdo (§4.22) ───────────────────── */
+
 .lateral {
   display: none;
+}
+
+.coluna {
+  min-width: 0;
 }
 
 .topo {
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   align-items: center;
-  gap: 2px;
-  height: 56px;
-  padding: 0 8px;
-  /* Um tom acima do fundo nos dois temas (branca no claro). */
-  background: var(--superficie);
-  border-bottom: 1px solid var(--linha);
+  gap: var(--ds-e-3);
+  height: var(--ds-l-topbar);
+  padding: 0 var(--ds-e-4);
+  background: var(--ds-fundo);
+  border-bottom: 1px solid var(--ds-divisoria);
 }
 
 .trilha {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
-  margin-left: 4px;
-  font-size: 16px;
-  line-height: 24px;
+  margin-right: auto;
+  font: var(--ds-tx-controle);
+  color: var(--ds-texto-2);
   white-space: nowrap;
 }
 
 .trilha a {
-  color: var(--texto-2);
+  color: inherit;
   text-decoration: none;
 }
 
-.trilha h1 {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: inherit;
-  font-weight: 700;
+.trilha a:hover {
+  color: var(--ds-texto);
 }
 
-.icone {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: none;
-  border-radius: 10px;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
+.trilha [aria-current] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ds-texto);
 }
 
 .conteudo {
-  max-width: 1040px;
-  margin: 0 auto;
-  /* Embaixo, espaço para o botão flutuante não cobrir o fim da lista. */
-  padding: 16px 20px 96px;
+  max-width: var(--ds-l-conteudo);
+  padding: var(--ds-e-6) var(--ds-e-4) var(--ds-e-12);
 }
 
-/* Menu (gaveta e lateral): sempre sobre a nav ameixa, nos dois temas. */
-.gaveta,
-.lateral {
+.logo {
+  display: block;
+  padding: 4px 14px 24px;
+}
+
+.logo svg {
+  display: block;
+  height: 26px;
+  width: auto;
+}
+
+.logo-simbolo {
+  fill: var(--ds-acao);
+}
+
+.logo-nome {
+  fill: var(--ds-texto);
+}
+
+.menu {
+  display: flex;
   flex-direction: column;
-  background: var(--nav);
-  color: #ffffff;
+  gap: 2px;
+}
+
+.menu a {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-e-3);
+  height: var(--ds-a-botao);
+  padding: 0 14px;
+  border-radius: var(--ds-raio-pilula);
+  color: var(--ds-texto);
+  font: var(--ds-tx-controle);
+  text-decoration: none;
+  transition: background-color var(--ds-t-rapido);
+}
+
+.menu a:hover {
+  background: var(--ds-fundo);
+}
+
+/* Ativo: fundo hover + ameixa, sem trocar o peso. */
+.menu a.ativo {
+  background: var(--ds-hover);
+  color: var(--ds-acao);
 }
 
 .gaveta {
-  width: 304px;
+  flex-direction: column;
+  width: var(--ds-l-menu);
   max-width: calc(100% - 56px);
   height: 100dvh;
   max-height: none;
   margin: 0;
-  padding: 6px 12px 20px;
+  padding: var(--ds-e-4) 14px var(--ds-e-6);
   border: none;
+  border-right: 1px solid var(--ds-divisoria);
+  background: var(--ds-superficie);
+  color: var(--ds-texto);
 }
 
 .gaveta[open] {
@@ -176,188 +206,573 @@ a:hover {
 }
 
 .gaveta::backdrop {
-  background: rgba(20, 12, 16, 0.55);
+  background: var(--ds-veu);
 }
 
 .gaveta-topo {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 44px;
-  padding-left: 8px;
+  margin-bottom: var(--ds-e-4);
 }
 
-.gaveta-topo .icone {
-  color: #e9d3dc;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font: 800 19px/1 Nunito, system-ui, sans-serif;
-  letter-spacing: -0.02em;
-}
-
-.menu {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: 16px;
-}
-
-.menu a {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 48px;
-  padding: 0 12px;
-  border-radius: 10px;
-  color: #f3dde6;
-  font-size: 15px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.menu a:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-}
-
-.menu a:hover svg {
-  color: var(--ponto);
-}
-
-.menu a.active {
-  background: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
-}
-
-/* Tema: botão redondo no canto direito da top-bar. */
-.botao-tema {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  margin: 0 4px 0 auto;
-  padding: 0;
-  border: none;
-  border-radius: 999px;
-  background: var(--afundado);
-  color: var(--texto);
-  cursor: pointer;
-}
-
-.botao-tema:hover {
-  color: var(--hover);
-}
-
-/* Botão primário; na página da Agenda vira flutuante no celular (.novo). */
-.botao {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 36px;
+.gaveta-topo .logo {
   padding: 0 14px;
-  border: none;
-  border-radius: 8px;
-  background: var(--destaque);
-  color: var(--sobre-cor);
-  font-weight: 700;
+}
+
+@media (min-width: 1024px) {
+  .app {
+    display: grid;
+    grid-template-columns: var(--ds-l-menu) minmax(0, 1fr);
+    min-height: 100dvh;
+  }
+
+  .lateral {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    height: 100dvh;
+    padding: var(--ds-e-6) 14px;
+    background: var(--ds-superficie);
+    border-right: 1px solid var(--ds-divisoria);
+  }
+
+  .topo .abrir-menu {
+    display: none;
+  }
+
+  .topo {
+    padding: 0 var(--ds-e-8);
+  }
+
+  .conteudo {
+    padding: 28px var(--ds-e-8) var(--ds-e-12);
+  }
+}
+
+/* ── Cabeçalho da tela: título, resumo e ações ─────────────────────────── */
+
+.cabecalho-tela {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-e-4);
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: var(--ds-e-6);
+}
+
+.cabecalho-tela h1 {
+  font: var(--ds-tx-h2);
+  letter-spacing: -0.01em;
+}
+
+.cabecalho-tela .resumo {
+  margin-top: var(--ds-e-1);
+  color: var(--ds-texto-2);
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-e-aviso);
+  align-items: center;
+}
+
+/* ── Botões (§4.1) ─────────────────────────────────────────────────────── */
+
+.botao {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ds-e-2);
+  height: var(--ds-a-botao);
+  padding: 0 var(--ds-e-5);
+  border: 0;
+  border-radius: var(--ds-raio-pilula);
+  background: var(--ds-acao);
+  color: var(--ds-acao-texto);
+  font: var(--ds-tx-botao);
+  white-space: nowrap;
   text-decoration: none;
   cursor: pointer;
+  transition: background-color var(--ds-t-rapido);
 }
 
 .botao:hover {
-  color: var(--sobre-cor);
+  background: var(--ds-acao-pressionada);
+  color: var(--ds-acao-texto);
+}
+
+.botao-entrada {
+  height: var(--ds-a-botao-entrada);
+}
+
+.botao-secundario {
+  background: var(--ds-hover);
+  color: var(--ds-texto);
+}
+
+.botao-secundario:hover {
+  background: color-mix(in srgb, var(--ds-texto) 6%, var(--ds-hover));
+  color: var(--ds-texto);
+}
+
+.botao-secundario:active {
+  background: color-mix(in srgb, var(--ds-texto) 10%, var(--ds-hover));
+}
+
+.botao-terciario {
+  padding: 0 var(--ds-e-2);
+  background: transparent;
+  color: var(--ds-acao);
+}
+
+.botao-terciario:hover {
+  background: var(--ds-hover);
+  color: var(--ds-acao);
+}
+
+.botao-pequeno {
+  height: var(--ds-a-botao-pequeno);
+  padding: 0 14px;
+  font: var(--ds-tx-controle);
+}
+
+.botao-terciario.botao-pequeno {
+  padding: 0 var(--ds-e-2);
 }
 
 .botao:disabled {
-  background: var(--afundado);
-  color: var(--texto-3);
-  cursor: default;
+  background: var(--ds-hover);
+  color: var(--ds-texto-3);
+  cursor: not-allowed;
 }
 
-.novo {
-  position: fixed;
-  right: 20px;
-  bottom: 28px;
-  width: 56px;
-  height: 56px;
-  padding: 0;
-  border-radius: 16px;
-  box-shadow: 0 12px 28px -10px rgba(134, 49, 92, 0.5);
+/* Carregando: mantém a largura, rótulo invisível e indicador no centro (aria-busy no botão). */
+.botao[aria-busy="true"] {
+  color: transparent;
+  cursor: progress;
 }
 
-/* No celular o texto some da tela, mas continua sendo o nome acessível do botão. */
-.novo span {
+.botao[aria-busy="true"]::after {
+  content: "";
   position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
+  inset: 0;
+  width: 18px;
+  height: 18px;
+  margin: auto;
+  border: 2.5px solid var(--ds-acao-texto);
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: ds-gira 0.8s linear infinite;
 }
 
-label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 13px;
-  font-weight: 600;
+@keyframes ds-gira {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.botao-icone {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--ds-a-icone);
+  height: var(--ds-a-icone);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ds-hover);
+  color: var(--ds-texto);
+  cursor: pointer;
+  transition: background-color var(--ds-t-rapido);
+}
+
+.botao-icone:hover {
+  background: color-mix(in srgb, var(--ds-texto) 6%, var(--ds-hover));
+}
+
+.botao-icone:disabled {
+  color: var(--ds-texto-3);
+  background: var(--ds-hover);
+  cursor: not-allowed;
+}
+
+.botao-icone.no-painel {
+  width: var(--ds-a-botao-pequeno);
+  height: var(--ds-a-botao-pequeno);
+}
+
+/* ── Campo (§4.2) ──────────────────────────────────────────────────────── */
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-e-rotulo);
+}
+
+.campo label {
+  font: var(--ds-tx-controle);
+}
+
+.ajuda {
+  font: var(--ds-tx-legenda);
+  color: var(--ds-texto-2);
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
-  height: 36px;
-  padding: 0 12px;
-  border: 1px solid var(--linha-forte);
-  border-radius: 8px;
-  background: var(--superficie);
-  color: var(--texto);
+  height: var(--ds-a-campo);
+  padding: 0 var(--ds-e-4);
+  border: var(--ds-borda-campo) solid var(--ds-borda);
+  border-radius: var(--ds-raio-medio);
+  background: var(--ds-superficie);
+  color: var(--ds-texto);
+  font: var(--ds-tx-corpo);
+  transition: border-color var(--ds-t-rapido);
+}
+
+input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--ds-texto-2);
 }
 
 input:focus-visible,
-select:focus-visible {
-  outline: none;
-  border-color: var(--destaque);
-  box-shadow: 0 0 0 3px var(--foco);
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--ds-foco);
+  outline-offset: 1px;
+  border-color: var(--ds-acao);
 }
+
+input::placeholder {
+  color: var(--ds-texto-3);
+}
+
+input:disabled,
+select:disabled {
+  background: var(--ds-hover);
+  border-color: var(--ds-hover);
+  color: var(--ds-texto-3);
+}
+
+/* Busca: pílula com a lupa à esquerda; o rótulo fica só para o leitor de tela. */
+.busca {
+  position: relative;
+}
+
+.busca svg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--ds-e-4);
+  margin: auto;
+  color: var(--ds-texto-2);
+  pointer-events: none;
+}
+
+.busca input {
+  padding-left: 44px;
+  border-radius: var(--ds-raio-pilula);
+}
+
+/* ── Cartão, painel, pares, avatar (§4.13, §4.15, §4.16) ───────────────── */
 
 .cartao {
-  background: var(--superficie);
-  border-radius: 12px;
-  padding: 8px;
+  background: var(--ds-superficie);
+  border: 1px solid var(--ds-divisoria);
+  border-radius: var(--ds-raio-cartao);
 }
 
-.secundario {
-  color: var(--texto-2);
+.com-painel {
+  display: grid;
+  gap: var(--ds-e-5);
+  align-items: start;
 }
 
-/* Estado vazio: ilustração da marca e o texto embaixo, centralizados. */
+.painel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-e-4);
+  padding: var(--ds-e-6);
+}
+
+@media (min-width: 1024px) {
+  .com-painel.aberto {
+    grid-template-columns: minmax(0, 1fr) var(--ds-l-painel);
+  }
+
+  .com-painel.largo {
+    grid-template-columns: minmax(0, 1fr) var(--ds-l-painel-largo);
+  }
+
+  .painel {
+    position: sticky;
+    top: calc(var(--ds-l-topbar) + var(--ds-e-6));
+  }
+}
+
+.painel-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-e-3);
+}
+
+.horario-destaque {
+  font: var(--ds-tx-horario-destaque);
+  font-variant-numeric: tabular-nums;
+}
+
+.horario-destaque small {
+  font: var(--ds-tx-horario-lista);
+  color: var(--ds-texto-2);
+}
+
+.quadro {
+  padding: var(--ds-e-4);
+  border-radius: var(--ds-raio-medio);
+  background: var(--ds-hover);
+}
+
+.pares {
+  margin: 0;
+}
+
+.pares div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ds-e-3);
+  padding: var(--ds-e-aviso) 0;
+  border-top: 1px solid var(--ds-divisoria);
+}
+
+.pares dt {
+  color: var(--ds-texto-2);
+}
+
+.pares dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.pessoa {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-e-3);
+  min-width: 0;
+}
+
+.pessoa-nome {
+  font-weight: 700;
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--ds-hover);
+  color: var(--ds-texto);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.avatar-44 {
+  width: 44px;
+  height: 44px;
+}
+
+/* ── Chip de status (§4.9) ─────────────────────────────────────────────── */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-e-rotulo);
+  width: max-content;
+  height: var(--ds-a-chip);
+  padding: 0 12px 0 10px;
+  border-radius: var(--ds-raio-pilula);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.st-aguardando {
+  --st: var(--ds-aguardando);
+  --st-texto: var(--ds-aguardando-texto);
+  --st-chip: var(--ds-aguardando-chip);
+}
+
+.st-confirmado {
+  --st: var(--ds-confirmado);
+  --st-texto: var(--ds-confirmado-texto);
+  --st-chip: var(--ds-confirmado-chip);
+}
+
+.st-feito {
+  --st: var(--ds-feito);
+  --st-texto: var(--ds-feito-texto);
+  --st-chip: var(--ds-feito-chip);
+}
+
+.st-cancelado {
+  --st: var(--ds-cancelado);
+  --st-texto: var(--ds-cancelado-texto);
+  --st-chip: var(--ds-cancelado-chip);
+}
+
+.chip[class*="st-"] {
+  background: var(--st-chip);
+  color: var(--st-texto);
+}
+
+/* ── Segmento e interruptor (§4.6, §4.7) ───────────────────────────────── */
+
+.segmento {
+  display: inline-flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: var(--ds-raio-pilula);
+  background: var(--ds-hover);
+}
+
+.segmento button {
+  height: var(--ds-a-botao-pequeno);
+  padding: 0 var(--ds-e-4);
+  border: 0;
+  border-radius: var(--ds-raio-pilula);
+  background: transparent;
+  color: var(--ds-texto-2);
+  font: var(--ds-tx-controle);
+  cursor: pointer;
+}
+
+.segmento button:hover {
+  color: var(--ds-texto);
+}
+
+.segmento button[aria-pressed="true"] {
+  background: var(--ds-superficie);
+  color: var(--ds-texto);
+  box-shadow: var(--ds-sombra);
+}
+
+.interruptor {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-e-aviso);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: var(--ds-tx-controle);
+  cursor: pointer;
+}
+
+.interruptor-trilho {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 26px;
+  border-radius: var(--ds-raio-pilula);
+  background: var(--ds-borda);
+  transition: background-color var(--ds-t-rapido);
+}
+
+.interruptor-trilho::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--ds-superficie);
+  box-shadow: var(--ds-sombra);
+  transition: transform var(--ds-t-rapido);
+}
+
+.interruptor[aria-checked="true"] .interruptor-trilho {
+  background: var(--ds-acao);
+}
+
+.interruptor[aria-checked="true"] .interruptor-trilho::after {
+  transform: translateX(18px);
+}
+
+/* ── Aviso (§4.11) ─────────────────────────────────────────────────────── */
+
+.aviso {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-e-aviso);
+  align-items: flex-start;
+  padding: var(--ds-e-3) var(--ds-e-4);
+  border-radius: var(--ds-raio-medio);
+  font: var(--ds-tx-tabela);
+}
+
+.aviso > svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.aviso-texto {
+  flex: 1;
+  min-width: 12em;
+}
+
+.aviso .botao {
+  margin: -6px 0;
+}
+
+.aviso-erro {
+  background: var(--ds-erro-chip);
+  color: var(--ds-erro-texto);
+}
+
+.aviso-erro .botao-secundario {
+  background: var(--ds-superficie);
+}
+
+/* ── Estado vazio e esqueleto (§4.19, §4.20) ───────────────────────────── */
+
 .vazio {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 24px 16px;
+  gap: var(--ds-e-2);
+  padding: var(--ds-e-6);
   text-align: center;
-  color: var(--texto-2);
-}
-
-.vazio svg {
-  width: 160px;
-  height: auto;
 }
 
 .vazio p {
-  margin: 0;
+  max-width: 30ch;
+  color: var(--ds-texto-2);
+  font: var(--ds-tx-tabela);
+}
+
+.vazio .botao {
+  margin-top: var(--ds-e-2);
 }
 
 .ilu-tr,
-.ilu-li {
+.ilu-li,
+.ilu-tracejado {
   fill: none;
   stroke-width: 3;
   stroke-linecap: round;
@@ -366,6 +781,11 @@ select:focus-visible {
 
 .ilu-tr {
   stroke: var(--ilu-traco);
+}
+
+.ilu-tracejado {
+  stroke: var(--ilu-traco);
+  stroke-dasharray: 2 8;
 }
 
 .ilu-li {
@@ -380,176 +800,250 @@ select:focus-visible {
   fill: var(--ilu-ponto);
 }
 
-.ilu-a2 {
-  fill: var(--ilu-acento);
+.esqueleto {
+  display: block;
+  border-radius: var(--ds-raio-bloco);
+  background: var(--ds-hover);
+  animation: ds-pulsa 1.6s ease-in-out infinite;
 }
 
-.erro {
+.esqueleto-cartao {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-e-3);
+  padding: var(--ds-e-6);
+}
+
+@keyframes ds-pulsa {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto {
+    animation: none;
+  }
+
+  .botao[aria-busy="true"]::after {
+    animation-duration: 2.4s;
+  }
+}
+
+/* ── Agenda: barra de filtros e grade de horas (§4.10, padrão B) ───────── */
+
+.filtros {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 16px;
+  gap: var(--ds-e-3) 14px;
   align-items: center;
-  justify-content: space-between;
-  margin: 0;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: var(--perigo-suave);
-  color: var(--perigo);
+  justify-content: flex-end;
+  margin-bottom: var(--ds-e-4);
 }
 
-.botao-texto {
-  height: 28px;
-  padding: 0 8px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: inherit;
-  font-weight: 600;
-  text-decoration: underline;
-  cursor: pointer;
+.navegacao {
+  display: inline-flex;
+  gap: var(--ds-e-1);
+  align-items: center;
 }
 
-.cabecalho {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 20px;
+.resumo-esqueleto {
+  width: 320px;
+  max-width: 100%;
+  height: 16px;
+  margin-top: var(--ds-e-2);
 }
 
-.filtro {
+.agenda {
+  overflow: hidden;
+}
+
+/* No celular a semana rola de lado; a grade web (1440 px) cabe inteira. */
+.agenda-rolagem {
+  overflow-x: auto;
+}
+
+.agenda-grade {
+  --colunas: 6;
+  min-width: calc(64px + var(--colunas) * 112px);
+}
+
+.agenda-cabecalho,
+.agenda-corpo {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  flex: 1;
+  grid-template-columns: 64px repeat(var(--colunas), minmax(0, 1fr));
 }
 
-/* Sem borda dentro do cartão: separa por espaço e preenchimento. */
-.lista {
-  margin: 0;
-  list-style: none;
+.agenda-cabecalho {
+  border-bottom: 1px solid var(--ds-divisoria);
 }
 
-.lista li {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 4px 12px;
-  padding: 10px 12px;
-  border-radius: 8px;
+.agenda-dia {
+  padding: var(--ds-e-3) var(--ds-e-aviso);
+}
+
+.agenda-numero {
+  font: 800 24px/28px var(--ds-titulo);
   font-variant-numeric: tabular-nums;
 }
 
-.lista li time {
-  grid-column: 1 / -1;
+.agenda-dia.hoje {
+  background: var(--ds-hover);
 }
 
-.lista li:nth-child(even) {
-  background: var(--fundo);
+.agenda-dia.hoje p {
+  color: var(--ds-acao);
 }
+
+.agenda-dia.hoje .legenda {
+  font-weight: 700;
+}
+
+/* Uma linha por hora (72 px), desenhada no fundo do corpo. */
+.agenda-corpo {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--ds-divisoria) 0,
+    var(--ds-divisoria) 1px,
+    transparent 1px,
+    transparent var(--ds-l-hora-agenda)
+  );
+}
+
+.agenda-horas span {
+  display: block;
+  height: var(--ds-l-hora-agenda);
+  padding: 2px var(--ds-e-aviso) 0 0;
+  text-align: right;
+}
+
+.agenda-coluna {
+  position: relative;
+  border-left: 1px solid var(--ds-divisoria);
+}
+
+.agenda-coluna.hoje {
+  background: var(--ds-fundo);
+}
+
+.agenda-esqueleto {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+}
+
+.bloco {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+  padding: 6px var(--ds-e-aviso);
+  border: 0;
+  border-radius: var(--ds-raio-bloco);
+  background: var(--st-chip);
+  color: var(--ds-texto);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--ds-t-rapido);
+}
+
+.bloco.compacto {
+  padding: 1px var(--ds-e-aviso);
+}
+
+.bloco:hover {
+  background: color-mix(in srgb, var(--ds-texto) 3%, var(--st-chip));
+}
+
+.bloco.st-aguardando {
+  border-left: 4px dashed var(--ds-aguardando);
+}
+
+.bloco.st-confirmado {
+  border-left: 4px solid var(--ds-confirmado);
+}
+
+.bloco.st-cancelado {
+  border: var(--ds-borda-campo) dashed var(--ds-borda);
+  background: var(--ds-superficie);
+}
+
+.bloco.st-cancelado .bloco-hora,
+.bloco.st-cancelado .bloco-nome {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.bloco.selecionado {
+  box-shadow: 0 0 0 var(--ds-anel-selecao) var(--ds-acao);
+}
+
+.bloco-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-e-1);
+  width: 100%;
+}
+
+.bloco-linha svg {
+  flex: none;
+  color: var(--st-texto);
+}
+
+.bloco-hora {
+  font: var(--ds-tx-horario-bloco);
+  font-variant-numeric: tabular-nums;
+}
+
+.bloco-nome {
+  width: 100%;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 17px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agora {
+  position: absolute;
+  left: -1px;
+  right: 0;
+  height: 2px;
+  background: var(--ds-texto);
+  pointer-events: none;
+}
+
+.agora span {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ds-texto);
+}
+
+/* ── Legado: formulário do Novo agendamento até a tela ser adaptada ────── */
 
 .formulario {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--ds-e-4);
   max-width: 560px;
-  padding: 20px;
+  padding: var(--ds-e-6);
 }
 
-/* Data e hora lado a lado já no celular; duração desce. */
+.formulario label {
+  display: block;
+  margin-bottom: var(--ds-e-rotulo);
+  font: var(--ds-tx-controle);
+}
+
 .linha {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
-}
-
-@media (min-width: 640px) {
-  .filtro {
-    display: flex;
-  }
-
-  .filtro > div {
-    width: 180px;
-  }
-
-  .lista li {
-    grid-template-columns: 12em 1fr auto;
-  }
-
-  .lista li time {
-    grid-column: auto;
-  }
-}
-
-@media (min-width: 1024px) {
-  .app {
-    display: grid;
-    grid-template-columns: 232px minmax(0, 1fr);
-  }
-
-  .lateral {
-    position: sticky;
-    top: 0;
-    display: flex;
-    height: 100dvh;
-    padding: 14px 16px 24px;
-  }
-
-  .lateral .logo {
-    height: 36px;
-    padding: 0 10px;
-    font-size: 20px;
-  }
-
-  .lateral .menu {
-    margin-top: 24px;
-  }
-
-  .lateral .menu a {
-    gap: 10px;
-    height: 36px;
-    padding: 0 10px;
-    border-radius: 8px;
-    color: #f3dde6;
-    font-size: 14px;
-  }
-
-  .lateral .menu a:hover,
-  .lateral .menu a.active {
-    color: #ffffff;
-  }
-
-  .abrir-menu {
-    display: none;
-  }
-
-  .topo {
-    height: 64px;
-    padding: 0 40px;
-  }
-
-  .trilha {
-    margin-left: 0;
-    font-size: 15px;
-  }
-
-  .conteudo {
-    padding: 24px 40px;
-  }
-
-  .novo {
-    position: static;
-    width: auto;
-    height: 36px;
-    padding: 0 14px;
-    border-radius: 8px;
-    box-shadow: none;
-  }
-
-  .novo span {
-    position: static;
-    width: auto;
-    height: auto;
-    clip-path: none;
-  }
+  gap: var(--ds-e-3);
 }
