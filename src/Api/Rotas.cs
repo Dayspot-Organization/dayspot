@@ -22,5 +22,13 @@ public static class Rotas
         app.MapMethods("/api/clientes", Leitura, Clientes.Listar);
         app.MapMethods("/api/agendamentos", Leitura, Agendamentos.Listar);
         app.MapPost("/api/agendamentos", Agendamentos.Criar);
+
+        // Sem sessão (#162): ficam fora dos middlewares de autenticação e de tenant.
+        var publico = app.MapGroup("/api/publico/{slug}").RequireRateLimiting(Publico.LimiteLeitura);
+        publico.MapMethods("", Leitura, Publico.LerEmpresa);
+        publico.MapMethods("/servicos", Leitura, Publico.ListarServicos);
+        publico.MapMethods("/prestadores", Leitura, Publico.ListarPrestadores);
+        publico.MapMethods("/ocupados", Leitura, Publico.ListarOcupados);
+        app.MapPost("/api/publico/{slug}/agendamentos", Publico.CriarAgendamento).RequireRateLimiting(Publico.LimiteEnvio);
     }
 }

@@ -17,6 +17,7 @@ public static class Erros
     public const string NaoEncontrado = "nao_encontrado"; // 404
     public const string MetodoNaoPermitido = "metodo_nao_permitido"; // 405
     public const string ConflitoHorario = "conflito_horario"; // 409
+    public const string MuitasTentativas = "muitas_tentativas"; // 429
     public const string ErroInterno = "erro_interno"; // 500
 
     /// <summary>Erro no formato padrão. detalhes pode ser nulo.</summary>

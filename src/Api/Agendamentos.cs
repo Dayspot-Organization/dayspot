@@ -123,7 +123,7 @@ public static partial class Agendamentos
     /// Lê uma data RFC 3339 (ISO 8601 com fuso) e devolve em UTC. Vazia devolve nulo.
     /// Em erro, devolve false com a resposta 400 em erro.
     /// </summary>
-    private static bool LerData(string? v, string campo, out DateTime? data, out IResult? erro)
+    internal static bool LerData(string? v, string campo, out DateTime? data, out IResult? erro)
     {
         data = null;
         erro = null;
