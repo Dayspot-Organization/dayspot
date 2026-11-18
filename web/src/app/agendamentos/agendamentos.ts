@@ -135,13 +135,13 @@ export class Agendamentos {
     this.lista().filter((a) => this.mostrarCancelados() || a.status !== "cancelado"),
   );
 
-  /** Dias na grade: segunda a sábado; o domingo só entra se tiver horário. */
+  /** Dias na grade: segunda a sábado; o domingo só entra se tiver horário ou se for hoje. */
   protected readonly dias = computed(() => {
     const { de, dias } = this.periodo();
     if (dias === 1) return [de];
     const semana = Array.from({ length: 7 }, (_, i) => somarDias(de, i));
     const temDomingo = this.visiveis().some((a) => diaLocal(new Date(a.inicio)) === semana[6]);
-    return temDomingo ? semana : semana.slice(0, 6);
+    return temDomingo || semana[6] === this.hoje() ? semana : semana.slice(0, 6);
   });
 
   /** Faixa de horas: 08–19 h, esticada se algum horário cair fora. */
