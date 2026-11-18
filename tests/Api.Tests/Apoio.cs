@@ -161,6 +161,26 @@ public sealed class Servidor : IAsyncDisposable
             rotas(app);
         });
 
+    /// <summary>O pipeline do Program.cs com as rotas públicas, sobre a connection string dada.</summary>
+    public static Task<Servidor> ComPublico(string connectionString, TimeProvider? relogio = null) => Criar(
+        s =>
+        {
+            s.AddSingleton(AppDb.Opcoes(connectionString)).AddScoped<AppDb>()
+                .AddSingleton(new Fixos(Seed.Alfa, Seed.Prestador, Seed.ServicoAlfa));
+            if (relogio is not null)
+            {
+                s.AddSingleton(relogio);
+            }
+            s.AddPublico();
+        },
+        app =>
+        {
+            app.UseRouting();
+            app.UsePublico();
+            app.UseTransacaoNasRotas(ctx => Publico.TenantDaRota(ctx) ?? Seed.Alfa);
+            app.MapApi();
+        });
+
     public async Task<HttpResponseMessage> Chamar(string metodo, string rota, string? corpo = null, Guid? tenant = null)
     {
         var req = new HttpRequestMessage(new HttpMethod(metodo), rota);
