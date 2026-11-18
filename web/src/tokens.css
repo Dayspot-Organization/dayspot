@@ -23,7 +23,7 @@
   --ds-acao-suave:        light-dark(#FBF4F7, #33222B); /* fundo de opção e linha selecionadas (texto 12,9:1 no escuro) */
   --ds-acao-texto:        light-dark(#FFFFFF, #1A1417); /* texto e ícone sobre ação ou erro cheio */
   --ds-acento:            light-dark(#F4A08A, #F4B49A); /* marcador do horário escolhido: só preenchimento */
-  --ds-foco:              light-dark(rgba(134, 49, 92, .28), rgba(238, 157, 191, .32)); /* anel de 3 px, só pelo teclado */
+  --ds-foco:              var(--ds-acao); /* anel de 3 px, só pelo teclado; sólido: 6,40:1 (claro) e 5,26:1 (escuro) no pior fundo */
 
   /* ── Status (fora da marca; sempre ícone + palavra) ─────────
      sem sufixo: barra e ponto · -texto: texto e ícone · -chip: chip, aviso e bloco */
