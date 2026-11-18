@@ -1,0 +1,17 @@
+# Fora do contexto de build: segredos, saída de build e o que a imagem da API não usa.
+.env
+.env.*
+.git
+.github
+.vs
+.vscode
+.idea
+**/bin
+**/obj
+**/TestResults
+**/node_modules
+web
+tests
+docs
+db
+*.md
