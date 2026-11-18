@@ -40,6 +40,7 @@ Cada organização (barbearia, clínica, estúdio) tem seus próprios usuários,
   - [Clonando](#clonando)
   - [Variáveis de ambiente](#variáveis-de-ambiente)
   - [Subindo o ambiente](#subindo-o-ambiente)
+  - [Imagem Docker da API](#imagem-docker-da-api)
   - [Frontend](#frontend)
 - [🗄️ Banco de dados](#️-banco-de-dados)
   - [Migrations](#migrations)
@@ -143,6 +144,20 @@ por `ROLLBACK`.
 > ⚠️ O `db/init/app_user.sh` só roda com o volume do banco vazio. Se o seu volume é anterior ao `db/init`, rode `docker compose down -v` uma vez antes do `up` — isso **apaga os dados locais** do banco.
 
 > ⚠️ **Banco de dev migrado pela ferramenta antiga.** Quem migrou o banco antes das EF Core Migrations não tem a tabela `__EFMigrationsHistory`: o `dotnet ef database update` tentaria criar tudo de novo e falharia. Não há transição: recrie o banco com `docker compose down -v` e `docker compose up -d` (**apaga os dados locais**), depois aplique as migrations e o seed. No `.env`, troque as variáveis antigas de migration pela `MIGRATIONS_DATABASE_URL` do `.env.example`.
+
+### Imagem Docker da API
+
+O `Dockerfile` da raiz gera a imagem da API (sem o `web/`), para o deploy no Render.
+O `.env` não entra na imagem: as variáveis do `.env.example` (menos as de migration) vêm do ambiente.
+
+```bash
+docker build -t dayspot-api .
+docker run --rm -p 8080:8080 -e DATABASE_URL=... -e TENANT_FIXO=... \
+  -e PRESTADOR_FIXO=... -e SERVICO_FIXO=... dayspot-api
+```
+
+A porta é a `PORTA_HTTP` (8080 por padrão); se houver `PORT`, que o Render define, ela vence.
+Migrations e seed não rodam na imagem (8.3): aplique antes, como em [Subindo o ambiente](#subindo-o-ambiente).
 
 ### Frontend
 
