@@ -2,6 +2,8 @@
 // 00004 e 00007); os handlers das cards 1.4, 1.5 e 1.6 seguem este formato.
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Injectable, inject } from "@angular/core";
+import { of } from "rxjs";
+import { EMPRESA_EXEMPLO, PRESTADORES_EXEMPLO, SERVICOS_EXEMPLO } from "./exemplo";
 import { ApiError, ErroRede } from "./http";
 
 export { ApiError, ErroRede };
@@ -45,6 +47,29 @@ export interface Cliente {
   telefone: string | null;
 }
 
+/** Serviço da empresa: a duração vem dele, não de quem agenda. */
+export interface Servico {
+  id: string;
+  nome: string;
+  duracao_min: number;
+  preco_centavos: number;
+}
+
+/** Profissional que atende (membership ativo). */
+export interface Prestador {
+  id: string;
+  nome: string;
+}
+
+/** O que a página pública mostra da empresa. */
+export interface Empresa {
+  nome: string;
+  endereco: string;
+  telefone: string;
+}
+
+export type NovoCliente = Pick<Cliente, "nome" | "telefone">;
+
 /** Única porta de entrada para a API. Os erros chegam convertidos pelo errosApiInterceptor. */
 @Injectable({ providedIn: "root" })
 export class Api {
@@ -62,6 +87,24 @@ export class Api {
   /** POST /api/agendamentos. 409 conflito_horario quando sobrepõe outro. */
   criarAgendamento(novo: NovoAgendamento) {
     return this.http.post<Omit<Agendamento, "cliente_nome">>("/api/agendamentos", novo);
+  }
+
+  /** POST /api/clientes. */
+  criarCliente(novo: NovoCliente) {
+    return this.http.post<Cliente>("/api/clientes", novo);
+  }
+
+  // Ainda sem rota na API: dados de exemplo (api/exemplo.ts). Trocar por GET quando existirem.
+  empresa() {
+    return of(EMPRESA_EXEMPLO);
+  }
+
+  listarServicos() {
+    return of(SERVICOS_EXEMPLO);
+  }
+
+  listarPrestadores() {
+    return of(PRESTADORES_EXEMPLO);
   }
 
   /** GET /api/clientes. */

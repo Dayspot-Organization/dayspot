@@ -1080,7 +1080,7 @@ select:disabled {
   gap: var(--ds-e-aviso);
 }
 
-.opcoes-clientes {
+.opcoes-rolagem {
   max-height: 268px;
   margin-top: var(--ds-e-3);
   padding: 3px;
@@ -1088,9 +1088,19 @@ select:disabled {
 }
 
 @media (min-width: 640px) {
-  .opcoes-clientes {
+  .opcoes-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .opcoes-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.opcoes-linha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-e-aviso);
 }
 
 .opcao {
@@ -1112,10 +1122,42 @@ select:disabled {
   border-color: var(--ds-texto-2);
 }
 
+.opcao[aria-checked="true"],
 .opcao.escolhida {
   border: var(--ds-borda-selecao) solid var(--ds-acao);
   background: var(--ds-acao-suave);
   cursor: default;
+}
+
+.opcao-pessoa {
+  padding: var(--ds-e-2) var(--ds-e-4) var(--ds-e-2) var(--ds-e-2);
+}
+
+.opcao-preco {
+  font-weight: 700;
+}
+
+/* Rádio da opção: anel na borda; marcado, anel ameixa com o miolo cheio. */
+.radio {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--ds-borda);
+  border-radius: 50%;
+}
+
+.opcao[aria-checked="true"] .radio {
+  border-color: var(--ds-acao);
+}
+
+.opcao[aria-checked="true"] .radio::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ds-acao);
 }
 
 .opcao-texto {
@@ -1303,4 +1345,113 @@ input.invalido {
 
 .aviso-acoes .botao {
   margin: 0;
+}
+
+.campos-dados {
+  display: grid;
+  gap: var(--ds-e-4);
+}
+
+@media (min-width: 640px) {
+  .campos-dados {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.valor {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.centro {
+  text-align: center;
+}
+
+.avatar-36 {
+  width: 36px;
+  height: 36px;
+  font-size: 13px;
+}
+
+.avatar-56 {
+  width: 56px;
+  height: 56px;
+  background: var(--ds-acao);
+  color: var(--ds-acao-texto);
+  font-size: 18px;
+}
+
+/* ── Página do cliente (padrão F): sem menu, 1040 px, empresa no topo ───── */
+
+.publica {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-e-6);
+  max-width: var(--ds-l-publica);
+  margin: 0 auto;
+  padding: var(--ds-e-8) var(--ds-e-4);
+}
+
+@media (min-width: 1024px) {
+  .publica {
+    padding: var(--ds-e-12) var(--ds-e-10) var(--ds-e-10);
+  }
+
+  .com-painel.estreito {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: var(--ds-e-8);
+  }
+}
+
+.publica .cabecalho-tela {
+  margin-bottom: 0;
+}
+
+.publica-empresa {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.publica-empresa .secundario {
+  font: var(--ds-tx-tabela);
+}
+
+.titulo-tela {
+  font: var(--ds-tx-h2);
+  letter-spacing: -0.01em;
+}
+
+.confirmado {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-e-3);
+  padding: var(--ds-e-6);
+}
+
+.publica-rodape {
+  display: flex;
+  gap: var(--ds-e-2);
+  align-items: center;
+  padding-top: var(--ds-e-6);
+  border-top: 1px solid var(--ds-divisoria);
+}
+
+.publica-rodape .logo {
+  padding: 0;
+}
+
+.publica-rodape .logo svg {
+  height: 20px;
+}
+
+/* Na página do cliente a coluna é mais estreita: serviços em duas colunas e nomes inteiros. */
+@media (min-width: 640px) {
+  .estreito .opcoes-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.opcoes-3 .opcao-texto .pessoa-nome {
+  white-space: normal;
 }

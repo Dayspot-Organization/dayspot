@@ -28,6 +28,19 @@ export class App {
     { initialValue: [] },
   );
 
+  /** Rotas com data.publica (página do cliente) aparecem sem a casca do painel. */
+  protected readonly publica = toSignal(
+    this.router.events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      map(() => {
+        let r = this.router.routerState.snapshot.root;
+        while (r.firstChild) r = r.firstChild;
+        return r.data["publica"] === true;
+      }),
+    ),
+    { initialValue: false },
+  );
+
   protected abrir() {
     this.gaveta().nativeElement.showModal();
   }

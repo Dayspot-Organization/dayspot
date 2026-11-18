@@ -15,6 +15,8 @@ export const routes: Routes = [
       { path: "novo", component: NovoAgendamento, data: { titulo: "Novo agendamento" } },
     ],
   },
+  // Página do cliente, aberta pelo link da empresa: sem menu nem login (data.publica).
+  { path: "agendar", component: NovoAgendamento, data: { titulo: "Agendar", publica: true } },
   { path: "**", redirectTo: "agendamentos" },
 ];
 
