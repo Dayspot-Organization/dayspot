@@ -1,20 +1,31 @@
-# 📅 Dayspot
+<div align="center">
 
-![.NET](https://img.shields.io/badge/.NET%2010-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
-![EF Core](https://img.shields.io/badge/EF%20Core-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL%2016-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![React](https://img.shields.io/badge/React%2019-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![Angular](https://img.shields.io/badge/Angular%20%28em%20migra%C3%A7%C3%A3o%29-DD0031?style=for-the-badge&logo=angular&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![Telegram](https://img.shields.io/badge/Telegram%20Bot%20API-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)
+<img src="web/public/favicon.svg" alt="Símbolo do Dayspot" width="96">
 
-[![CI](https://img.shields.io/github/actions/workflow/status/Dayspot-Organization/dayspot/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/Dayspot-Organization/dayspot/actions)
-![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow?style=for-the-badge)
+<h1>Dayspot 📅</h1>
 
-**Plataforma multi-tenant de agendamentos com notificações automáticas via Telegram.**
+<p>
+  <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-512BD4?style=for-the-badge&logo=dotnet&logoColor=white">
+  <img alt="EF Core 10" src="https://img.shields.io/badge/EF_Core-10-512BD4?style=for-the-badge&logo=dotnet&logoColor=white">
+  <img alt="PostgreSQL 16" src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white">
+  <img alt="Angular 22" src="https://img.shields.io/badge/Angular-22-DD0031?style=for-the-badge&logo=angular&logoColor=white">
+  <img alt="TypeScript 6" src="https://img.shields.io/badge/TypeScript-6-3178C6?style=for-the-badge&logo=typescript&logoColor=white">
+</p>
+<p>
+  <img alt="Node.js 22" src="https://img.shields.io/badge/Node.js-22-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white">
+  <img alt="xUnit.v3 4" src="https://img.shields.io/badge/xUnit.v3-4-512BD4?style=for-the-badge&logo=dotnet&logoColor=white">
+  <img alt="Docker Compose" src="https://img.shields.io/badge/Docker_Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white">
+  <a href="https://github.com/Dayspot-Organization/dayspot/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Dayspot-Organization/dayspot/ci.yml?branch=main&style=for-the-badge&label=CI&logo=githubactions&logoColor=white"></a>
+  <img alt="Status: em desenvolvimento" src="https://img.shields.io/badge/status-em_desenvolvimento-yellow?style=for-the-badge">
+</p>
 
-Cada organização (barbearia, clínica, estúdio) tem seus próprios usuários, serviços, horários e clientes, isolados das demais. O cliente final recebe confirmação e lembrete pelo Telegram, sem precisar de conta no sistema.
+<p><strong>Plataforma multi-tenant de agendamentos: o cliente final agenda sem criar conta e recebe confirmação e lembrete pelo Telegram.</strong></p>
+
+</div>
+
+---
+
+Cada organização (barbearia, clínica, estúdio) tem seus próprios usuários, serviços, horários e clientes, isolados das demais.
 
 > 🚧 Em desenvolvimento. Andamento no GitHub Projects (Smart Booking DevOps).
 
