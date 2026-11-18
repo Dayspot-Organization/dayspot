@@ -5,7 +5,8 @@ using Dayspot.Api.Dados;
 // Fixos no código (1.14); vão para o config só se alguém precisar mudar.
 var timeoutCabecalhos = TimeSpan.FromSeconds(5); // corta slowloris
 var timeoutOcioso = TimeSpan.FromSeconds(60);
-var timeoutPing = TimeSpan.FromSeconds(5);
+var timeoutPing = TimeSpan.FromSeconds(10); // por tentativa
+var prazoPing = TimeSpan.FromSeconds(30); // total: o Neon free leva alguns segundos para acordar
 var timeoutShutdown = TimeSpan.FromSeconds(30); // dá tempo de a requisição mais longa terminar
 
 Config cfg;
@@ -40,18 +41,31 @@ builder.Services.AddSingleton(new Fixos(cfg.TenantFixo, cfg.PrestadorFixo, cfg.S
 var app = builder.Build();
 
 // O pool conecta sob demanda: sem o ping, banco fora do ar só aparece como 500.
-using (var escopo = app.Services.CreateScope())
-using (var prazo = new CancellationTokenSource(timeoutPing))
+// Tenta de novo com espera crescente (1, 2, 4, 5, 5... s) até o prazo total; só então desiste.
+var relogio = System.Diagnostics.Stopwatch.StartNew();
+var espera = TimeSpan.FromSeconds(1);
+for (var tentativa = 1; ; tentativa++)
 {
+    var restante = prazoPing - relogio.Elapsed;
+    using var escopo = app.Services.CreateScope();
+    using var prazo = new CancellationTokenSource(restante < timeoutPing ? restante : timeoutPing);
     try
     {
         var db = escopo.ServiceProvider.GetRequiredService<AppDb>();
         await db.Database.OpenConnectionAsync(prazo.Token);
         await db.Database.ExecuteSqlRawAsync("SELECT 1", prazo.Token);
+        break;
+    }
+    catch (Exception e) when (relogio.Elapsed + espera < prazoPing)
+    {
+        app.Logger.LogWarning("não alcançou o banco (tentativa {Tentativa}): {Erro}; nova tentativa em {Espera}s",
+            tentativa, e.GetBaseException().Message, espera.TotalSeconds);
+        await Task.Delay(espera);
+        espera = TimeSpan.FromSeconds(Math.Min(espera.TotalSeconds * 2, 5));
     }
     catch (Exception e)
     {
-        app.Logger.LogError(e, "não alcançou o banco");
+        app.Logger.LogError(e, "não alcançou o banco após {Tentativas} tentativas", tentativa);
         return 1;
     }
 }

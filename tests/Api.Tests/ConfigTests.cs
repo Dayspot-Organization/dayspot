@@ -117,8 +117,8 @@ public sealed partial class ConfigTests : IDisposable
     {
         var cs = new Npgsql.NpgsqlConnectionStringBuilder(
             Config.ParaConnectionString("postgres://app_user:s%40nha@db.interno:5467/example?sslmode=disable&connect_timeout=1"));
-        Assert.Equal(("db.interno", 5467, "example", "app_user", "s@nha", Npgsql.SslMode.Disable, 1),
-            (cs.Host, cs.Port, cs.Database, cs.Username, cs.Password, cs.SslMode, cs.Timeout));
+        Assert.Equal(("db.interno", 5467, "example", "app_user", "s@nha", Npgsql.SslMode.Disable, 1, Npgsql.GssEncryptionMode.Disable),
+            (cs.Host, cs.Port, cs.Database, cs.Username, cs.Password, cs.SslMode, cs.Timeout, cs.GssEncryptionMode));
     }
 
     [Fact]

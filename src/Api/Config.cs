@@ -133,6 +133,8 @@ public sealed record Config(
             Port = u.IsDefaultPort || u.Port < 0 ? 5432 : u.Port,
             Database = Uri.UnescapeDataString(u.AbsolutePath.TrimStart('/')),
             Username = Uri.UnescapeDataString(credencial[0]),
+            // Sem Kerberos: senão o Npgsql tenta carregar a libgssapi, ausente na imagem.
+            GssEncryptionMode = GssEncryptionMode.Disable,
         };
         if (credencial.Length == 2)
         {
