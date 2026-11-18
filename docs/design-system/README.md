@@ -59,7 +59,7 @@ componentes da seção 4 e os tokens; (3) liste os estados com o checklist da se
 | `ds-acao-suave` | `#FBF4F7` | `#33222B` | fundo de opção e linha selecionada | — |
 | `ds-acao-texto` | `#FFFFFF` | `#1A1417` | texto sobre `ds-acao` | — |
 | `ds-acento` | `#F4A08A` | `#F4B49A` | marcador do horário escolhido | texto, traço |
-| `ds-foco` | ameixa 28 % | rosa 32 % | anel de foco | — |
+| `ds-foco` | `#86315C` | `#EE9DBF` | anel de foco, sólido e igual a `ds-acao` (pior fundo: 6,40:1 no claro, 5,26:1 no escuro) | cor translúcida (fica abaixo de 3:1) |
 
 Todos os pares de texto conferidos (AA) nos dois temas em 17/11/2026.
 
@@ -529,7 +529,7 @@ superfície, Hanken Grotesk + Nunito 700–800 entram pelo `index.html` e o logo
 | `--hover` (hover de link) | `--ds-acao-pressionada` | — |
 | `--sobre-cor` | `--ds-acao-texto` | — |
 | `--ponto` `#F4A08A` fixo | `--ds-acento` | escuro `#F4B49A` |
-| `--foco` 22 % | `--ds-foco` | 28 % no claro; anel de 3 px |
+| `--foco` 22 % | `--ds-foco` | sólido, igual a `--ds-acao`; anel de 3 px |
 | `--nav` (menu ameixa sólido) | sai | menu em `--ds-superficie`, item ativo em `--ds-hover` + `--ds-acao` |
 | `--agendado` | sai | bloco usa `--ds-<status>-chip` |
 | `--sucesso*`, `--atencao*`, `--perigo*` | `--ds-confirmado*`, `--ds-aguardando*`, `--ds-erro*` | paleta de status |
