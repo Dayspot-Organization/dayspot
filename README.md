@@ -27,7 +27,7 @@
 
 Cada organização (barbearia, clínica, estúdio) tem seus próprios usuários, serviços, horários e clientes, isolados das demais.
 
-> 🚧 Em desenvolvimento. Andamento no GitHub Projects (Smart Booking DevOps).
+> 🚧 Em desenvolvimento. Andamento no GitHub Projects (Dayspot Devops).
 
 ---
 
@@ -78,11 +78,9 @@ O isolamento entre organizações é garantido no banco, com Row Level Security,
 | Acesso a dados | EF Core + Npgsql |
 | Migrations | EF Core Migrations, com o SQL escrito à mão (`migrationBuilder.Sql`) |
 | Banco | PostgreSQL 16, com Row Level Security |
-| Frontend | React 19 + Vite + TypeScript, em migração para Angular |
+| Frontend | Angular 22 + TypeScript (Angular CLI, componentes standalone, signals, `@angular/router`) |
 | Notificações | Telegram Bot API |
 | Ambiente | Docker Compose |
-
-> 🔄 **Frontend em migração.** O `web/` continua em React 19 + Vite, e os comandos da seção [Frontend](#frontend) são os de hoje. A troca para Angular está em andamento; este README muda quando ela chegar ao `web/`.
 
 ---
 
@@ -91,8 +89,8 @@ O isolamento entre organizações é garantido no banco, com Row Level Security,
 ### Pré-requisitos
 
 - [Docker](https://docs.docker.com/get-docker/) com Compose
-- [.NET SDK](https://dotnet.microsoft.com/download) 10
-- [Node.js](https://nodejs.org/) 22+ — para o `web/`
+- [.NET SDK](https://dotnet.microsoft.com/download) 10 (`10.0.100` ou feature mais nova, conforme o `global.json`)
+- [Node.js](https://nodejs.org/) 22 — para o `web/` (a versão do CI)
 - `psql` (cliente do PostgreSQL) — para o seed e a verificação de isolamento
 
 O `dotnet-ef` (migrations) não se instala à parte: é ferramenta local, com versão fixa em
@@ -144,7 +142,7 @@ por `ROLLBACK`.
 
 > ⚠️ O `db/init/app_user.sh` só roda com o volume do banco vazio. Se o seu volume é anterior ao `db/init`, rode `docker compose down -v` uma vez antes do `up` — isso **apaga os dados locais** do banco.
 
-> ⚠️ **Banco de dev migrado pela ferramenta antiga.** Quem migrou o banco antes das EF Core Migrations tem a tabela `goose_db_version` e não tem `__EFMigrationsHistory`: o `dotnet ef database update` tentaria criar tudo de novo e falharia. Não há transição: recrie o banco com `docker compose down -v` e `docker compose up -d` (**apaga os dados locais**), depois aplique as migrations e o seed. No `.env`, troque as três variáveis `GOOSE_*` pela `MIGRATIONS_DATABASE_URL` do `.env.example`.
+> ⚠️ **Banco de dev migrado pela ferramenta antiga.** Quem migrou o banco antes das EF Core Migrations não tem a tabela `__EFMigrationsHistory`: o `dotnet ef database update` tentaria criar tudo de novo e falharia. Não há transição: recrie o banco com `docker compose down -v` e `docker compose up -d` (**apaga os dados locais**), depois aplique as migrations e o seed. No `.env`, troque as variáveis antigas de migration pela `MIGRATIONS_DATABASE_URL` do `.env.example`.
 
 ### Frontend
 
@@ -249,7 +247,8 @@ dayspot/
 ├── .config/dotnet-tools.json   # dotnet-ef em versão fixa, a do EF Core
 ├── .env.example
 ├── CLAUDE.md                   # regras para o Claude Code
-└── CONTRIBUTING.md
+├── CONTRIBUTING.md
+└── DESIGN.md                   # referência visual do web/
 ```
 
 Estrutura-alvo — cada pasta nasce no card que a usa:

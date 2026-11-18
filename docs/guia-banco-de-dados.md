@@ -2,7 +2,17 @@
 
 Fatia 0 do backlog (itens 0.7 a 0.18) e base de acesso a dados da Fatia 1 (1.2 e
 1.3). Complementa `docs/requisitos.md`.
-Versão **1.9** · 15/11/2026
+Versão **1.10** · 17/11/2026
+
+## Mudanças desde a v1.9
+
+Conferência do guia contra o código depois da migração para .NET (#144). Nenhuma
+regra muda.
+
+- **Seed:** o comando de execução (`psql "$MIGRATIONS_DATABASE_URL" -f db/seed.sql`)
+  está em §Seed e teste de isolamento; `db/` guarda só o seed e o `db/init/app_user.sh`.
+- **Rodar e testar localmente:** o fluxo completo (compose, migrations, seed,
+  `dotnet test`) e os passos de banco do CI, na ordem do `ci.yml`.
 
 ## Mudanças desde a v1.8
 
@@ -902,6 +912,13 @@ INSERT INTO tenants (id, nome, slug, criado_por) VALUES
 UUIDs fixos e legíveis no seed facilitam depuração. Em produção nunca, no seed
 sempre.
 
+O seed mora em `db/seed.sql` e roda como dono das tabelas, num banco já migrado.
+Pode rodar de novo: `ON CONFLICT (id) DO NOTHING` pula o que já existe.
+
+```bash
+psql "$MIGRATIONS_DATABASE_URL" -f db/seed.sql
+```
+
 Os usuários `aaaa…` e `bbbb…` entram antes, e cada um ganha depois a membership
 `administrador` do tenant que criou. No Alfa, o administrador criador também atende (tem
 agendamentos como `prestador_id`) e há mais um usuário com papel `prestador`, para
@@ -948,9 +965,41 @@ dotnet ef database update --project src/Api
 dotnet test --filter-class "*IsolamentoTests"
 ```
 
-Ele roda no CI, com o Postgres do workflow (`services: postgres`, item 0.17) e as
-migrations aplicadas pelo `dotnet ef database update`. Teste de isolamento que só existe como comando manual deixa de ser
-executado na terceira semana.
+Os testes leem as variáveis só do ambiente, não do `.env`: daí o `set -a`. O
+`dotnet ef` lê as duas formas.
+
+### Rodar e testar localmente
+
+Com o `.env` copiado do `.env.example`, do zero:
+
+```bash
+docker compose up -d                            # Postgres em localhost:5467; o initdb cria o app_user
+dotnet tool restore                             # dotnet-ef na versão fixa
+dotnet ef database update --project src/Api     # migrations, como dono
+set -a; . ./.env; set +a
+psql "$MIGRATIONS_DATABASE_URL" -f db/seed.sql  # os testes de banco leem o seed
+dotnet test                                     # todos; os de banco estão em BancoTests.cs e TransacaoTests.cs
+```
+
+Os testes de banco gravam e apagam os próprios dados (UUIDs fora da faixa do seed)
+ou desfazem por `ROLLBACK`; o seed pode ficar.
+
+### No CI
+
+O job `build-and-test` do `.github/workflows/ci.yml` sobe o Postgres em
+`services: postgres` (item 0.17, `postgres:16-alpine`) e roda, nesta ordem:
+
+1. `dotnet ef migrations has-pending-model-changes`: modelo do `AppDb` diferente do
+   snapshot = faltou gerar a migration.
+2. `sh db/init/app_user.sh`: o `app_user` precisa existir antes da 009.
+3. `dotnet ef database update`, depois `database update 0` e `database update` de
+   novo: o `Down` de toda migration é testado em todo PR.
+4. `psql "$MIGRATIONS_DATABASE_URL" -f db/seed.sql`.
+5. `dotnet test`. Com `CI` definida, teste de banco sem `DATABASE_URL` ou
+   `MIGRATIONS_DATABASE_URL` falha em vez de pular.
+
+Teste de isolamento que só existe como comando manual deixa de ser executado na
+terceira semana.
 
 ## Acesso a dados: EF Core + Npgsql
 

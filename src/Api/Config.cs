@@ -22,7 +22,7 @@ public sealed record Config(
     Guid ServicoFixo) // TODO(T6): remover
 {
     private const string UsuarioApi = "app_user"; // criado por db/init/app_user.sh
-    private const string PortaPadrao = "8080"; // a do proxy do Vite (web/vite.config.ts)
+    private const string PortaPadrao = "8080"; // alvo do proxy do ng serve (web/proxy.conf.json)
 
     /// <summary>
     /// Lê o .env do diretório atual, se existir, e depois o ambiente. Variável já

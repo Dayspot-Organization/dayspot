@@ -1,12 +1,28 @@
 # Cards — Dayspot
 
-Cards que existem no board **Smart Booking DevOps** (GitHub Projects), por fatia.
+Cards que existem no board **Dayspot Devops** (GitHub Projects da organização
+[Dayspot-Organization](https://github.com/Dayspot-Organization/dayspot)), por fatia.
 Só a lista: status, responsável e sprint ficam no board. Atualize este arquivo
 quando cards forem criados ou apagados (uma fatia por vez), num PR `docs`.
 
 Dependências copiadas do "Depende de" de cada issue — o corpo da issue é o contrato.
 
-Conferido em 23/10/2026.
+Conferido em 17/11/2026.
+
+## Mudanças de 17/11/2026 (migração de stack)
+
+Projeto renomeado para dayspot (#143); repositório em `Dayspot-Organization/dayspot`.
+
+| Card | Item | O que mudou |
+|---|---|---|
+| — | — | Backend migrado de Go (pgx + sqlc, goose) para .NET + EF Core no PR #144, sem card: API em `src/Api/`, migrations em `src/Api/Migrations/`, acesso a dados em `src/Api/Dados/`, erros em `src/Api/Erros.cs`, testes em `tests/Api.Tests/`. Saíram `cmd/`, `internal/`, `db/migrations/` e `db/queries/` |
+| #146 | — | Card novo: frontend `web/` migrado de React + Vite para Angular (`web/src/app/`), fechado pelo PR #147 |
+| #148 | — | Card novo, retroativo: backend migrado de Go para .NET + EF Core, fechado pelo PR #144 |
+| #149 | — | Card novo: banco de produção no Neon na stack nova (continuação do #138): `MIGRATIONS_DATABASE_URL`, `channel_binding` na URL, `.env.example` e RNF09. Decisão em aberto: recriar o banco com `dotnet ef database update` ou registrar as 10 migrations em `__EFMigrationsHistory` |
+| #150 | — | Card novo: teste que falha se um handler fora de `src/Api/Dados/` acessar um `DbSet` do `AppDb` |
+
+Os títulos de #63 (goose) e #55 (Vite + React) continuam como no board; a stack
+atual é a da tabela acima.
 
 ## Mudanças de 23/10/2026 (backlog v2.3)
 
@@ -124,6 +140,10 @@ Itens 0.1 a 0.6 não têm card: as issues da numeração antiga foram apagadas.
 | #130 | 2.20 | Tela de gestão de prestadores: listar membros e convidar | M | frontend | 2.18, 2.21, 2.11 |
 | #135 | 2.21 | GET /membros: lista os membros do tenant (só administrador) | P | backend | 2.7 |
 | #136 | 2.22 | Criar conta pelo convite: grava só usuarios + membership do convite | M | backend, frontend | 2.1, 2.3, 2.10, 2.15, 2.17 |
+| #146 | — | Migrar o frontend de React para Angular | — | frontend | 1.8–1.12 |
+| #148 | — | Migrar o backend de Go para .NET (EF Core) | — | backend | 1.1–1.7, 1.13, 1.14, 2.14 |
+| #149 | — | Banco de produção no Neon na stack nova (EF Migrations e .NET) | M | infra, banco | #138, #148 |
+| #150 | — | Teste: handler fora de src/Api/Dados/ não acessa DbSet do AppDb | P | backend | #148 |
 
 A 2.14 vem antes da 2.3: a sessão mora na tabela `sessoes`. A 2.22 vem antes da 2.19: o aceite oferece "criar conta" a quem não tem conta. A fatia fecha quando 2.13 e 2.16 passam no CI.
 

@@ -60,7 +60,7 @@ ver); de outro prestador do **mesmo** tenant, para quem não é administrador,
 - Corpo fora desse formato com status 502/503/504: tratar como erro de rede (`ErroRede`),
   porque é o proxy sem alcançar a API (o do `ng serve` responde 502 com ela fora do ar).
 - Corpo fora desse formato com outro status (HTML de erro etc.): tratar como `erro_interno`.
-- Falha do próprio `fetch` (sem resposta): erro de rede (`ErroRede`).
+- Requisição sem resposta (status 0 no `HttpClient`): erro de rede (`ErroRede`).
 - Código desconhecido: exibir `mensagem`.
 
 ## Backend
