@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Estados vazios, erro e carregando</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""><link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Nunito:wght@700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ds [data-tema="escuro"],.ds[data-tema="escuro"]{--ds-fundo:#1A1417;--ds-superficie:#251D21;--ds-hover:#30272B;--ds-divisoria:#463A40;--ds-borda:#857880;--ds-texto:#F5ECEF;--ds-texto-2:#C0B0B7;--ds-texto-3:#857880;--ds-acao:#EE9DBF;--ds-acao-pressionada:#F4B4CF;--ds-acao-suave:#33222B;--ds-acao-texto:#1A1417;--ds-acento:#F4B49A;--ds-foco:rgba(238,157,191,.32);--ds-confirmado:#7FCF86;--ds-confirmado-texto:#7FCF86;--ds-confirmado-chip:#24362A;--ds-aguardando:#F2C14E;--ds-aguardando-texto:#F2C14E;--ds-aguardando-chip:#3A3220;--ds-cancelado:#B5ACA4;--ds-cancelado-texto:#B5ACA4;--ds-cancelado-chip:#34302D;--ds-feito:#8DBCE3;--ds-feito-texto:#8DBCE3;--ds-feito-chip:#1F2E3B;--ds-faltou:#B9A5F5;--ds-faltou-texto:#B9A5F5;--ds-faltou-chip:#2F2843;--ds-erro:#FF8A85;--ds-erro-texto:#FF8A85;--ds-erro-chip:#42282A;--ds-grafico-marcado:#A85A80;--ds-sombra:none;--ds-sombra-forte:none;--ds-veu:rgba(0,0,0,.6);color:var(--ds-texto)}
+.ds{--ds-fundo:#FBF7F5;--ds-superficie:#FFFFFF;--ds-hover:#F4ECEA;--ds-divisoria:#EEE3E0;--ds-borda:#8E807F;--ds-texto:#2B2227;--ds-texto-2:#5B4D53;--ds-texto-3:#8E807F;--ds-acao:#86315C;--ds-acao-pressionada:#6E2A55;--ds-acao-suave:#FBF4F7;--ds-acao-texto:#FFFFFF;--ds-acento:#F4A08A;--ds-foco:rgba(134,49,92,.28);--ds-confirmado:#2E7D32;--ds-confirmado-texto:#22622A;--ds-confirmado-chip:#E4F2E4;--ds-aguardando:#A87400;--ds-aguardando-texto:#7A5200;--ds-aguardando-chip:#FCF0CF;--ds-cancelado:#8C8279;--ds-cancelado-texto:#5F5750;--ds-cancelado-chip:#EEEAE5;--ds-feito:#1F5F8B;--ds-feito-texto:#1B527A;--ds-feito-chip:#E3EDF5;--ds-faltou:#7350D6;--ds-faltou-texto:#5A3BB8;--ds-faltou-chip:#EEE9FC;--ds-erro:#D1242F;--ds-erro-texto:#A8161F;--ds-erro-chip:#FDE6E6;--ds-grafico-recebido:var(--ds-acao);--ds-grafico-marcado:#D98AAE;--ds-sombra:0 1px 3px rgba(43,34,39,.12);--ds-sombra-forte:0 12px 32px rgba(43,34,39,.12);--ds-veu:rgba(26,20,23,.48);--ds-marca-claro:#FBF7F5;--ds-dia-manha:#FFD9B0;--ds-degrade:linear-gradient(180deg,#FFD9B0 0%,#F4A08A 38%,#C9587E 70%,#6E2A55 100%);
+font-family:"Hanken Grotesk",system-ui,sans-serif;color:var(--ds-texto);background:var(--ds-fundo);font-size:16px;line-height:24px;width:100%}
+.ds *{box-sizing:border-box}
+.ds p{margin:0}
+.nu{font-family:Nunito,ui-rounded,system-ui,sans-serif;font-weight:800}
+.h1{font-family:Nunito,ui-rounded,sans-serif;font-weight:800;font-size:40px;line-height:44px;letter-spacing:-0.015em;margin:0}
+.h2{font-family:Nunito,ui-rounded,sans-serif;font-weight:800;font-size:28px;line-height:34px;letter-spacing:-0.01em;margin:0}
+.h3{font-family:Nunito,ui-rounded,sans-serif;font-weight:700;font-size:20px;line-height:26px;margin:0}
+.h4{font-weight:700;font-size:16px;line-height:22px;margin:0}
+.leg{font-size:13px;line-height:18px;font-weight:500;color:var(--ds-texto-2)}
+.t2{color:var(--ds-texto-2)}
+.num{font-variant-numeric:tabular-nums}
+.hr{font-family:Nunito,ui-rounded,sans-serif;font-weight:800;font-variant-numeric:tabular-nums}
+.card{background:var(--ds-superficie);border:1px solid var(--ds-divisoria);border-radius:24px}
+.btn{font-family:inherit;font-size:16px;line-height:20px;font-weight:600;height:44px;padding:0 20px;border-radius:999px;border:0;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;white-space:nowrap;text-decoration:none}
+.b1{background:var(--ds-acao);color:var(--ds-acao-texto)}.b1:hover{background:var(--ds-acao-pressionada)}
+.b2{background:var(--ds-hover);color:var(--ds-texto)}
+.b3{background:transparent;color:var(--ds-acao);padding:0 8px}
+.b4{background:transparent;color:var(--ds-erro-texto);padding:0 8px}
+.bs{height:36px;font-size:15px;padding:0 14px}
+.ib{width:40px;height:40px;border-radius:50%;border:0;background:var(--ds-hover);color:var(--ds-texto);display:inline-grid;place-items:center;cursor:pointer;flex:none}
+.campo{display:flex;flex-direction:column;gap:6px}
+.campo label,.campo .lb{font-size:15px;font-weight:600}
+.in{font-family:inherit;font-size:16px;height:48px;border-radius:16px;border:1.5px solid var(--ds-borda);padding:0 16px;background:var(--ds-superficie);color:var(--ds-texto);width:100%}
+.in:focus{outline:3px solid var(--ds-foco);outline-offset:1px;border-color:var(--ds-acao)}
+.ajuda{font-size:13px;line-height:18px;color:var(--ds-texto-2)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px 0 10px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap;width:max-content}
+.c-conf{background:var(--ds-confirmado-chip);color:var(--ds-confirmado-texto)}.c-agu{background:var(--ds-aguardando-chip);color:var(--ds-aguardando-texto)}.c-can{background:var(--ds-cancelado-chip);color:var(--ds-cancelado-texto)}.c-feito{background:var(--ds-feito-chip);color:var(--ds-feito-texto)}.c-falta{background:var(--ds-faltou-chip);color:var(--ds-faltou-texto)}.c-erro{background:var(--ds-erro-chip);color:var(--ds-erro-texto)}.c-neu{background:var(--ds-hover);color:var(--ds-texto-2)}
+.seg{display:inline-flex;background:var(--ds-hover);border-radius:999px;padding:4px;gap:2px}
+.seg button{font-family:inherit;font-size:15px;font-weight:600;border:0;height:36px;padding:0 16px;border-radius:999px;background:transparent;color:var(--ds-texto-2);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ds-superficie);color:var(--ds-texto);box-shadow:var(--ds-sombra)}
+.av{border-radius:50%;display:grid;place-items:center;font-weight:700;flex:none;background:var(--ds-hover);color:var(--ds-texto)}
+.tb{width:100%;border-collapse:collapse;font-size:15px}
+.tb th{font-size:13px;font-weight:600;color:var(--ds-texto-2);text-align:left;padding:14px 16px 8px}
+.tb td{padding:14px 16px;border-top:1px solid var(--ds-divisoria);vertical-align:middle}
+.tb th:first-child,.tb td:first-child{padding-left:24px}.tb th:last-child,.tb td:last-child{padding-right:24px}
+.sw{width:44px;height:26px;border-radius:999px;border:0;position:relative;flex:none;cursor:pointer}
+.sw span{position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:var(--ds-superficie);box-shadow:var(--ds-sombra)}
+.aviso{display:flex;gap:10px;align-items:flex-start;border-radius:16px;padding:12px 16px;font-size:15px;line-height:22px}
+a{color:var(--ds-acao)}a:hover{color:var(--ds-acao-pressionada)}
+.btn{transition:background-color 150ms}
+.btn:focus-visible,.ib:focus-visible,.sw:focus-visible,.seg button:focus-visible,.lat a:focus-visible,.in:focus-visible,button:focus-visible,a:focus-visible,.is-foco{outline:3px solid var(--ds-foco);outline-offset:2px}
+.in:focus-visible,.in.is-foco{outline-offset:1px;border-color:var(--ds-acao)}
+.b1.is-hover{background:var(--ds-acao-pressionada)}
+.b2:hover,.ib:hover,.b2.is-hover{background:color-mix(in srgb,var(--ds-texto) 6%,var(--ds-hover))}
+.b3:hover{background:var(--ds-hover)}
+.b4:hover{background:var(--ds-erro-chip)}
+.b5{background:var(--ds-erro-texto);color:var(--ds-acao-texto)}
+.btn:disabled{background:var(--ds-hover);color:var(--ds-texto-3);cursor:not-allowed}
+.btn.is-carregando{color:transparent;position:relative}
+.btn.is-carregando::after{content:"";position:absolute;inset:0;margin:auto;width:18px;height:18px;border-radius:50%;border:2.5px solid var(--ds-acao-texto);border-right-color:transparent;animation:ds-gira .8s linear infinite}
+.b2.is-carregando::after{border-color:var(--ds-texto);border-right-color:transparent}
+@keyframes ds-gira{to{transform:rotate(360deg)}}
+.in:hover,.in.is-hover{border-color:var(--ds-texto-2)}
+.in:disabled{background:var(--ds-hover);border-color:var(--ds-hover);color:var(--ds-texto-3)}
+.in::placeholder{color:var(--ds-texto-3)}
+.seg button:hover{color:var(--ds-texto)}
+.sw:disabled{background:var(--ds-hover);cursor:not-allowed}
+.op:not([aria-checked="true"]):not(:disabled):hover,.dt:not([aria-pressed="true"]):not(:disabled):hover,.sl:not([aria-pressed="true"]):not(:disabled):hover,.sl.is-hover{border-color:var(--ds-texto-2)}
+@media (prefers-reduced-motion:reduce){.btn.is-carregando::after{animation-duration:2.4s}}
+
+</style>
+</helmet>
+<div class="ds" style="width: 1440px; height: 1060px; overflow: hidden">
+<div style="padding: 48px 56px; display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); grid-auto-rows: 1fr; gap: 20px; height: 1060px">
+<section class="card" style="padding: 24px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px"><p class="leg" style="align-self: flex-start">Primeiro acesso</p><svg width="176" height="132" viewBox="0 0 200 150" aria-hidden="true"><style>.t{fill:none;stroke:var(--ds-borda);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.l{fill:none;stroke:var(--ds-divisoria);stroke-width:3;stroke-linecap:round}.d{fill:none;stroke:var(--ds-borda);stroke-width:3;stroke-linecap:round;stroke-dasharray:2 8}.p{fill:var(--ds-hover)}.a{fill:var(--ds-acao)}</style><path class="t" d="M114 22H62a14 14 0 0 0-14 14v86a14 14 0 0 0 14 14h76a14 14 0 0 0 14-14V62"/><path class="l" d="M66 56h48M66 80h68M66 104h68"/><rect class="p" x="62" y="44" width="58" height="22" rx="11"/><circle class="a" cx="146" cy="30" r="10"/></svg><h2 class="h3">Vamos montar sua agenda</h2><p class="t2" style="font-size: 15px; line-height: 22px; max-width: 30ch; margin-bottom: 8px">Comece pelos serviços que você faz. Depois, os dias e horários em que atende.</p><div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: auto"><button class="btn b1" type="button">Cadastrar serviços</button><button class="btn b2" type="button">Definir horários</button></div></section>
+<section class="card" style="padding: 24px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px"><p class="leg" style="align-self: flex-start">Dia sem mais horários</p><svg width="176" height="132" viewBox="0 0 200 150" aria-hidden="true"><style>.t{fill:none;stroke:var(--ds-borda);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.l{fill:none;stroke:var(--ds-divisoria);stroke-width:3;stroke-linecap:round}.d{fill:none;stroke:var(--ds-borda);stroke-width:3;stroke-linecap:round;stroke-dasharray:2 8}.p{fill:var(--ds-hover)}.a{fill:var(--ds-acao)}</style><path class="t" d="M114 22H62a14 14 0 0 0-14 14v86a14 14 0 0 0 14 14h76a14 14 0 0 0 14-14V62"/><rect class="p" x="62" y="44" width="58" height="18" rx="9"/><rect class="p" x="62" y="70" width="40" height="18" rx="9"/><path class="d" d="M66 108h68"/><circle class="a" cx="146" cy="30" r="10"/></svg><h2 class="h3">Nada marcado depois das 16h</h2><p class="t2" style="font-size: 15px; line-height: 22px; max-width: 30ch; margin-bottom: 8px">O resto do dia está livre.</p><div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: auto"><button class="btn b1" type="button"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Novo agendamento</button></div></section>
+<section class="card" style="padding: 24px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px"><p class="leg" style="align-self: flex-start">Clientes vazio</p><svg width="176" height="132" viewBox="0 0 200 150" aria-hidden="true"><style>.t{fill:none;stroke:var(--ds-borda);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.l{fill:none;stroke:var(--ds-divisoria);stroke-width:3;stroke-linecap:round}.d{fill:none;stroke:var(--ds-borda);stroke-width:3;stroke-linecap:round;stroke-dasharray:2 8}.p{fill:var(--ds-hover)}.a{fill:var(--ds-acao)}</style><rect class="t" x="40" y="30" width="80" height="90" rx="14"/><circle class="a" cx="80" cy="62" r="11"/><path class="t" d="M58 104a22 22 0 0 1 44 0"/><path class="l" d="M134 62h30M134 80h22M134 98h30"/></svg><h2 class="h3">Nenhum cliente ainda</h2><p class="t2" style="font-size: 15px; line-height: 22px; max-width: 30ch; margin-bottom: 8px">Cadastre quem já atende com você. Com o WhatsApp, a pessoa recebe a confirmação e o lembrete.</p><div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: auto"><button class="btn b1" type="button"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Novo cliente</button></div></section>
+<section class="card" style="padding: 24px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px"><p class="leg" style="align-self: flex-start">Novo agendamento</p><svg width="176" height="132" viewBox="0 0 200 150" aria-hidden="true"><style>.t{fill:none;stroke:var(--ds-borda);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.l{fill:none;stroke:var(--ds-divisoria);stroke-width:3;stroke-linecap:round}.d{fill:none;stroke:var(--ds-borda);stroke-width:3;stroke-linecap:round;stroke-dasharray:2 8}.p{fill:var(--ds-hover)}.a{fill:var(--ds-acao)}</style><rect class="t" x="34" y="34" width="132" height="86" rx="16"/><rect class="p" x="50" y="52" width="44" height="18" rx="9"/><rect class="p" x="104" y="52" width="44" height="18" rx="9"/><rect class="p" x="50" y="82" width="44" height="18" rx="9"/><rect class="p" x="104" y="82" width="44" height="18" rx="9"/><circle class="a" cx="164" cy="34" r="10"/></svg><h2 class="h3">Não tem horário livre na quarta</h2><p class="t2" style="font-size: 15px; line-height: 22px; max-width: 30ch; margin-bottom: 8px">Quinta tem 6 horários a partir das 09:00.</p><div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: auto"><button class="btn b1" type="button">Ver quinta</button><button class="btn b2" type="button">Outro dia</button></div></section>
+<section class="card" style="padding: 24px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px"><p class="leg" style="align-self: flex-start">Erro de rede</p><svg width="176" height="132" viewBox="0 0 200 150" aria-hidden="true"><style>.t{fill:none;stroke:var(--ds-borda);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.l{fill:none;stroke:var(--ds-divisoria);stroke-width:3;stroke-linecap:round}.d{fill:none;stroke:var(--ds-borda);stroke-width:3;stroke-linecap:round;stroke-dasharray:2 8}.p{fill:var(--ds-hover)}.a{fill:var(--ds-acao)}</style><path class="t" d="M118 26H66a14 14 0 0 0-14 14v70a14 14 0 0 0 14 14h68a14 14 0 0 0 14-14V60"/><path class="l" d="M72 76h16M98 76h16M72 98h48"/><path class="d" d="M126 26a22 22 0 0 1 22 22"/><circle class="a" cx="150" cy="46" r="9"/></svg><h2 class="h3">Sem conexão</h2><p class="t2" style="font-size: 15px; line-height: 22px; max-width: 30ch; margin-bottom: 8px">Tente de novo quando a internet voltar. Nada do que estava salvo foi perdido.</p><div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: auto"><button class="btn b1" type="button">Tentar de novo</button></div></section>
+<section class="card" style="padding: 24px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px"><p class="leg" style="align-self: flex-start">Sessão expirada</p><svg width="176" height="132" viewBox="0 0 200 150" aria-hidden="true"><style>.t{fill:none;stroke:var(--ds-borda);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.l{fill:none;stroke:var(--ds-divisoria);stroke-width:3;stroke-linecap:round}.d{fill:none;stroke:var(--ds-borda);stroke-width:3;stroke-linecap:round;stroke-dasharray:2 8}.p{fill:var(--ds-hover)}.a{fill:var(--ds-acao)}</style><rect class="t" x="58" y="62" width="84" height="62" rx="14"/><path class="t" d="M76 62V48a24 24 0 0 1 48 0v4"/><circle class="a" cx="100" cy="92" r="9"/></svg><h2 class="h3">Sua sessão terminou</h2><p class="t2" style="font-size: 15px; line-height: 22px; max-width: 30ch; margin-bottom: 8px">Entre de novo para continuar de onde parou.</p><div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: auto"><button class="btn b1" type="button">Entrar</button></div></section>
+<section class="card" style="padding: 24px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px"><p class="leg" style="align-self: flex-start">Não encontrado</p><svg width="176" height="132" viewBox="0 0 200 150" aria-hidden="true"><style>.t{fill:none;stroke:var(--ds-borda);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.l{fill:none;stroke:var(--ds-divisoria);stroke-width:3;stroke-linecap:round}.d{fill:none;stroke:var(--ds-borda);stroke-width:3;stroke-linecap:round;stroke-dasharray:2 8}.p{fill:var(--ds-hover)}.a{fill:var(--ds-acao)}</style><path class="d" d="M58 30h70a16 16 0 0 1 16 16v66a16 16 0 0 1-16 16H58a16 16 0 0 1-16-16V46a16 16 0 0 1 16-16z"/><path class="l" d="M64 60h40M64 80h28"/><circle class="a" cx="150" cy="126" r="9"/></svg><h2 class="h3">Esta página não existe</h2><p class="t2" style="font-size: 15px; line-height: 22px; max-width: 30ch; margin-bottom: 8px">O link pode estar errado ou o horário é de outra empresa.</p><div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: auto"><button class="btn b1" type="button">Ir para a agenda</button></div></section>
+<section class="card" aria-busy="true" aria-label="Carregando a agenda" style="padding: 24px 24px; display: flex; flex-direction: column; gap: 12px"><p class="leg">Carregando, na agenda</p><span style="display: block; width: 70%; height: 28px; border-radius: 12px; background: var(--ds-hover)"></span><span style="display: block; width: 45%; height: 16px; border-radius: 12px; background: var(--ds-hover)"></span><div style="display: grid; grid-template-columns: 40px 1fr; gap: 10px; margin-top: 8px"><span style="display: block; width: 100%; height: 16px; border-radius: 12px; background: var(--ds-hover)"></span><span style="display: block; width: 100%; height: 52px; border-radius: 12px; background: var(--ds-hover)"></span><span style="display: block; width: 100%; height: 16px; border-radius: 12px; background: var(--ds-hover)"></span><span style="display: block; width: 100%; height: 52px; border-radius: 12px; background: var(--ds-hover)"></span><span style="display: block; width: 100%; height: 16px; border-radius: 12px; background: var(--ds-hover)"></span><span style="display: block; width: 100%; height: 52px; border-radius: 12px; background: var(--ds-hover)"></span></div><p class="leg" style="margin-top: auto; text-align: center">Esqueleto nas formas finais, pulsando devagar. Nunca “Carregando…” solto.</p></section>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1060}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
