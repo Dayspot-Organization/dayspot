@@ -9,6 +9,18 @@ Dependências copiadas do "Depende de" de cada issue — o corpo da issue é o c
 
 Conferido em 18/11/2026.
 
+## Mudanças de 18/11/2026 (piloto)
+
+A primeira publicação é um piloto com uma empresa (`docs/backlog.md` v2.6).
+
+| Card | Item | O que mudou |
+|---|---|---|
+| #128, #129, #130, #135, #136 | 2.18–2.22 | Passam para a Fatia 2E, depois do piloto; os itens mantêm a numeração |
+| #150 | — | Passa para a Fatia 2E |
+| #149 | — | Passa para a Fatia P. Decidido: o Neon não será recriado |
+| #168 a #178 | — | Cards novos da Fatia P |
+| #179 a #182 | — | Cards novos da Fatia P: design system, documentação, concorrência no agendamento público e este alinhamento |
+
 ## Mudanças de 18/11/2026 (agendamento público)
 
 Cards novos da Fatia 2, fora do `docs/backlog.md`:
@@ -18,6 +30,7 @@ Cards novos da Fatia 2, fora do `docs/backlog.md`:
 | #161 | — | Card novo: agenda semanal no design v2.1 (PR #157) |
 | #162 | — | Card novo: rotas públicas por slug e criação atômica de cliente e agendamento |
 | #163 | — | Card novo: página pública `/agendar/:slug` e novo agendamento no design v2.1 (PR #158) |
+| #165 | — | Card novo: CI em PR para qualquer base, build Docker e 1 aprovação para a `main` |
 
 ## Mudanças de 17/11/2026 (migração de stack)
 
@@ -145,38 +158,86 @@ Itens 0.1 a 0.6 não têm card: as issues da numeração antiga foram apagadas.
 | #125 | 2.15 | Normalizar e-mail (trim + minúsculas) no cadastro e no login | P | backend | — |
 | #126 | 2.16 | Teste: prestador não lê agendamento de outro prestador do mesmo tenant | M | backend | 2.2, 2.3, 2.7, 0.17 |
 | #127 | 2.17 | Migration: convites (papel administrador ou prestador) | P | banco | 0.9 |
+
+### Cards da Fatia 2 sem item no backlog
+
+| Card | Item | Título | Tam. | Área | Depende de |
+|---|---|---|---|---|---|
+| #138 | — | Banco de produção no Neon | M | infra, banco | Fatia 0, 0.17 |
+| #146 | — | Migrar o frontend de React para Angular | — | frontend | 1.8–1.12 |
+| #148 | — | Migrar o backend de Go para .NET (EF Core) | — | backend | 1.1–1.7, 1.13, 1.14, 2.14 |
+| #151 | — | Atualizar documentação para a stack .NET/Angular | — | docs | PRs #144 e #147 |
+| #161 | — | Agenda semanal no design v2.1 | M | frontend | 1.6, #146 |
+| #162 | — | Agendamento público: rotas por slug e criação atômica de cliente e agendamento | G | backend, banco, docs | 1.3, 1.5, 1.7, #148 |
+| #163 | — | Página pública /agendar/:slug e novo agendamento no design v2.1 | G | frontend | #161, #162 |
+| #165 | — | Proteger o fluxo de merge na main: CI em todo PR, build Docker e 1 aprovação | P | infra | — |
+
+A 2.14 vem antes da 2.3: a sessão mora na tabela `sessoes`. A fatia fecha quando 2.13 e 2.16 passam no CI.
+
+A 2.17 (#127) fica na Fatia 2 no board, mas só a Fatia 2E depende dela.
+
+Sem decisão em aberto no corpo das issues das Fatias 2 e 2E: as de 2.2, 2.3, 2.8, 2.18, 2.19 e 2.22 foram decididas em 23/10/2026 (`requisitos.md` §12).
+
+## Fatia P — Publicar
+
+| Card | Item | Título | Tam. | Área | Depende de |
+|---|---|---|---|---|---|
+| #149 | — | Banco de produção no Neon na stack nova (EF Migrations e .NET) | M | infra, banco | #138, #148 |
+| #168 | — | Cancelar e concluir agendamento no painel | G | backend, frontend | 2.6 (#116), 2.7 (#117) |
+| #169 | — | Regras do agendamento público no backend | M | backend | #162 |
+| #170 | — | Contato da empresa na página pública | M | banco, backend, frontend | #163 |
+| #171 | — | Dados do agendamento no painel: telefone, serviço e profissional | M | backend, frontend | 2.6 (#116), 2.7 (#117) |
+| #172 | — | Health check e monitoramento mínimo | M | infra, backend | — |
+| #173 | — | Roteiro de deploy e migrations | M | infra, banco, docs | #149, #172 |
+| #174 | — | Provisionar a empresa piloto | M | infra, banco | #149, #170, #173 |
+| #175 | — | Privacidade da página pública | M | frontend, docs | #163, #170 |
+| #176 | — | Acessibilidade do fluxo público | M | frontend | #163 |
+| #177 | — | Ajustes da agenda: achados menores do PR #157 | M | frontend | #161 |
+| #178 | — | Verificação em produção antes de divulgar | M | infra | #118, #120, #123, #126, #149, #163, #168 a #176 |
+| #179 | — | Alinhar o design system às decisões do piloto | M | docs | — |
+| #180 | — | Documentação de produto e API alinhada às decisões do piloto | M | docs | #162 |
+| #181 | — | Agendamentos simultâneos no mesmo horário: deadlock responde 500 em vez de 409 | P | backend | #162 |
+| #182 | — | Alinhar backlog e cards ao planejamento do piloto | M | docs | — |
+
+Decisão em aberto no #174: administrador que não atende aparece como profissional na página pública, e falta confirmar se o horário da empresa piloto cabe na janela fixa.
+
+## Fatia 2E — Equipe
+
+Depois do piloto.
+
+| Card | Item | Título | Tam. | Área | Depende de |
+|---|---|---|---|---|---|
 | #128 | 2.18 | POST e GET /convites: administrador convida administrador ou prestador | M | backend | 2.17, 2.7 |
 | #129 | 2.19 | Aceite do convite (endpoint e tela), reativando membership removido | M | backend, frontend | 2.17, 2.5, 2.10, 2.22 |
 | #130 | 2.20 | Tela de gestão de prestadores: listar membros e convidar | M | frontend | 2.18, 2.21, 2.11 |
 | #135 | 2.21 | GET /membros: lista os membros do tenant (só administrador) | P | backend | 2.7 |
 | #136 | 2.22 | Criar conta pelo convite: grava só usuarios + membership do convite | M | backend, frontend | 2.1, 2.3, 2.10, 2.15, 2.17 |
-| #146 | — | Migrar o frontend de React para Angular | — | frontend | 1.8–1.12 |
-| #148 | — | Migrar o backend de Go para .NET (EF Core) | — | backend | 1.1–1.7, 1.13, 1.14, 2.14 |
-| #149 | — | Banco de produção no Neon na stack nova (EF Migrations e .NET) | M | infra, banco | #138, #148 |
 | #150 | — | Teste: handler fora de src/Api/Dados/ não acessa DbSet do AppDb | P | backend | #148 |
-| #161 | — | Agenda semanal no design v2.1 | M | frontend | 1.6, #146 |
-| #162 | — | Agendamento público: rotas por slug e criação atômica de cliente e agendamento | G | backend, banco, docs | 1.3, 1.5, 1.7, #148 |
-| #163 | — | Página pública /agendar/:slug e novo agendamento no design v2.1 | G | frontend | #161, #162 |
 
-A 2.14 vem antes da 2.3: a sessão mora na tabela `sessoes`. A 2.22 vem antes da 2.19: o aceite oferece "criar conta" a quem não tem conta. A fatia fecha quando 2.13 e 2.16 passam no CI.
+A 2.22 vem antes da 2.19: o aceite oferece "criar conta" a quem não tem conta.
 
-Sem decisão em aberto no corpo das issues da Fatia 2: as de 2.2, 2.3, 2.8, 2.18, 2.19 e 2.22 foram decididas em 23/10/2026 (`requisitos.md` §12).
+**Sequência:** 2.17 (#127) e #150 -> 2.18 (#128), 2.21 (#135) e 2.22 (#136) -> 2.19 (#129) e 2.20 (#130).
 
-### Sequência recomendada
+## Fatias 3 e 4
 
-Ondas pelo "Depende de" acima, supondo as Fatias 0 e 1 entregues. Os cards de
-uma mesma onda podem rodar em paralelo.
+Sem cards: congeladas até a reescrita para o WhatsApp ser fechada (`docs/backlog.md`).
 
-| Onda | Cards | Por quê |
+## Ordem até o piloto
+
+Os cards de uma mesma etapa podem andar em paralelo, respeitando o "Depende de".
+O #163 depende de #161 e #162, que vêm antes da etapa 1.
+
+| Etapa | Cards | O que fecha |
 |---|---|---|
-| 1 | 2.1 (#111), 2.14 (#124), 2.15 (#125), 2.17 (#127) | Sem dependência na fatia |
-| 2 | 2.2 (#112), 2.3 (#113) | Cadastro e login, sobre hash, `sessoes` e e-mail normalizado |
-| 3 | 2.5 (#115), 2.8 (#118), 2.10 (#120) | 2.8 é lateral e não bloqueia nada |
-| 4 | 2.6 (#116), 2.4 (#114), 2.9 (#119), 2.22 (#136) | 2.6 é o maior card e o de mais risco |
-| 5 | 2.7 (#117), 2.11 (#121), 2.19 (#129) | 2.7 destrava 2.12, 2.16, 2.18 e 2.21 |
-| 6 | 2.12 (#122), 2.16 (#126), 2.18 (#128), 2.21 (#135) | |
-| 7 | 2.13 (#123), 2.20 (#130) | 2.13 e 2.16 no CI fecham a fatia |
+| 1 | #165, #163 | Fluxo de merge protegido e página pública ligada à API |
+| 2 | #169, #172, #149 (em paralelo) | Regras do agendamento público, saúde da API e banco de produção |
+| 3 | 2.3 (#113), 2.5 (#115), 2.6 (#116), 2.4 (#114), 2.9 (#119), 2.7 (#117) | Login, sessão, tenant e papéis |
+| 4 | 2.2 (#112), 2.10 (#120), 2.11 (#121), 2.8 (#118), 2.12 (#122), 2.16 (#126), 2.13 (#123) | Cadastro, telas, fim dos valores fixos e testes de isolamento |
+| 5 | #168, #171, #170, #175, #176 | Operação no painel, contato, privacidade e acessibilidade |
+| 6 | #173, #174 | Roteiro de deploy e empresa piloto em produção |
+| 7 | #178 | Verificação em produção antes de divulgar |
 
-**Caminho crítico:** 2.14 -> 2.3 -> 2.5 -> 2.6 -> 2.7 -> 2.12 -> 2.13. Atraso
-na 2.6 ou na 2.7 atrasa a fatia; a trilha 2.7 -> 2.18/2.21 -> 2.20 tem o mesmo
-comprimento.
+O #177 entra só se sobrar tempo. #179, #180, #181 e #182 foram criados depois da ordem aprovada e não têm etapa definida.
+
+**Caminho crítico:** 2.3 -> 2.5 -> 2.6 -> 2.7 -> 2.12 -> 2.13 -> #178. Atraso na
+2.6 ou na 2.7 atrasa o piloto, porque #168 e #171 também dependem delas.
