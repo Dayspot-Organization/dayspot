@@ -246,6 +246,30 @@ public class AgendamentosTests
         Assert.Equal(Seed.Prestador, (await r.Json()).GetProperty("erro").GetProperty("detalhes").GetProperty("prestador_id").GetGuid());
     }
 
+    // Com COMMIT de verdade, no tenant do seed: o fim do teste apaga o que gravou.
+    [Fact]
+    public async Task CriarSimultaneosNoMesmoHorarioUmSoEntra()
+    {
+        await using var dono = await Banco.Conectar("MIGRATIONS_DATABASE_URL");
+        await using var api = await Servidor.ComPublico(Banco.ConnectionString("DATABASE_URL"));
+        var inicio = new DateTime(2098, 3, 1, 9, 0, 0, DateTimeKind.Utc);
+        try
+        {
+            var respostas = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ =>
+                api.Chamar("POST", "/api/agendamentos", $$"""{"cliente_id":"{{Seed.ClienteAlfa}}","inicio":"2098-03-01T09:00:00Z"}""")));
+            Assert.Single(respostas, r => r.StatusCode == HttpStatusCode.Created);
+            foreach (var r in respostas.Where(r => r.StatusCode != HttpStatusCode.Created))
+            {
+                await r.ExigirErro(HttpStatusCode.Conflict, Erros.ConflitoHorario);
+            }
+            Assert.Equal(1, await dono.Escalar<int>("SELECT count(*) FROM agendamentos WHERE tenant_id = $1 AND inicio = $2", Seed.Alfa, inicio));
+        }
+        finally
+        {
+            await dono.Exec("DELETE FROM agendamentos WHERE tenant_id = $1 AND inicio = $2", Seed.Alfa, inicio);
+        }
+    }
+
     [Fact]
     public async Task CriarComPrestadorRemovido()
     {
