@@ -1,7 +1,37 @@
-// Peças da casca (app.html): logo, menu e botão de tema. Medidas: docs/design-system/README.md §4.22.
-import { ChangeDetectionStrategy, Component, input, output } from "@angular/core";
-import { RouterLink, RouterLinkActive } from "@angular/router";
-import type { Tema } from "./tema";
+// Casca do painel (painel.html) e suas peças: logo, menu e botão de tema. Medidas: docs/design-system/README.md §4.22.
+import { ChangeDetectionStrategy, Component, type ElementRef, inject, input, output, viewChild } from "@angular/core";
+import { toSignal } from "@angular/core/rxjs-interop";
+import {
+  type ActivatedRouteSnapshot,
+  NavigationEnd,
+  Router,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet,
+} from "@angular/router";
+import { filter, map } from "rxjs";
+import { type Tema, TemaService } from "./tema";
+
+/** Um passo da trilha: título declarado na própria rota e o caminho até ela. */
+export interface Passo {
+  titulo: string;
+  caminho: string;
+}
+
+/**
+ * Rotas com data.titulo, da raiz até a ativa. Lê o data da configuração de cada rota
+ * (não o herdado), para "Agenda" não se repetir na rota-filha "".
+ */
+export function trilhaDe(raiz: ActivatedRouteSnapshot): Passo[] {
+  const trilha: Passo[] = [];
+  const segmentos: string[] = [];
+  for (let r: ActivatedRouteSnapshot | null = raiz; r; r = r.firstChild) {
+    segmentos.push(...r.url.map((s) => s.path));
+    const titulo = r.routeConfig?.data?.["titulo"];
+    if (typeof titulo === "string") trilha.push({ titulo, caminho: "/" + segmentos.join("/") });
+  }
+  return trilha;
+}
 
 /**
  * Logo horizontal com os traços de logo-horizontal.svg (assets da marca), sem redesenhar.
@@ -103,5 +133,41 @@ export class BotaoTema {
 
   protected rotulo() {
     return this.tema() === "escuro" ? "Tema escuro. Mudar para o claro" : "Tema claro. Mudar para o escuro";
+  }
+}
+
+// Estrutura do DESIGN.md: celular com top-bar e gaveta (<dialog>), desktop com menu
+// lateral fixo (o CSS troca a partir de 1024 px).
+@Component({
+  selector: "app-painel",
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RouterOutlet, RouterLink, Logo, Menu, BotaoTema],
+  templateUrl: "./painel.html",
+})
+export class Painel {
+  private readonly router = inject(Router);
+  private readonly gaveta = viewChild.required<ElementRef<HTMLDialogElement>>("gaveta");
+  protected readonly tema = inject(TemaService);
+
+  /** Trilha da top-bar, recalculada a cada navegação concluída (o título da aba fica no TituloDayspot). */
+  protected readonly trilha = toSignal(
+    this.router.events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      map(() => trilhaDe(this.router.routerState.snapshot.root)),
+    ),
+    { initialValue: [] },
+  );
+
+  protected abrir() {
+    this.gaveta().nativeElement.showModal();
+  }
+
+  protected fechar() {
+    this.gaveta().nativeElement.close();
+  }
+
+  /** Clique no fundo escurecido (fora do conteúdo) fecha a gaveta. */
+  protected cliqueNaGaveta(e: MouseEvent) {
+    if (e.target === e.currentTarget) this.fechar();
   }
 }

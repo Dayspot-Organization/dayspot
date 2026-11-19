@@ -2,22 +2,6 @@
 // Desenho: docs/design-system/README.md §4.11 (aviso), §4.19 (vazio) e §4.20 (esqueleto).
 import { ChangeDetectionStrategy, Component, booleanAttribute, input, output } from "@angular/core";
 
-/** Esqueleto genérico (linhas nas medidas de um cartão). Telas com forma própria desenham o seu. */
-@Component({
-  selector: "app-carregando",
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="cartao esqueleto-cartao" aria-busy="true" role="status">
-      <span class="so-leitor">Carregando</span>
-      <span class="esqueleto" style="width: 40%; height: 26px"></span>
-      <span class="esqueleto" style="width: 100%; height: 48px"></span>
-      <span class="esqueleto" style="width: 100%; height: 48px"></span>
-      <span class="esqueleto" style="width: 60%; height: 48px"></span>
-    </div>
-  `,
-})
-export class Carregando {}
-
 /**
  * Aviso de erro no fluxo da página: ícone + o que aconteceu e o que fazer.
  * "Tentar de novo" quando há o que repetir (ex.: a busca que falhou): ligue `podeRepetir`.
