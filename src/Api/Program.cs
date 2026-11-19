@@ -37,6 +37,7 @@ builder.Services.Configure<HostOptions>(o => o.ShutdownTimeout = timeoutShutdown
 builder.Services.AddSingleton(AppDb.Opcoes(Config.ParaConnectionString(cfg.DatabaseUrl)));
 builder.Services.AddScoped<AppDb>();
 builder.Services.AddSingleton(new Fixos(cfg.TenantFixo, cfg.PrestadorFixo, cfg.ServicoFixo));
+builder.Services.AddPublico();
 
 var app = builder.Build();
 
@@ -71,8 +72,10 @@ for (var tentativa = 1; ; tentativa++)
 }
 
 app.UseRouting();
-// Toda requisição numa transação com o tenant; na Fatia 2 ele vem da sessão.
-app.UseTransacaoNasRotas(_ => cfg.TenantFixo);
+app.UsePublico();
+// Toda requisição numa transação com o tenant: o do slug nas rotas públicas; nas
+// demais, na Fatia 2 ele vem da sessão.
+app.UseTransacaoNasRotas(ctx => Publico.TenantDaRota(ctx) ?? cfg.TenantFixo);
 app.MapApi();
 
 app.Logger.LogInformation("API no ar na porta {Porta}, tenant fixo {TenantFixo}", cfg.PortaHttp, cfg.TenantFixo);

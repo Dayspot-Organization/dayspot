@@ -1,9 +1,20 @@
 # Requisitos — Dayspot
 
 Sistema de agendamentos multi-tenant com notificação via Telegram.
-Documento de requisitos e decisões técnicas — **v0.13** · 17/11/2026
+Documento de requisitos e decisões técnicas — **v0.14** · 18/11/2026
 
 > Fonte da verdade: este arquivo. A pasta do Drive é histórico.
+
+## Mudanças desde a v0.13
+
+Decisão de produto (#162), 18/11/2026: o cliente final agenda sozinho, sem conta, pela
+página pública da empresa.
+
+| # | O que mudou | Onde |
+|---|---|---|
+| 1 | Rotas públicas `/api/publico/{slug}`: o tenant sai do slug da rota, exceção à regra da sessão | RNF05, 9, 12 |
+| 2 | O telefone passa a identificar o cliente no agendamento público; continua fora das notificações | 12 |
+| 3 | Janela do agendamento público, profissionais e limite de requisições por IP | 12 |
 
 ## Mudanças desde a v0.12
 
@@ -170,7 +181,9 @@ agendam os mesmos clientes. Só o administrador gerencia serviços e preços.
   restart do worker ou execução concorrente.
 - **RNF04** — Senhas com Argon2id ou bcrypt (custo ≥ 12).
 - **RNF05** — `tenant_id` derivado exclusivamente da sessão, nunca aceito do
-  corpo da requisição ou de query param.
+  corpo da requisição ou de query param. **Exceção:** nas rotas públicas
+  `/api/publico/{slug}`, sem sessão, o tenant sai do slug da rota, e continua nunca
+  vindo do corpo nem da query string (#162).
 - **RNF06** — Rate limit no login.
 - **RNF07** — Segredos via variável de ambiente.
 - **RNF08** — Falha do Telegram não pode derrubar o fluxo de agendamento.
@@ -489,7 +502,9 @@ segue o mesmo caminho do cancelamento pelo sistema (item 5.2). Decidido em
 
 Regras não negociáveis:
 
-1. O `tenant_id` sai da sessão, **nunca** do payload da requisição.
+1. O `tenant_id` sai da sessão, **nunca** do payload da requisição. Exceção: as rotas
+   públicas `/api/publico/{slug}` não têm sessão, ficam fora dos middlewares de
+   autenticação e de tenant e tiram o tenant do slug da rota (#162).
 2. Middleware obrigatório que extrai o tenant, valida o membership e injeta no
    contexto antes de qualquer handler.
 3. Verificação de papel por rota: só o administrador convida e remove membros, gerencia
@@ -554,7 +569,7 @@ usuário do tenant A e verificar que nenhum endpoint retorna dado do tenant B (i
 | Tema | Decisão |
 |---|---|
 | Multi-tenancy | Shared schema com `tenant_id` + RLS |
-| Telefone do cliente | Contato manual; nunca referenciado pelo worker |
+| Telefone do cliente | Contato manual; nunca referenciado pelo worker. No agendamento público, os dígitos do telefone identificam o cliente dentro da empresa (#162) |
 | Dados pessoais | Seed fictício; finalidade e retenção no README |
 | Criação de tenant | Signup self-service cria tenant + membership administrador e grava `tenants.criado_por` |
 | Bot | Único no MVP, coluna por tenant já prevista |
@@ -608,6 +623,16 @@ Decidido em 23/10/2026 (recomendações de `docs/especificacao-fluxo.md` §8.1, 
 | Link do convite | O administrador copia o link `/convite/{token}` na tela de prestadores; sem envio de e-mail no MVP. `POST` e `GET /api/convites` devolvem o token (2.18, 2.20) |
 | Rotas do convite | `GET /api/convites/{token}` sem sessão (empresa, papel e e-mail); `POST /api/convites/{token}/aceite` com sessão, fora do middleware de tenant, e a sessão passa para a empresa do convite; `POST /api/convites/{token}/conta` sem sessão. Telas `/convite/:token` e `/convite/:token/conta`. Sessão com outro e-mail → 403 `sem_permissao` (2.19, 2.22, 2.6) |
 
+Decidido em 18/11/2026 (#162):
+
+| Tema | Decisão |
+|---|---|
+| Agendamento público | O cliente final agenda sem conta em `/api/publico/{slug}`. Cliente e agendamento na mesma transação; telefone já cadastrado reaproveita o cliente mais antigo, sem alterar o nome gravado e sem revelar dados dele |
+| Janela do agendamento público | Segunda a sábado, início a partir de 08:00 e fim até 19:00, no fuso da empresa (`tenants.fuso_horario`). Regra fixa até existir o cadastro de disponibilidade. O `POST /api/agendamentos` do painel não muda |
+| Profissionais na página pública | Todos os memberships ativos da empresa, sem marca de "atende" |
+| Limite das rotas públicas | Por IP: 60 leituras e 10 envios por minuto. Acima disso, 429 `muitas_tentativas` com `Retry-After`. O IP vem do `CF-Connecting-IP`, que a Cloudflare do Render sobrescreve; o `X-Forwarded-For` não é usado, porque o cliente controla o começo dele. IPv6 conta por bloco /64. Contador em memória na API |
+| Dados da empresa na página pública | Só nome e fuso: `tenants` não tem endereço nem telefone |
+
 ## 13. Estimativa de prazo
 
 Base: 3 pessoas × ~5h/semana = 15h/semana nominais. Esforço por fatia no
@@ -649,4 +674,4 @@ O que o MVP não faz, de propósito. Decidido em 02/10/2026.
 |---|---|
 | Transferir a empresa, ou recuperá-la quando o criador sai ou perde a conta | O criador (`tenants.criado_por`) não é removível; trocar de dono pede fluxo próprio |
 | Feed (assinatura) de calendário `.ics` | Só download (RF17): o feed precisa de URL com token e expõe a agenda fora da sessão |
-| Papel `atendente` | Removido na v0.8: quem agenda é o administrador ou o próprio prestador |
+| Papel `atendente` | Removido na v0.8: quem agenda é o administrador, o próprio prestador ou, desde a v0.14, o cliente final pela página pública |

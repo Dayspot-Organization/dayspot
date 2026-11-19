@@ -2,7 +2,16 @@
 
 Fatia 0 do backlog (itens 0.7 a 0.18) e base de acesso a dados da Fatia 1 (1.2 e
 1.3). Complementa `docs/requisitos.md`.
-Versão **1.10** · 17/11/2026
+Versão **1.11** · 18/11/2026
+
+## Mudanças desde a v1.10
+
+Agendamento público (#162, `requisitos.md` v0.14). Sem migration: o schema não muda.
+
+- **Rotas públicas:** o slug é resolvido em `tenants` (fora do RLS, com `WHERE` manual)
+  antes da transação; dentro dela, o tenant entra por `set_config`, como nas demais rotas.
+- **`clientes.telefone`:** continua fora das notificações, mas identifica o cliente no
+  agendamento público, com advisory lock por tenant e telefone (§004).
 
 ## Mudanças desde a v1.9
 
@@ -420,6 +429,16 @@ DROP TABLE clientes;
 manual, não canal de notificação. Nenhuma query do worker pode referenciar essa
 coluna. Se alguém validar formato de telefone aqui, entendeu errado o propósito
 do campo.
+
+**Agendamento público (#162).** O telefone continua fora das notificações, mas passa
+a identificar o cliente: `Consultas.ClienteDoTelefone` procura no tenant pelos dígitos,
+com `removido_em IS NULL`, e reaproveita o mais antigo. Duas requisições simultâneas
+com o mesmo telefone novo não criam dois clientes porque
+`pg_advisory_xact_lock(hashtextextended(tenant || ':' || digitos, 0))` as serializa até
+o fim da transação.
+
+⚠️ **Não troque o advisory lock por `UNIQUE`.** `telefone` é texto livre e pode ter
+duplicados gravados: o índice único falharia na migration ou obrigaria a alterar dados.
 
 `telegram_chat_id` é `bigint`, não `int`. IDs do Telegram já passam de 2³¹.
 

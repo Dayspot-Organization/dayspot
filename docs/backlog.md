@@ -1,6 +1,6 @@
 # Backlog
 
-## Organizado por fatias verticais — v2.4 · 17/11/2026
+## Organizado por fatias verticais — v2.5 · 18/11/2026
 
 Complementa `docs/requisitos.md` e `docs/guia-banco-de-dados.md`.
 
@@ -13,6 +13,8 @@ Complementa `docs/requisitos.md` e `docs/guia-banco-de-dados.md`.
 > **Mudanças da v2.3:** revisão da Fatia 2 (23/10/2026). A 2.7 aplica o `Escopo` também na criação de agendamento e a 2.16 testa isso; a escolha de empresa no login ficou decidida e é da 2.3 (`requisitos.md` §12); itens novos 2.21 (`GET /membros`, para a 2.20) e 2.22 (criar conta pelo convite, para a 2.19). Cronograma recalculado (~481h).
 
 > **Mudanças da v2.4:** o backend passou de Go para .NET com EF Core (#144) e o frontend de React para Angular (#147); o projeto se chama Dayspot (#143). Itens e decisões não mudam: só as referências técnicas (0.5, 0.7, 1.2, 1.8, 3.2, acesso a dados da Fatia 1 e período da Fatia 7).
+
+> **Mudanças da v2.5:** o cliente final agenda sem conta pela página pública da empresa (#162, `requisitos.md` v0.14). A 6.3 e a 6.6 passam a citar a página pública.
 
 ---
 
@@ -247,6 +249,8 @@ O carregamento de config da 0.4 passou para a 1.1.
 | 6.6  | `[T6] Substituir campo de hora livre por seleção de slots` | M |
 | 6.7  | `[T6] Comando /meusagendamentos no bot` | M |
 | 6.8  | `[T6] Log de mensagens enviadas visível no frontend` | M |
+
+> **Página pública (#162).** 6.3: `GET /horarios-livres` continua previsto para o painel; a página pública lê `GET /api/publico/{slug}/ocupados`, que não calcula slots, e o `POST` público aceita a janela fixa de segunda a sábado, das 08:00 às 19:00, até existir o cadastro de disponibilidade. 6.6: a seleção de slots troca o campo de hora livre do painel, e `POST /api/agendamentos` segue com `SERVICO_FIXO` até lá; a página pública já grava o serviço e o profissional escolhidos.
 
 **Fatia mais cortável do projeto.** Até aqui o sistema já agenda, autentica, isola tenants, avisa, lembra e cancela. Disponibilidades podem viver no seed até o fim do semestre sem prejudicar a demonstração.
 

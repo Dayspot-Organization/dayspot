@@ -26,6 +26,7 @@ Toda resposta de erro (status 4xx/5xx) tem `Content-Type: application/json` e es
 | 404    | `nao_encontrado`      | Recurso não existe (ou não pertence ao tenant), ou rota inexistente. |
 | 405    | `metodo_nao_permitido` | Rota existe, mas não com esse método. O cabeçalho `Allow` lista os métodos aceitos. |
 | 409    | `conflito_horario`    | Agendamento sobrepõe outro (SQLSTATE `23P01`). |
+| 429    | `muitas_tentativas`   | Acima do limite de requisições. Rotas públicas: 60 leituras e 10 envios por minuto, por IP. Login (entra na 2.8): 5 falhas por e-mail ou 20 por IP em 15 minutos. Cabeçalho `Retry-After` em segundos. |
 | 500    | `erro_interno`        | Falha inesperada. Mensagem sempre genérica; o detalhe fica só no log do servidor. |
 
 Código novo entra aqui e em `src/Api/Erros.cs` no mesmo PR.
@@ -45,7 +46,6 @@ que o introduz.
 | 409    | `convite_invalido` | Convite expirado ou já aceito, ou para e-mail que já tem membership ativo no tenant. | 2.18, 2.19, 2.22 |
 | 409    | `email_em_uso`     | Cadastro ou criar conta pelo convite com e-mail que já tem conta. | 2.2, 2.22 |
 | 409    | `slug_em_uso`      | Cadastro com slug de empresa já usado. | 2.2 |
-| 429    | `muitas_tentativas` | Login acima do limite: 5 falhas por e-mail ou 20 por IP em 15 minutos. Cabeçalho `Retry-After` em segundos. | 2.8 |
 
 `conflito_horario` passa a valer também no `PATCH` que remarca ou troca o serviço
 (5.1), que dispara a constraint de sobreposição de novo.

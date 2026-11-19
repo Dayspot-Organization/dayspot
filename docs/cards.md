@@ -7,7 +7,17 @@ quando cards forem criados ou apagados (uma fatia por vez), num PR `docs`.
 
 Dependências copiadas do "Depende de" de cada issue — o corpo da issue é o contrato.
 
-Conferido em 17/11/2026.
+Conferido em 18/11/2026.
+
+## Mudanças de 18/11/2026 (agendamento público)
+
+Cards novos da Fatia 2, fora do `docs/backlog.md`:
+
+| Card | Item | O que mudou |
+|---|---|---|
+| #161 | — | Card novo: agenda semanal no design v2.1 (PR #157) |
+| #162 | — | Card novo: rotas públicas por slug e criação atômica de cliente e agendamento |
+| #163 | — | Card novo: página pública `/agendar/:slug` e novo agendamento no design v2.1 (PR #158) |
 
 ## Mudanças de 17/11/2026 (migração de stack)
 
@@ -144,6 +154,9 @@ Itens 0.1 a 0.6 não têm card: as issues da numeração antiga foram apagadas.
 | #148 | — | Migrar o backend de Go para .NET (EF Core) | — | backend | 1.1–1.7, 1.13, 1.14, 2.14 |
 | #149 | — | Banco de produção no Neon na stack nova (EF Migrations e .NET) | M | infra, banco | #138, #148 |
 | #150 | — | Teste: handler fora de src/Api/Dados/ não acessa DbSet do AppDb | P | backend | #148 |
+| #161 | — | Agenda semanal no design v2.1 | M | frontend | 1.6, #146 |
+| #162 | — | Agendamento público: rotas por slug e criação atômica de cliente e agendamento | G | backend, banco, docs | 1.3, 1.5, 1.7, #148 |
+| #163 | — | Página pública /agendar/:slug e novo agendamento no design v2.1 | G | frontend | #161, #162 |
 
 A 2.14 vem antes da 2.3: a sessão mora na tabela `sessoes`. A 2.22 vem antes da 2.19: o aceite oferece "criar conta" a quem não tem conta. A fatia fecha quando 2.13 e 2.16 passam no CI.
 

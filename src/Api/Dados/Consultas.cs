@@ -7,6 +7,12 @@ public sealed record NovoAgendamento(Guid ClienteId, Guid ServicoId, Guid Presta
 
 public sealed record AgendamentoComCliente(Agendamento Agendamento, string ClienteNome);
 
+public sealed record EmpresaPublica(Guid Id, string Nome, string FusoHorario);
+
+public sealed record PrestadorPublico(Guid Id, string Nome);
+
+public sealed record Ocupado(DateTime Inicio, DateTime Fim);
+
 /// <summary>
 /// As consultas da API. Toda uma recebe tenantId logo depois do contexto e filtra
 /// por ele, mesmo com RLS: é a camada (b) de defesa (requisitos §6.2). Rodam dentro
@@ -73,5 +79,66 @@ public static class Consultas
             RETURNING *
             """).ToListAsync(ct);
         return criados.SingleOrDefault();
+    }
+
+    /// <summary>
+    /// A única consulta sem tenantId: é ela que descobre o tenant, antes da transação.
+    /// tenants fica fora do RLS (guia §009), e só estas colunas saem daqui.
+    /// </summary>
+    public static Task<EmpresaPublica?> BuscarEmpresaPorSlug(this AppDb db, string slug, CancellationToken ct = default) =>
+        db.Tenants.Where(t => t.Slug == slug)
+            .Select(t => new EmpresaPublica(t.Id, t.Nome, t.FusoHorario))
+            .FirstOrDefaultAsync(ct);
+
+    public static Task<List<Servico>> ListarServicosAtivos(this AppDb db, Guid tenantId, CancellationToken ct = default) =>
+        db.Servicos.Where(s => s.TenantId == tenantId && s.Ativo)
+            .OrderBy(s => s.Nome)
+            .ToListAsync(ct);
+
+    /// <summary>Nulo: inexistente, inativo ou de outro tenant.</summary>
+    public static Task<Servico?> BuscarServicoAtivo(this AppDb db, Guid tenantId, Guid id, CancellationToken ct = default) =>
+        db.Servicos.FirstOrDefaultAsync(s => s.TenantId == tenantId && s.Id == id && s.Ativo, ct);
+
+    /// <summary>memberships e usuarios ficam fora do RLS: o filtro por tenant é este WHERE.</summary>
+    public static Task<List<PrestadorPublico>> ListarPrestadoresAtivos(this AppDb db, Guid tenantId, CancellationToken ct = default) =>
+        (from m in db.Memberships
+         join u in db.Usuarios on m.UsuarioId equals u.Id
+         where m.TenantId == tenantId && m.RemovidoEm == null
+         orderby u.Nome
+         select new PrestadorPublico(u.Id, u.Nome)).ToListAsync(ct);
+
+    public static Task<bool> PrestadorAtivo(this AppDb db, Guid tenantId, Guid id, CancellationToken ct = default) =>
+        db.Memberships.AnyAsync(m => m.TenantId == tenantId && m.UsuarioId == id && m.RemovidoEm == null, ct);
+
+    /// <summary>Intervalos do prestador que cruzam [de, ate); cancelado libera o horário.</summary>
+    public static Task<List<Ocupado>> ListarOcupados(this AppDb db, Guid tenantId, Guid prestadorId,
+        DateTime de, DateTime ate, CancellationToken ct = default) =>
+        db.Agendamentos
+            .Where(a => a.TenantId == tenantId && a.PrestadorId == prestadorId && a.Status != "cancelado"
+                && a.Inicio < ate && a.Fim > de)
+            .OrderBy(a => a.Inicio)
+            .Select(a => new Ocupado(a.Inicio, a.Fim))
+            .ToListAsync(ct);
+
+    /// <summary>
+    /// Cliente do tenant com estes dígitos de telefone (com mais de um, o mais antigo);
+    /// sem nenhum, cria. telefone não tem UNIQUE e pode ter duplicados gravados, então
+    /// um índice único quebraria na migration: o advisory lock serializa por tenant e
+    /// telefone até o fim da transação, sem tocar nos dados.
+    /// </summary>
+    public static async Task<Guid> ClienteDoTelefone(this AppDb db, Guid tenantId, string nome, string telefone, string digitos,
+        CancellationToken ct = default)
+    {
+        await db.Database.ExecuteSqlAsync(
+            $"SELECT pg_advisory_xact_lock(hashtextextended({tenantId.ToString()} || ':' || {digitos}, 0))", ct);
+        // Varre os clientes do tenant; índice em expressão se a base crescer.
+        var achados = await db.Database.SqlQuery<Guid>($"""
+            SELECT id AS "Value" FROM clientes
+            WHERE tenant_id = {tenantId} AND removido_em IS NULL
+              AND regexp_replace(telefone, '[^0-9]', '', 'g') = {digitos}
+            ORDER BY criado_em, id
+            LIMIT 1
+            """).ToListAsync(ct);
+        return achados.Count > 0 ? achados[0] : (await db.CriarCliente(tenantId, nome, telefone, ct)).Id;
     }
 }

@@ -15,8 +15,8 @@ public sealed record NovoClienteJson(string? Nome, string? Telefone);
 
 public static class Clientes
 {
-    private const int MaxNome = 200;
-    private const int MaxTelefone = 30;
+    internal const int MaxNome = 200;
+    internal const int MaxTelefone = 30;
 
     public static async Task<IResult> Criar(HttpRequest req, AppDb db, Fixos fixos, CancellationToken ct)
     {
@@ -51,5 +51,5 @@ public static class Clientes
     }
 
     // Caracteres Unicode, não unidades UTF-16: um emoji conta um.
-    private static int Caracteres(string s) => s.EnumerateRunes().Count();
+    internal static int Caracteres(string s) => s.EnumerateRunes().Count();
 }
