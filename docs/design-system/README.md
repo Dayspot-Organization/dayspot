@@ -6,9 +6,9 @@ identidade), com as correções da auditoria aplicadas. Leia o [`DESIGN.md`](../
 | O quê | Onde |
 |---|---|
 | Brief (produto, voz, marca, decisões) | [`DESIGN.md`](../../DESIGN.md) |
-| Tokens (fonte única) | [`tokens.css`](tokens.css) (também em `web/src/tokens.css`: seção 8) |
+| Tokens (fonte única) | [`web/src/tokens.css`](../../web/src/tokens.css) (seção 8) |
 | Logos usados nas telas | [`assets/`](assets/) |
-| Telas de referência v2.1 | [`telas/`](telas/) (abra o `.dc.html` no navegador) |
+| Telas de referência v2.1 | [`telas/`](telas/README.md) (abra o `.dc.html` no navegador; as desatualizadas estão listadas lá) |
 | Auditoria e correções | [`auditoria.md`](auditoria.md) |
 
 **Como usar numa tela nova:** (1) escolha o padrão de tela da seção 5; (2) monte só com os
@@ -80,7 +80,7 @@ Todos os pares de texto conferidos (AA) nos dois temas em 17/11/2026.
 **Proporção numa tela de trabalho:** neutros 70 % · grafite 16 % · ameixa até 9 % ·
 pêssego até 3 % · status até 2 % · degradê 0 %.
 
-**Pares aprovados:** só os da tabela 3.3 de `boas-praticas-identidade.md`. Cor nova
+**Pares aprovados:** só os pares de token desta seção. Cor nova
 precisa passar 4,5:1 (texto) ou 3:1 (ícone, borda, gráfico) antes de virar token.
 
 ### 2.2 Tipografia
@@ -468,10 +468,10 @@ Toda tela nova usa um destes. Se nenhum serve, é decisão de sistema: proponha 
 |---|---|---|
 | **A. Lista + painel** | casca · cabeçalho (título, resumo, principal "Novo …") · aviso opcional · grade `1fr 340`: cartão com busca + segmento + tabela; painel de edição sticky | Clientes, Serviços, Prestadores |
 | **B. Grade de tempo + detalhe** | casca · cabeçalho · barra de filtros (pessoa, cancelados, setas + Hoje, Dia/Semana) · grade `1fr 340`: cartão com grade de horas; painel de detalhe | Agenda |
-| **C. Formulário em passos + resumo** | casca com trilha · cabeçalho sem ação · grade `1fr 360`: cartão com passos numerados; resumo sticky com horário grande, pares, principal 52 px, frase sobre o WhatsApp e erro 409 | Novo agendamento |
+| **C. Formulário em passos + resumo** | casca com trilha · cabeçalho sem ação · grade `1fr 360`: cartão com passos numerados; resumo sticky com horário grande, pares, principal 52 px, frase sobre o WhatsApp e erro 409. Alvo futuro: cliente → serviço → com quem → dia → horário; no piloto, o painel tem só cliente, data, hora e duração | Novo agendamento |
 | **D. Edição por linha + prévia** | casca · abas por pessoa · grade `1fr 360`: cartão com uma linha por item (interruptor + faixas + total) e barra de salvar no rodapé ("Alterações não salvas", Descartar, Salvar …); prévia sticky | Disponibilidade, Configurações |
 | **E. Relatório** | casca · cabeçalho com setas de mês · filtro de pessoa · 4 cartões de número · cartão de gráfico · grade `1.5fr 1fr` com tabelas | Financeiro |
-| **F. Página pública** | sem casca, até 1040 · cabeçalho do salão (avatar 56 + nome + endereço) · `ds-tx-h2` · cartão do próximo horário com 2 ações · lista · rodapé "agendado com" + logo | Meus horários |
+| **F. Página pública** | sem casca, até 1040 · cabeçalho do salão (avatar 56 + nome + contato da empresa, sem endereço) · `ds-tx-h2` · cartão do próximo horário com 2 ações · lista · rodapé "agendado com" + logo. `/agendar/:slug` é pensada para celular (390 px primeiro) | Meus horários, Agendar |
 | **G. Painel de marca** | duas colunas, formulário + degradê | Entrar, Cadastro |
 
 ---
@@ -504,13 +504,13 @@ Escreva para cada item: aplica (e o que mostra), não aplica (por quê) ou pergu
 3. Liste todas as telas e arquivos de código que usam a peça.
 4. Leve a mudança e a lista para aprovação do dono do produto.
 5. Aprovado: atualize as telas em `telas/`, o código, este README, o índice,
-   `tokens.css` e o Registro de decisões do `DESIGN.md`, no mesmo PR.
+   `web/src/tokens.css` e o Registro de decisões do `DESIGN.md`, no mesmo PR.
 
 ---
 
 ## 8. Migração dos tokens do código (v1 → v2.1)
 
-**Feita na adaptação da Agenda.** [`tokens.css`](tokens.css) foi copiado para `web/src/tokens.css`
+**Feita na adaptação da Agenda.** Os tokens ficam só em [`web/src/tokens.css`](../../web/src/tokens.css)
 (carregado antes de `styles.css` pelo `angular.json`), os nomes seguem o mapa abaixo, o menu foi para
 superfície, Hanken Grotesk + Nunito 700–800 entram pelo `index.html` e o logo usa os traços de
 `logo-horizontal.svg` direto no componente, com as cores pelos tokens (`--ds-acao` no símbolo,

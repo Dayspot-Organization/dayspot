@@ -6,7 +6,7 @@
 >
 > Versão 2.1 · 17/11/2026 · fontes: guia de boas práticas da identidade (D aberto, paleta Fim de
 > tarde), proposta de design v2 do novo front-end, [`docs/especificacao-fluxo.md`](docs/especificacao-fluxo.md)
-> v1.1, [`docs/requisitos.md`](docs/requisitos.md) v0.10 e as 13 telas de referência em
+> v1.1, [`docs/requisitos.md`](docs/requisitos.md) e as 13 telas de referência em
 > [`docs/design-system/telas/`](docs/design-system/telas/).
 
 ## Produto
@@ -22,7 +22,8 @@ clientes isolados.
   próprios horários com "Vou sim" / "Preciso cancelar". A grade é só do estabelecimento.
 - **Página pública da empresa (sem conta):** o cliente final agenda sozinho em
   `/agendar/:slug`, escolhendo serviço, profissional e horário e informando nome e
-  telefone. Vê só os horários ocupados, nunca dados de outros clientes.
+  telefone. Vê só os horários ocupados, nunca dados de outros clientes. A página é pensada
+  para celular e mostra um contato da empresa; o endereço fica fora.
 - **Avisos:** confirmação, lembrete e cancelamento vão pelo **WhatsApp**, por um job que
   chama a API. O Telegram saiu.
 - **Trabalho principal da tela mais usada (Agenda):** ver o dia/semana de relance e marcar
@@ -51,11 +52,12 @@ cliente"). Telas de trabalho são neutras; a cor aparece em ação, seleção e 
 ## Marca
 
 - **Símbolo:** D aberto com ponto pêssego no vão ("o horário marcado"). Sempre pelo SVG
-  (`logo-horizontal.svg`, `simbolo*.svg`), nunca redigitado nem redesenhado. Abaixo de
-  24 px, `simbolo-16px.svg`.
+  ([`logo-horizontal.svg`](docs/design-system/assets/logo-horizontal.svg),
+  [`logo-horizontal-escuro.svg`](docs/design-system/assets/logo-horizontal-escuro.svg)), nunca
+  redigitado nem redesenhado.
 - **Cores:** ameixa `#86315C` (ação, link, seleção), pêssego `#F4A08A` (só preenchimento),
   grafite `#2B2227` (texto), papel `#FBF7F5`. Escuro: fundo `#1A1417`, ação `#EE9DBF`.
-  Status com paleta própria, fora da marca. Valores em [`docs/design-system/tokens.css`](docs/design-system/tokens.css) (nomes `--ds-*`).
+  Status com paleta própria, fora da marca. Valores em [`web/src/tokens.css`](web/src/tokens.css) (nomes `--ds-*`).
 - **Fontes:** Nunito 700–800 só em título, wordmark e horário; Hanken Grotesk 400–700 em
   todo o resto.
 - **Degradê do dia** (`#FFD9B0 → #F4A08A → #C9587E → #6E2A55`): só em peças de marca
@@ -63,8 +65,8 @@ cliente"). Telas de trabalho são neutras; a cor aparece em ação, seleção e 
 - **Ícones:** traço 2,25, pontas redondas, grade 24, um ponto cheio por ícone em ameixa.
 - **Ilustrações de estado:** traço e preenchimento em cinza quente, ponto em ameixa.
 - Sistema de design: [`docs/design-system/README.md`](docs/design-system/README.md). Tokens:
-  [`docs/design-system/tokens.css`](docs/design-system/tokens.css). O código usa os mesmos tokens
-  (`web/src/tokens.css`, carregado antes de `web/src/styles.css`); a migração está na seção 8 do README do sistema.
+  [`web/src/tokens.css`](web/src/tokens.css), fonte única, carregado antes de `web/src/styles.css`;
+  a migração está na seção 8 do README do sistema.
 
 ## Referências
 
@@ -75,18 +77,20 @@ referência. Pendente (ver Perguntas abertas).
   símbolo; evitar: degradê fora das peças de marca.
 - Telas de referência v2.1 ([`docs/design-system/telas/`](docs/design-system/telas/), 13 telas,
   17/11/2026) — tirar: estrutura, medidas e componentes; os desvios da auditoria já foram
-  corrigidos ([`docs/design-system/auditoria.md`](docs/design-system/auditoria.md)).
+  corrigidos ([`docs/design-system/auditoria.md`](docs/design-system/auditoria.md)). As telas que
+  divergem das decisões de 18/11/2026 estão listadas no
+  [README das telas](docs/design-system/telas/README.md).
 - Recepção de um salão de bairro (persona de voz) — tirar: o jeito de falar; evitar:
   cerimônia e jargão.
 
 ## Restrições
 
 - **Web primeiro:** telas fechadas em 1440 px, conteúdo até 1240 px. Celular (390 px)
-  vem depois, a partir das telas web.
-- **Acessibilidade:** WCAG AA; só pares de cor da tabela 3.3 das boas práticas. Texto
+  vem depois, a partir das telas web. Exceção: a página pública `/agendar/:slug` é pensada
+  para celular desde o início.
+- **Acessibilidade:** WCAG AA; só pares de cor aprovados na seção 2.1 do README do sistema. Texto
   mínimo 13 px, corpo 16 px. Alvo mínimo 36 px no painel, 44 px em ação principal.
-  Status sempre com ícone + palavra. Foco visível. Considerar luz forte (pares "com
-  reflexo").
+  Status sempre com ícone + palavra. Foco visível. Considerar luz forte.
 - **Temas:** claro e escuro, mesmos tokens; escuro sem sombra nem brilho.
 - **Papéis:** o prestador não vê seletor de pessoa, Serviços, Prestadores nem
   Configurações. Esconder na tela não é autorização (RNF11).
@@ -104,9 +108,9 @@ referência. Pendente (ver Perguntas abertas).
 - 2026-11-17 — Grade de agenda só para o estabelecimento; cliente vê lista dos próprios
   horários — o cliente não precisa de conta.
 - 2026-11-17 — Fluxo de novo agendamento: cliente → serviço → (com quem) → dia → horário —
-  aprovado pelo dono.
+  aprovado pelo dono. Continua como alvo futuro; o piloto segue o registro de 18/11.
 - 2026-11-17 — Web primeiro; versões de celular retiradas por enquanto — fechar o fluxo
-  antes de adaptar.
+  antes de adaptar. A página pública é exceção (registro de 18/11).
 - 2026-11-17 — Status na tela: Aguardando, Confirmado, Feito, Cancelado, Faltou, Erro;
   ameixa nunca é status — confunde ação com estado e falha em daltonismo.
 - 2026-11-17 — Documentação do sistema (`DESIGN.md` + `docs/design-system/`) — para telas
@@ -125,17 +129,24 @@ referência. Pendente (ver Perguntas abertas).
   - bloco da agenda mostra linhas conforme a altura; ações secundárias do painel empilhadas.
 - 2026-11-17 — Valores do escuro calculados e fixados (`#F4B4CF`, `#33222B`, `#A85A80`, véu) —
   todos passam AA.
-- 2026-11-17 — Tokens v2.1 com fonte única num arquivo (`docs/design-system/tokens.css`, depois
-  `web/src/tokens.css`); o menu deixa de ser ameixa sólido e o logo passa a ser sempre o SVG da
+- 2026-11-17 — Tokens v2.1 com fonte única em `web/src/tokens.css`; o menu deixa de ser ameixa sólido e o logo passa a ser sempre o SVG da
   marca — regra da identidade.
 - 2026-11-17 — Código migrado para a v2.1 junto com a adaptação da Agenda: `web/src/tokens.css`,
   casca nova (menu em superfície, top-bar 64 px), Hanken Grotesk + Nunito, logo com os traços do SVG
   da marca. Status na grade: `confirmado` aparece como Aguardando até existir `presenca_confirmada_em`.
+- 2026-11-18 — O cliente final agenda sozinho em `/agendar/:slug`, página pensada para celular —
+  decisão do dono do projeto.
+- 2026-11-18 — A página pública mostra um contato da empresa (#170); o endereço fica fora — o
+  cliente precisa de um canal para cancelar.
+- 2026-11-18 — No painel, durante o piloto, o novo agendamento tem só cliente, data, hora e
+  duração; o fluxo completo continua como alvo futuro — decisão do dono do projeto.
 
 ## Perguntas abertas
 
 - **Referências externas:** há produtos para seguir (ou evitar) nas próximas telas?
-- **Telas sem desenho:** escolha de empresa no login, aceite de convite, versões de celular.
+- **Telas sem desenho:** escolha de empresa no login, aceite de convite, versões de celular,
+  página pública `/agendar/:slug`.
 - **Faltou e Aguardando × Confirmado** dependem de mudança no banco
   (`presenca_confirmada_em`, status de falta).
-- **Telegram no `web/src/index.html`:** a descrição e o `og:description` ainda falam em Telegram.
+- **Símbolo isolado:** o repositório só tem o logo horizontal e o `web/public/favicon.svg`; falta
+  decidir se entram SVGs só do símbolo para tamanhos abaixo de 24 px.
