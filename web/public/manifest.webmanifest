@@ -1,7 +1,7 @@
 {
   "name": "Dayspot",
   "short_name": "Dayspot",
-  "description": "Agenda com hora marcada. O lembrete vai pelo Telegram.",
+  "description": "Agenda com hora marcada.",
   "lang": "pt-BR",
   "start_url": "/",
   "display": "standalone",
