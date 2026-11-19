@@ -207,11 +207,11 @@ Depois do piloto.
 
 | Card | Item | Título | Tam. | Área | Depende de |
 |---|---|---|---|---|---|
-| #128 | 2.18 | POST e GET /convites: administrador convida administrador ou prestador | M | backend | 2.17, 2.7 |
-| #129 | 2.19 | Aceite do convite (endpoint e tela), reativando membership removido | M | backend, frontend | 2.17, 2.5, 2.10, 2.22 |
-| #130 | 2.20 | Tela de gestão de prestadores: listar membros e convidar | M | frontend | 2.18, 2.21, 2.11 |
-| #135 | 2.21 | GET /membros: lista os membros do tenant (só administrador) | P | backend | 2.7 |
-| #136 | 2.22 | Criar conta pelo convite: grava só usuarios + membership do convite | M | backend, frontend | 2.1, 2.3, 2.10, 2.15, 2.17 |
+| #128 | 2.18 | POST e GET /convites: administrador convida administrador ou prestador | M | backend | 2.17 (#127), 2.7 (#117) |
+| #129 | 2.19 | Aceite do convite (endpoint e tela), reativando membership removido | M | backend, frontend | 2.17 (#127), 2.5 (#115), 2.10 (#120), 2.22 (#136) |
+| #130 | 2.20 | Tela de gestão de prestadores: listar membros e convidar | M | frontend | 2.18 (#128), 2.21 (#135), 2.11 (#121) |
+| #135 | 2.21 | GET /membros: lista os membros do tenant (só administrador) | P | backend | 2.7 (#117) |
+| #136 | 2.22 | Criar conta pelo convite: grava só usuarios + membership do convite | M | backend, frontend | 2.1 (#111), 2.3 (#113), 2.10 (#120), 2.15 (#125), 2.17 (#127) |
 | #150 | — | Teste: handler fora de src/Api/Dados/ não acessa DbSet do AppDb | P | backend | #148 |
 
 A 2.22 vem antes da 2.19: o aceite oferece "criar conta" a quem não tem conta.
