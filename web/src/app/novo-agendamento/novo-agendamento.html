@@ -1,402 +1,182 @@
-<!-- Padrão C (passos + resumo). Na página do cliente, dentro do padrão F: sem menu, com a empresa no topo. -->
-@if (publica) {
-  <div class="publica">
-    @if (empresa.value(); as e) {
-      <header class="publica-empresa">
-        <span class="avatar avatar-56" aria-hidden="true">{{ iniciais(e.nome) }}</span>
-        <div>
-          <p class="titulo-cartao">{{ e.nome }}</p>
-          <p class="secundario numeros">{{ e.endereco }} · {{ formatarTelefone(e.telefone) }}</p>
-        </div>
-      </header>
-    }
-    @if (agendado(); as a) {
-      <section class="cartao confirmado" role="status">
-        <span class="chip st-confirmado">
-          <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-          Agendado
-        </span>
-        <h1 class="titulo-tela">{{ a.frase }}</h1>
-        <p class="secundario">{{ a.detalhe }}</p>
-        <div>
-          <button type="button" class="botao botao-secundario" (click)="marcarOutro()">Marcar outro horário</button>
+<!-- Padrão C (passos + resumo). -->
+<div class="cabecalho-tela">
+  <div>
+    <h1>Novo agendamento</h1>
+    <p class="resumo">Escolha o cliente, a data, a hora e a duração.</p>
+  </div>
+</div>
+
+@if (semConexao()) {
+  <section class="cartao">
+    <app-vazio ilustracao="conexao" titulo="Sem conexão">
+      <p>Tente de novo quando a internet voltar. Nada do que estava salvo foi perdido.</p>
+      <button type="button" class="botao" (click)="clientes.reload()">Tentar de novo</button>
+    </app-vazio>
+  </section>
+} @else if (erroClientes()) {
+  <app-mensagem-erro [mensagem]="erroClientes()" podeRepetir (tentarDeNovo)="clientes.reload()" />
+} @else if (!clientes.hasValue()) {
+  <div class="com-painel largo" aria-busy="true">
+    <div class="cartao esqueleto-cartao">
+      <span class="so-leitor">Carregando</span>
+      <span class="esqueleto" style="width: 30%; height: 26px"></span>
+      <span class="esqueleto" style="width: 100%; height: 64px"></span>
+      <span class="esqueleto" style="width: 30%; height: 26px; margin-top: 24px"></span>
+      <span class="esqueleto" style="width: 100%; height: 64px"></span>
+    </div>
+    <div class="cartao esqueleto-cartao">
+      <span class="esqueleto" style="width: 40%; height: 26px"></span>
+      <span class="esqueleto" style="width: 100%; height: 84px"></span>
+    </div>
+  </div>
+} @else if (semClientes()) {
+  <section class="cartao">
+    <app-vazio ilustracao="clientes" titulo="Nenhum cliente ainda">
+      <p>Quando houver clientes cadastrados, eles aparecem aqui para você escolher.</p>
+    </app-vazio>
+  </section>
+} @else {
+  <form class="com-painel largo" aria-label="Novo agendamento" novalidate (submit)="agendar($event)">
+    <div class="cartao passos">
+      <!-- Cliente -->
+      <section class="passo" id="secao-cliente" tabindex="-1" aria-labelledby="passo-cliente">
+        <h2 class="passo-titulo" id="passo-cliente"><span class="passo-numero">1</span>Cliente</h2>
+        @if (cliente(); as c) {
+          <div class="opcao escolhida">
+            <span class="avatar" aria-hidden="true">{{ c.iniciais }}</span>
+            <span class="opcao-texto">
+              <span class="pessoa-nome">{{ c.nome }}</span>
+              <span class="legenda numeros">{{ c.meta }}</span>
+            </span>
+            <button type="button" class="botao botao-terciario botao-pequeno" (click)="clienteId.set('')">Trocar</button>
+          </div>
+        } @else {
+          <div class="busca">
+            <label class="so-leitor" for="busca-cliente">Buscar cliente</label>
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M10.5 17a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM15.5 15.5L20 20"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <input
+              #campoBusca
+              id="busca-cliente"
+              type="search"
+              placeholder="Buscar pelo nome ou telefone"
+              autocomplete="off"
+              [value]="busca()"
+              (input)="busca.set(campoBusca.value)"
+            />
+          </div>
+          @if (clientesFiltrados().length === 0) {
+            <div class="sem-resultado">
+              <p class="secundario">Nenhum cliente com "{{ busca() }}".</p>
+              <button type="button" class="botao botao-terciario botao-pequeno" (click)="busca.set('')">Limpar busca</button>
+            </div>
+          } @else {
+            <div class="opcoes opcoes-2 opcoes-rolagem" role="radiogroup" aria-labelledby="passo-cliente">
+              @for (c of clientesFiltrados(); track c.id) {
+                <button type="button" class="opcao" role="radio" aria-checked="false" (click)="escolherCliente(c.id)">
+                  <span class="avatar" aria-hidden="true">{{ c.iniciais }}</span>
+                  <span class="opcao-texto">
+                    <span class="pessoa-nome">{{ c.nome }}</span>
+                    <span class="legenda numeros">{{ c.meta }}</span>
+                  </span>
+                </button>
+              }
+            </div>
+          }
+        }
+      </section>
+
+      <!-- Data, hora e duração: livres, sem grade de horários -->
+      <section class="passo" aria-labelledby="passo-quando">
+        <h2 class="passo-titulo" id="passo-quando"><span class="passo-numero">2</span>Data e hora</h2>
+        <div class="campos-dados">
+          <div class="campo">
+            <label for="data">Data</label>
+            <input
+              #campoData
+              id="data"
+              type="date"
+              [value]="data()"
+              [class.invalido]="tentou() && !data()"
+              [attr.aria-invalid]="tentou() && !data()"
+              (input)="data.set(campoData.value)"
+            />
+          </div>
+          <div class="campo">
+            <label for="hora">Hora de início</label>
+            <input
+              #campoHora
+              id="hora"
+              type="time"
+              [value]="hora()"
+              [class.invalido]="tentou() && !hora()"
+              [attr.aria-invalid]="tentou() && !hora()"
+              (input)="hora.set(campoHora.value)"
+            />
+          </div>
+          <div class="campo campo-duracao">
+            <label for="duracao">Duração (min)</label>
+            <input
+              #campoDuracao
+              id="duracao"
+              type="number"
+              min="5"
+              max="1440"
+              step="5"
+              [value]="duracao()"
+              [class.invalido]="tentou() && !duracaoValida()"
+              [attr.aria-invalid]="tentou() && !duracaoValida()"
+              aria-describedby="duracao-ajuda"
+              (input)="duracao.set(campoDuracao.value)"
+            />
+            <p class="ajuda" [class.ajuda-erro]="tentou() && !duracaoValida()" id="duracao-ajuda">De 5 em 5 minutos, até 24 horas.</p>
+          </div>
         </div>
       </section>
-    } @else {
-      <div class="cabecalho-tela">
+    </div>
+
+    <aside class="cartao painel" aria-label="Resumo">
+      <h2 class="titulo-cartao">Resumo</h2>
+      <div class="quadro">
+        <p class="secundario resumo-dia">{{ data() ? dataLonga(data()) : "Escolha a data" }}</p>
+        @if (hora()) {
+          <p class="horario-destaque">
+            {{ hora() }}
+            @if (fim(); as f) {
+              <small>às {{ formatarHora(f) }}</small>
+            }
+          </p>
+        } @else {
+          <p class="resumo-falta">Escolha a hora</p>
+        }
+      </div>
+      <dl class="pares">
         <div>
-          <h1>Agende seu horário</h1>
-          <p class="resumo">Escolha o serviço, com quem e um horário livre. Não precisa de conta nem de senha.</p>
+          <dt>Cliente</dt>
+          <dd>{{ cliente()?.nome ?? "—" }}</dd>
         </div>
-      </div>
-      <ng-container [ngTemplateOutlet]="conteudo" />
-    }
-    <footer class="publica-rodape">
-      <span class="legenda">agendado com</span>
-      <app-logo />
-    </footer>
-  </div>
-} @else {
-  <div class="cabecalho-tela">
-    <div>
-      <h1>Novo agendamento</h1>
-      <p class="resumo">Escolha o cliente, o serviço, com quem e um horário livre.</p>
-    </div>
-  </div>
-  <ng-container [ngTemplateOutlet]="conteudo" />
+        <div>
+          <dt>Duração</dt>
+          <dd>{{ duracaoValida() ? duracaoEmTexto(+duracao()) : "—" }}</dd>
+        </div>
+      </dl>
+      <button type="submit" class="botao botao-entrada" [attr.aria-busy]="enviando()" aria-describedby="falta-envio">
+        {{ rotuloBotao() }}
+      </button>
+      @if (falta()) {
+        <p class="ajuda centro" id="falta-envio">{{ falta() }}</p>
+      }
+      @if (erro()) {
+        <app-mensagem-erro [mensagem]="erro()" />
+      }
+    </aside>
+  </form>
 }
-
-<ng-template #conteudo>
-  @if (semConexao()) {
-    <section class="cartao">
-      <app-vazio ilustracao="conexao" titulo="Sem conexão">
-        <p>Tente de novo quando a internet voltar. Nada do que estava salvo foi perdido.</p>
-        <button type="button" class="botao" (click)="tentarDeNovo()">Tentar de novo</button>
-      </app-vazio>
-    </section>
-  } @else if (mensagemErroBase()) {
-    <app-mensagem-erro [mensagem]="mensagemErroBase()" podeRepetir (tentarDeNovo)="tentarDeNovo()" />
-  } @else if (carregandoBase()) {
-    <div class="com-painel" [class.largo]="!publica" [class.estreito]="publica" aria-busy="true">
-      <div class="cartao esqueleto-cartao">
-        <span class="so-leitor">Carregando</span>
-        <span class="esqueleto" style="width: 30%; height: 26px"></span>
-        <span class="esqueleto" style="width: 100%; height: 64px"></span>
-        <span class="esqueleto" style="width: 30%; height: 26px; margin-top: 24px"></span>
-        <span class="esqueleto" style="width: 100%; height: 64px"></span>
-        <span class="esqueleto" style="width: 30%; height: 26px; margin-top: 24px"></span>
-        <span class="esqueleto" style="width: 100%; height: 76px"></span>
-      </div>
-      <div class="cartao esqueleto-cartao">
-        <span class="esqueleto" style="width: 40%; height: 26px"></span>
-        <span class="esqueleto" style="width: 100%; height: 84px"></span>
-      </div>
-    </div>
-  } @else if (semClientes()) {
-    <section class="cartao">
-      <app-vazio ilustracao="clientes" titulo="Nenhum cliente ainda">
-        <p>Quando houver clientes cadastrados, eles aparecem aqui para você escolher.</p>
-      </app-vazio>
-    </section>
-  } @else {
-    <form class="com-painel" [class.largo]="!publica" [class.estreito]="publica" aria-label="Novo agendamento" (submit)="agendar($event)">
-      <div class="cartao passos">
-        @if (!publica) {
-          <!-- Cliente (só no painel) -->
-          <section class="passo" aria-labelledby="passo-cliente">
-            <h2 class="passo-titulo" id="passo-cliente"><span class="passo-numero">{{ n.cliente }}</span>Cliente</h2>
-            @if (cliente(); as c) {
-              <div class="opcao escolhida">
-                <span class="avatar" aria-hidden="true">{{ c.iniciais }}</span>
-                <span class="opcao-texto">
-                  <span class="pessoa-nome">{{ c.nome }}</span>
-                  <span class="legenda numeros">{{ c.meta }}</span>
-                </span>
-                <button type="button" class="botao botao-terciario botao-pequeno" (click)="clienteId.set('')">Trocar</button>
-              </div>
-            } @else {
-              <div class="busca">
-                <label class="so-leitor" for="busca-cliente">Buscar cliente</label>
-                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    d="M10.5 17a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM15.5 15.5L20 20"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-                <input
-                  #campoBusca
-                  id="busca-cliente"
-                  type="search"
-                  placeholder="Buscar pelo nome ou telefone"
-                  autocomplete="off"
-                  [value]="busca()"
-                  (input)="busca.set(campoBusca.value)"
-                />
-              </div>
-              @if (clientesFiltrados().length === 0) {
-                <div class="sem-resultado">
-                  <p class="secundario">Nenhum cliente com "{{ busca() }}".</p>
-                  <button type="button" class="botao botao-terciario botao-pequeno" (click)="busca.set('')">Limpar busca</button>
-                </div>
-              } @else {
-                <div class="opcoes opcoes-2 opcoes-rolagem" role="radiogroup" aria-labelledby="passo-cliente">
-                  @for (c of clientesFiltrados(); track c.id) {
-                    <button type="button" class="opcao" role="radio" aria-checked="false" (click)="escolherCliente(c.id)">
-                      <span class="avatar" aria-hidden="true">{{ c.iniciais }}</span>
-                      <span class="opcao-texto">
-                        <span class="pessoa-nome">{{ c.nome }}</span>
-                        <span class="legenda numeros">{{ c.meta }}</span>
-                      </span>
-                    </button>
-                  }
-                </div>
-              }
-            }
-          </section>
-        }
-
-        <!-- Serviço: define a duração -->
-        <section class="passo" aria-labelledby="passo-servico">
-          <h2 class="passo-titulo" id="passo-servico"><span class="passo-numero">{{ n.servico }}</span>Serviço</h2>
-          <div class="opcoes opcoes-3" role="radiogroup" aria-labelledby="passo-servico">
-            @for (s of listaServicos(); track s.id) {
-              <button
-                type="button"
-                class="opcao"
-                role="radio"
-                [attr.aria-checked]="servicoId() === s.id"
-                (click)="escolherServico(s.id)"
-              >
-                <span class="radio" aria-hidden="true"></span>
-                <span class="opcao-texto">
-                  <span class="pessoa-nome">{{ s.nome }}</span>
-                  <span class="legenda">{{ s.duracao }}</span>
-                </span>
-                <span class="opcao-preco numeros">{{ s.preco }}</span>
-              </button>
-            }
-          </div>
-        </section>
-
-        <!-- Com quem -->
-        <section class="passo" aria-labelledby="passo-prestador">
-          <h2 class="passo-titulo" id="passo-prestador"><span class="passo-numero">{{ n.prestador }}</span>Com quem</h2>
-          <div class="opcoes-linha" role="radiogroup" aria-labelledby="passo-prestador">
-            @for (p of listaPrestadores(); track p.id) {
-              <button
-                type="button"
-                class="opcao opcao-pessoa"
-                role="radio"
-                [attr.aria-checked]="prestador()?.id === p.id"
-                (click)="escolherPrestador(p.id)"
-              >
-                <span class="avatar avatar-36" aria-hidden="true">{{ p.iniciais }}</span>
-                <span class="pessoa-nome">{{ p.nome }}</span>
-              </button>
-            }
-          </div>
-        </section>
-
-        <!-- Dia -->
-        <section class="passo" aria-labelledby="passo-dia">
-          <div class="passo-cabecalho">
-            <h2 class="passo-titulo" id="passo-dia"><span class="passo-numero">{{ n.dia }}</span>Dia</h2>
-            <div class="navegacao">
-              <span class="mes">{{ mesDaFila() }}</span>
-              <button
-                type="button"
-                class="botao-icone"
-                aria-label="Dias anteriores"
-                [disabled]="inicioDaFila() <= hoje"
-                (click)="andarFila(-1)"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M14 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              </button>
-              <button type="button" class="botao-icone" aria-label="Próximos dias" (click)="andarFila(1)">
-                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M10 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div class="dias">
-            @for (d of fila(); track d.dia) {
-              <button
-                type="button"
-                class="dia"
-                [attr.aria-pressed]="d.dia === dia()"
-                [attr.aria-label]="d.hoje ? d.rotulo + ', hoje' : d.rotulo"
-                (click)="escolherDia(d.dia)"
-              >
-                <span>{{ d.curto }}</span>
-                <span class="dia-numero">{{ d.numero }}</span>
-                @if (d.hoje) {
-                  <span class="dia-hoje">hoje</span>
-                }
-              </button>
-            }
-          </div>
-        </section>
-
-        <!-- Horário -->
-        <section class="passo" aria-labelledby="passo-horario">
-          <h2 class="passo-titulo" id="passo-horario">
-            <span class="passo-numero">{{ n.horario }}</span>Horário
-            @if (legendaHorarios()) {
-              <span class="legenda">{{ legendaHorarios() }}</span>
-            }
-          </h2>
-          @if (!servico()) {
-            <p class="secundario">Escolha o serviço para ver os horários livres.</p>
-          } @else if (!prestador()) {
-            <p class="secundario">Escolha com quem para ver os horários livres.</p>
-          } @else if (erroDoDia()) {
-            <app-mensagem-erro [mensagem]="erroDoDia()" podeRepetir (tentarDeNovo)="doDia.reload()" />
-          } @else if (doDia.isLoading() && !doDia.hasValue()) {
-            <div class="horarios" aria-busy="true">
-              @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; track i) {
-                <span class="esqueleto" style="height: 44px; border-radius: 999px"></span>
-              }
-            </div>
-          } @else if (livres().length === 0) {
-            <app-vazio ilustracao="horarios" [titulo]="'Não tem horário livre ' + (dia() === hoje ? 'hoje' : 'nesse dia')">
-              <p>Escolha outro dia ou outra pessoa.</p>
-            </app-vazio>
-          } @else {
-            @for (grupo of [{ nome: 'Manhã', lista: manha() }, { nome: 'Tarde', lista: tarde() }]; track grupo.nome) {
-              @if (grupo.lista.length) {
-                <h3 class="grupo-horarios">{{ grupo.nome }}</h3>
-                <div class="horarios">
-                  @for (h of grupo.lista; track h.hora) {
-                    <button
-                      type="button"
-                      class="horario"
-                      [disabled]="h.ocupado"
-                      [attr.aria-label]="h.ocupado ? h.hora + ', ocupado' : null"
-                      [attr.aria-pressed]="h.ocupado ? null : escolhido()?.hora === h.hora"
-                      (click)="escolherHora(h.hora)"
-                    >
-                      {{ h.hora }}
-                    </button>
-                  }
-                </div>
-              }
-            }
-          }
-        </section>
-
-        @if (publica) {
-          <!-- Seus dados (só na página do cliente) -->
-          <section class="passo" aria-labelledby="passo-dados">
-            <h2 class="passo-titulo" id="passo-dados"><span class="passo-numero">{{ n.dados }}</span>Seus dados</h2>
-            <div class="campos-dados">
-              <div class="campo">
-                <label for="nome">Nome</label>
-                <input
-                  #campoNome
-                  id="nome"
-                  autocomplete="name"
-                  [value]="nome()"
-                  [class.invalido]="nomeTocado() && !nomeValido()"
-                  [attr.aria-invalid]="nomeTocado() && !nomeValido()"
-                  aria-describedby="nome-ajuda"
-                  (input)="nome.set(campoNome.value)"
-                  (blur)="nomeTocado.set(true)"
-                />
-                @if (nomeTocado() && !nomeValido()) {
-                  <p class="ajuda ajuda-erro" id="nome-ajuda">Escreva seu nome.</p>
-                } @else {
-                  <p class="ajuda" id="nome-ajuda">Como você quer ser chamado.</p>
-                }
-              </div>
-              <div class="campo">
-                <label for="whatsapp">WhatsApp</label>
-                <input
-                  #campoWhatsapp
-                  id="whatsapp"
-                  type="tel"
-                  inputmode="tel"
-                  autocomplete="tel"
-                  placeholder="(11) 98877-4410"
-                  [value]="whatsapp()"
-                  [class.invalido]="whatsappTocado() && !whatsappOk()"
-                  [attr.aria-invalid]="whatsappTocado() && !whatsappOk()"
-                  aria-describedby="whatsapp-ajuda"
-                  (input)="whatsapp.set(campoWhatsapp.value)"
-                  (blur)="whatsappTocado.set(true)"
-                />
-                @if (whatsappTocado() && !whatsappOk()) {
-                  <p class="ajuda ajuda-erro" id="whatsapp-ajuda">Use DDD + número, como (11) 98877-4410.</p>
-                } @else {
-                  <p class="ajuda" id="whatsapp-ajuda">É por ele que falamos com você sobre o horário.</p>
-                }
-              </div>
-            </div>
-          </section>
-        }
-      </div>
-
-      <aside class="cartao painel" aria-label="Resumo">
-        <h2 class="titulo-cartao">Resumo</h2>
-        <div class="quadro">
-          <p class="secundario resumo-dia">{{ dataLonga(dia()) }}</p>
-          @if (escolhido(); as h) {
-            <p class="horario-destaque">{{ h.hora }} <small>às {{ formatarHora(h.fim) }}</small></p>
-          } @else {
-            <p class="resumo-falta">Escolha um horário</p>
-          }
-        </div>
-        <dl class="pares">
-          @if (!publica) {
-            <div>
-              <dt>Cliente</dt>
-              <dd>{{ cliente()?.nome ?? "—" }}</dd>
-            </div>
-          }
-          <div>
-            <dt>Serviço</dt>
-            <dd>{{ servico() ? servico()!.nome + ", " + duracaoEmTexto(servico()!.duracao_min) : "—" }}</dd>
-          </div>
-          <div>
-            <dt>Profissional</dt>
-            <dd>{{ prestador()?.nome ?? "—" }}</dd>
-          </div>
-          <div>
-            <dt>Valor</dt>
-            <dd>
-              @if (servico(); as s) {
-                <span class="valor">{{ dinheiro(s.preco_centavos) }}</span>
-              } @else {
-                —
-              }
-            </dd>
-          </div>
-        </dl>
-        <button
-          type="submit"
-          class="botao botao-entrada"
-          [disabled]="!pronto() && !enviando()"
-          [attr.aria-busy]="enviando()"
-        >
-          {{ rotuloBotao() }}
-        </button>
-        @if (publica && servico()) {
-          <p class="legenda centro">Pagamento no local.</p>
-        }
-        @if (horaRecusada()) {
-          <div class="aviso aviso-erro aviso-coluna" role="alert">
-            <span class="aviso-linha">
-              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 6v8M12 18h.01" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" />
-              </svg>
-              @if (alternativas().length) {
-                <span>O horário das {{ horaRecusada() }} acabou de ser ocupado. Estes ainda estão livres:</span>
-              } @else {
-                <span>O horário das {{ horaRecusada() }} acabou de ser ocupado. Escolha outro dia.</span>
-              }
-            </span>
-            @if (alternativas().length) {
-              <span class="aviso-acoes">
-                @for (h of alternativas(); track h.hora) {
-                  <button type="button" class="botao botao-secundario botao-pequeno numeros" (click)="escolherHora(h.hora)">
-                    {{ h.hora }}
-                  </button>
-                }
-              </span>
-            }
-          </div>
-        } @else if (erro()) {
-          <app-mensagem-erro [mensagem]="erro()" />
-        }
-      </aside>
-    </form>
-  }
-</ng-template>

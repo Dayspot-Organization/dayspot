@@ -2,13 +2,23 @@ import { Injectable, inject } from "@angular/core";
 import { Title } from "@angular/platform-browser";
 import { type RouterStateSnapshot, type Routes, TitleStrategy } from "@angular/router";
 import { Agendamentos } from "./agendamentos/agendamentos";
+import { Agendar } from "./agendar/agendar";
 import { Painel, trilhaDe } from "./layout";
 import { NovoAgendamento } from "./novo-agendamento/novo-agendamento";
 
 // data.titulo vira a trilha da top-bar (layout.ts): "Agenda › Novo agendamento".
 export const routes: Routes = [
   // Página do cliente, aberta pelo link da empresa: fora da casca do painel, sem menu nem login.
-  { path: "agendar", component: NovoAgendamento, data: { titulo: "Agendar", publica: true } },
+  // Sem slug válido, a própria página avisa que a empresa não foi encontrada.
+  {
+    path: "agendar",
+    data: { titulo: "Agendar" },
+    children: [
+      { path: "", component: Agendar },
+      { path: ":slug", component: Agendar },
+      { path: "**", component: Agendar },
+    ],
+  },
   {
     path: "",
     component: Painel,

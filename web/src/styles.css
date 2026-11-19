@@ -1414,10 +1414,6 @@ input.invalido {
   align-items: center;
 }
 
-.publica-empresa .secundario {
-  font: var(--ds-tx-tabela);
-}
-
 .titulo-tela {
   font: var(--ds-tx-h2);
   letter-spacing: -0.01em;
