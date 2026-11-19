@@ -1,9 +1,24 @@
 # Requisitos — Dayspot
 
-Sistema de agendamentos multi-tenant com notificação via Telegram.
-Documento de requisitos e decisões técnicas — **v0.14** · 18/11/2026
+Sistema de agendamentos multi-tenant, com página pública para o cliente final e avisos
+planejados pelo WhatsApp.
+Documento de requisitos e decisões técnicas — **v0.15** · 18/11/2026
 
 > Fonte da verdade: este arquivo. A pasta do Drive é histórico.
+
+## Mudanças desde a v0.14
+
+Decisões para a primeira publicação, um piloto com uma empresa (#180), 18/11/2026.
+
+| # | O que mudou | Onde |
+|---|---|---|
+| 1 | RF19: o cliente final agenda sozinho pela página pública | 1, 3, 5 |
+| 2 | O canal de avisos passa de Telegram para WhatsApp, sem integração existente; fornecedor, custo e prazo ficam pendentes | 1, 2, 3, 4, 5, 6.2, 7, 8, 10, 11, 12 |
+| 3 | RNF09: hospedagem no Render e no Neon | 4, 12 |
+| 4 | Piloto: serviços por SQL, `POST` do painel com valores fixos, contato na página e convites depois | 7, 12 |
+| 5 | Dados pessoais: empresa controladora, retenção de 12 meses e aviso do formulário | 12 |
+| 6 | Papel de `clientes.telefone` sem contradição entre o modelo e as decisões | 7, 12 |
+| 7 | Dependências das Fatias 5 e 6 corrigidas; a estimativa deixa de citar Go | 10, 13 |
 
 ## Mudanças desde a v0.13
 
@@ -124,22 +139,24 @@ entre os dois documentos era o risco: quem copiasse daqui levava a versão bugad
 
 Plataforma web multi-tenant para gestão de agendamentos. Cada tenant (empresa)
 tem seus próprios usuários (administradores e prestadores), serviços, horários e clientes,
-isolados dos demais. Notificações de lembrete enviadas via bot do Telegram.
+isolados dos demais. O cliente final agenda sozinho, sem conta, pela página pública
+da empresa em `/agendar/:slug` (RF19). Os avisos ao cliente serão enviados pelo
+WhatsApp; essa integração ainda não existe (§8).
+
+A primeira publicação é um **piloto com uma empresa** (§12).
 
 **Stack:** API em C# (ASP.NET Core, .NET 10), frontend em Angular, banco PostgreSQL
-(acesso via EF Core + Npgsql; EF Core Migrations em SQL), worker de notificações em
-C#, Telegram Bot API.
+(acesso via EF Core + Npgsql; EF Core Migrations em SQL). Planejados: worker de
+notificações em C# e integração com o WhatsApp.
 
 ## 2. Ordem de execução
 
-Continua valendo: **o sistema de agendamento vem antes do bot**. O bot não tem o
-que notificar sem o modelo de dados.
+Continua valendo: **o sistema de agendamento vem antes dos avisos**. O canal não tem
+o que notificar sem o modelo de dados.
 
-Com o Telegram, a burocracia da Meta desaparece: criar um bot no @BotFather leva
-dois minutos e não exige CNPJ, verificação nem aprovação de template. Em
-compensação, o multi-tenant adiciona complexidade estrutural que precisa estar
-certa **desde a primeira migration**. Retrofit de `tenant_id` em schema pronto é
-caro e propenso a erro.
+O multi-tenant adiciona complexidade estrutural que precisa estar certa **desde a
+primeira migration**. Retrofit de `tenant_id` em schema pronto é caro e propenso a
+erro.
 
 ## 3. Requisitos funcionais
 
@@ -152,9 +169,9 @@ caro e propenso a erro.
 | RF05 | Agendamentos: criar, listar, reagendar, cancelar e concluir; nunca excluídos. O prestador só opera os próprios (RF15) | Alta |
 | RF06 | Definição de horários disponíveis por prestador | Alta |
 | RF07 | Bloqueio de conflito de horário (double booking) | Alta |
-| RF08 | Vinculação do cliente ao Telegram via deep link | Alta |
+| RF08 | Vinculação do cliente ao canal de avisos, o WhatsApp (fluxo pendente, §8.3) | Alta |
 | RF09 | Envio automático de lembrete X horas antes | Alta |
-| RF10 | Confirmação/cancelamento pelo cliente via botão inline | Média |
+| RF10 | Confirmação/cancelamento pelo cliente na mensagem do WhatsApp (forma pendente, §8.3) | Média |
 | RF11 | Log de mensagens enviadas com status | Média |
 | RF12 | Convite e remoção de membros: o administrador convida administradores e prestadores e remove prestadores; só o criador remove administrador; o criador não é removível | Alta |
 | RF13 | Reenvio manual de notificação | Baixa |
@@ -163,6 +180,14 @@ caro e propenso a erro.
 | RF16 | Resumo financeiro mensal dos agendamentos concluídos: o próprio, para o prestador; total e por prestador, para o administrador | Média |
 | RF17 | Exportar a agenda do período para o calendário do celular (download de `.ics`) | Baixa |
 | RF18 | Preço por serviço, em centavos; o valor do agendamento é copiado na criação; recopiado só ao trocar o serviço (novo `fim` + sobreposição); remarcar mantém | Alta |
+| RF19 | Agendamento público: o cliente final, sem conta, escolhe serviço, profissional e horário em `/agendar/:slug` e informa nome e telefone | Alta |
+
+**Agendamento público (RF19).** Já existe na API (#162): rotas `/api/publico/{slug}`,
+de segunda a sábado, com início a partir de 08:00 e fim até 19:00, no fuso da empresa;
+todos os memberships ativos aparecem como profissionais; limite por IP de 60 leituras e
+10 envios por minuto. Planejado: a tela `/agendar/:slug` (#163, PR #167); até 60 dias de
+antecedência, grade de 30 minutos, até 3 agendamentos futuros por telefone e telefone
+brasileiro normalizado, sem SMS (#169); contato da empresa na página (#170).
 
 **Ciclo de vida do agendamento (RF05).** Nasce `confirmado`. Concluir só com
 `inicio <= now()`; cancelar a qualquer momento enquanto `confirmado`; `cancelado` e
@@ -186,11 +211,14 @@ agendam os mesmos clientes. Só o administrador gerencia serviços e preços.
   vindo do corpo nem da query string (#162).
 - **RNF06** — Rate limit no login.
 - **RNF07** — Segredos via variável de ambiente.
-- **RNF08** — Falha do Telegram não pode derrubar o fluxo de agendamento.
-- **RNF09** — Deploy via Docker Compose (api, worker, postgres).
-- **RNF10** *(novo)* — Todo update recebido do Telegram é autenticado pelo
-  `secret_token` do webhook. Endpoint sem essa verificação aceita `/start`
-  forjado de qualquer origem.
+- **RNF08** — Falha do canal de avisos não pode derrubar o fluxo de agendamento.
+- **RNF09** — Hospedagem no Render, com frontend e API no mesmo endereço, e PostgreSQL
+  gerenciado no Neon. Deploy da `main` depois do CI; migrations aplicadas fora do
+  deploy. O `Dockerfile` da raiz gera só a imagem da API, e a configuração real do
+  Render fica documentada no roteiro do #173. O Docker Compose serve só ao ambiente
+  local.
+- **RNF10** — Todo evento recebido do canal de avisos é autenticado antes de ser
+  processado. O mecanismo depende da integração do WhatsApp (§8.3).
 - **RNF11** *(v0.8)* — Escopo por prestador (RF15) garantido no backend: o filtro
   sai da sessão, pelo `Escopo` que o middleware monta (2.7), nunca do payload;
   prestador que pede `prestador_id` de outro recebe 403. Coberto por teste (2.16).
@@ -199,22 +227,27 @@ agendam os mesmos clientes. Só o administrador gerencia serviços e preços.
 ## 5. Arquitetura
 
 ```
-[Angular SPA] -HTTPS/JSON-> [API .NET] --> [PostgreSQL + RLS]
-                                |            ^
-                                v            |
-                      [Worker .NET (scheduler)]
-                                |
-                                v
-                       [Telegram Bot API]
-                                |
-              [webhook de updates] --> [API .NET]
+[Cliente final: /agendar/:slug]--+
+                                 +--> [Angular SPA] -HTTPS/JSON-> [API .NET] --> [PostgreSQL + RLS]
+[Equipe: painel]-----------------+                                                      ^
+                                                                                        |
+                                               (planejado) [Worker .NET (scheduler)] ---+
+                                                                     |
+                                                                     v
+                                               (planejado) [WhatsApp, fornecedor pendente]
 ```
 
-**Worker separado da API:** a API responde HTTP e precisa ser rápida; o envio de
-lembretes é um processo periódico. Juntar os dois funciona com uma instância e
-quebra com duas (mensagem duplicada).
+**Página pública.** `/agendar/:slug` abre sem login e chama as rotas
+`/api/publico/{slug}`, que ficam fora da sessão: o tenant sai do slug da rota (RNF05,
+§9). As rotas estão na `main` (#162); a tela entra pelo #163 (PR #167).
+
+**Worker separado da API (planejado):** a API responde HTTP e precisa ser rápida; o
+envio de lembretes é um processo periódico. Juntar os dois funciona com uma instância
+e quebra com duas (mensagem duplicada).
 
 ### 5.1 Padrão outbox para notificações
+
+Planejado: a tabela `notificacoes` existe, mas nenhuma rota grava nela ainda.
 
 Três tipos de notificação, dois mecanismos:
 
@@ -322,9 +355,8 @@ token, sem tenant. Consequência a carregar: **nessas quatro tabelas e em `tenan
 
 `tenants` também fica de fora pelo mesmo motivo (o login lista as empresas do
 usuário e a escolha resolve o slug antes do contexto). Por isso, **segredo por
-tenant não pode morar nessa tabela**: quando
-`telegram_bot_token` passar a ser usado, ele sai para uma tabela própria com
-policy, ou para o gerenciador de segredos.
+tenant não pode morar nessa tabela**: a coluna legada `telegram_bot_token` fica sempre
+nula, garantida pelo `CHECK telegram_bot_token_nulo`.
 
 **O RLS isola empresas, não prestadores.** Dentro da empresa, o escopo por
 prestador (RF15) é filtro na query, sem policy extra: o repositório recebe o
@@ -356,8 +388,8 @@ convites(id, tenant_id, email, papel IN ('administrador','prestador'), token UNI
          expira_em, aceito_em NULL, criado_por)
 
 clientes(id, tenant_id, nome,
-         telefone TEXT NULL,            -- contato manual apenas, NÃO é canal
-         telegram_chat_id BIGINT NULL,
+         telefone TEXT NULL,            -- contato; identifica o cliente no agendamento público
+         telegram_chat_id BIGINT NULL,  -- legado, sem uso
          notificavel BOOLEAN DEFAULT true,
          vinculo_token UUID, vinculo_expira_em, vinculado_em NULL,
          removido_em NULL,
@@ -379,6 +411,17 @@ notificacoes(id, tenant_id, agendamento_id, tipo, versao, status,
              enviado_em, telegram_message_id, erro,
              UNIQUE(agendamento_id, tipo, versao))
 ```
+
+**O que está no schema hoje.** As migrations vão até a 010. `convites` ainda não
+existe: a migration 011 fica para depois do piloto. As colunas do Telegram
+(`tenants.telegram_bot_token`, `clientes.telegram_chat_id`, `clientes.vinculo_token`,
+`clientes.vinculo_expira_em`, `clientes.vinculado_em` e
+`notificacoes.telegram_message_id`) continuam no schema, sem uso, até uma migration
+futura.
+
+**Telefone do cliente.** Serve de contato e, no agendamento público, identifica o
+cliente dentro da empresa pelos dígitos (#162). Nenhum aviso usa o telefone hoje; o uso
+como destino do WhatsApp depende das decisões pendentes de §8.3.
 
 **Conflito de horário.** A regra não pode viver só na aplicação: duas requisições
 simultâneas passam pelas duas validações e gravam as duas.
@@ -426,74 +469,35 @@ agendamento guarda o valor da época.
 `ON DELETE RESTRICT` e é gravado pelo signup. Ninguém remove o criador, e só ele
 remove outro administrador (regra do endpoint de remoção, item 5.8).
 
-## 8. Telegram
+## 8. Avisos pelo WhatsApp
 
-### 8.1 O que melhora em relação ao WhatsApp
+### 8.1 Decisão e estado atual
 
-Sem custo por mensagem, sem verificação de Business Manager, sem CNPJ, sem número
-dedicado, sem aprovação prévia de template, botões inline nativos, bot criado no
-@BotFather em minutos.
+O canal de avisos ao cliente é o **WhatsApp**; o Telegram sai (decidido em 18/11/2026).
+**Nenhuma integração existe:** o sistema não envia mensagem a ninguém e o worker não
+existe. O desenho anterior, com bot, deep link e botões inline, deixou de valer.
 
-### 8.2 O que não muda: o bot não pode iniciar conversa
+### 8.2 O que vale para qualquer canal
 
-É a restrição que define o design, equivalente à janela de 24h do WhatsApp — na
-prática mais rígida, porque não existe saída via template pago. Sem `chat_id`
-capturado, o cliente é inatingível.
+- Outbox, idempotência e descarte de lembrete no cancelamento (§5.1, RNF03).
+- Falha do canal não derruba o agendamento (RNF08), e evento recebido é autenticado
+  (RNF10).
+- O agendamento já nasce `confirmado`: confirmar pela mensagem não muda status;
+  cancelar segue o mesmo caminho do cancelamento pelo sistema (item 5.2). Decidido em
+  02/10/2026.
+- Cliente que não pode receber aviso aparece como tal na tela, para o prestador não
+  achar que o lembrete foi enviado.
 
-**Fluxo de vinculação (deep link):**
+### 8.3 Decisões pendentes
 
-1. Ao cadastrar o cliente, o sistema gera um `vinculo_token` (UUID) com validade.
-2. Entrega-se ao cliente o link `https://t.me/SeuBot?start=<vinculo_token>`.
-3. O cliente abre e o Telegram envia `/start <vinculo_token>`.
-4. O webhook recebe o update, resolve o token, grava `telegram_chat_id` e marca
-   `vinculado_em`.
-
-O `vinculo_token` é **uma credencial**: quem o tiver vincula o próprio Telegram
-àquele cliente. Por isso tem `vinculo_expira_em` e é consumido no primeiro uso
-(`vinculado_em IS NOT NULL` ⇒ recusar novo `/start`).
-
-**Consequência no produto:** existe o estado "cliente cadastrado porém não
-notificável". A UI precisa mostrar isso explicitamente, senão o prestador acha que
-o lembrete foi enviado e não foi.
-
-### 8.3 Um bot para todos os tenants, ou um por tenant?
-
-| | Bot único | Bot por tenant |
-|---|---|---|
-| Setup | Um token no `.env` | Cada tenant cria no BotFather |
-| Marca | Genérica | Cada empresa com seu bot |
-| Webhook | Uma URL | Uma URL por bot |
-| Rate limit | 30 msg/s compartilhado | 30 msg/s por tenant |
-| Complexidade | Baixa | Média-alta |
-
-**Decisão: bot único no MVP**, com a coluna `tenants.telegram_bot_token` já
-prevista (nula = bot da plataforma). Com bot único, o `vinculo_token` precisa
-resolver cliente **e** tenant — o que ele já faz, sendo UUID único global.
-
-### 8.4 Limites de envio
-
-Cerca de 1 mensagem por segundo no mesmo chat e ~30 por segundo no total. Acima
-disso a API retorna HTTP 429 com `retry_after`. O worker trata 429 respeitando
-`retry_after` e usa token bucket simples — nunca dispara em loop apertado.
-
-### 8.5 Webhook vs long polling
-
-- **Long polling em desenvolvimento**: não exige URL pública, funciona atrás de NAT.
-- **Webhook em produção**: exige HTTPS com certificado válido e endpoint público.
-
-Abstrair atrás de uma interface permite trocar por configuração.
-
-**Autenticação do webhook (RNF10).** O endpoint é público: sem verificação,
-qualquer um faz POST forjando `/start <token>` ou um `callback_query` de
-cancelamento. No `setWebhook`, passe `secret_token`; a cada update, compare com o
-header `X-Telegram-Bot-Api-Secret-Token` e rejeite com 401 quando não bater.
-
-### 8.6 Botões inline (RF10)
-
-O agendamento já nasce `confirmado`, então o botão **Confirmar** não muda status:
-só registra a confirmação de presença e edita a mensagem (item 5.7). **Cancelar**
-segue o mesmo caminho do cancelamento pelo sistema (item 5.2). Decidido em
-02/10/2026.
+| Tema | Situação |
+|---|---|
+| Fornecedor da integração | Pendente |
+| Custo | Pendente |
+| Prazo | Pendente |
+| Telefone como destino e consentimento do cliente (RF08) | Pendente; o aviso atual do formulário não trata de mensagens |
+| Confirmar e cancelar pela mensagem (RF10) | Pendente; depende do fornecedor |
+| Remoção das colunas do Telegram | Migration futura (§7) |
 
 ## 9. Autenticação e autorização
 
@@ -538,12 +542,14 @@ termina em algo demonstrável. Detalhe, issues e critérios em `docs/backlog.md`
 | T0 Fundação | Repositório, CI, schema com `tenant_id`, RLS, constraint de sobreposição, seed | — |
 | T1 Agendar | Criar e listar agendamentos no navegador, tenant fixo e sem login | T0 |
 | T2 Entrar | Signup, login, sessão, middleware de tenant, papéis com escopo por prestador e convites | T1 |
-| T3 Avisar | Vinculação por deep link e confirmação imediata no Telegram | T2 |
-| T4 Lembrar | Worker com outbox, idempotência, backoff e tratamento de 429/403 | T3 |
-| T5 Cancelar | Cancelar, reagendar e concluir, inclusive cancelar por botão inline; remoção de membro | T4 |
-| T6 Configurar | Serviços com preço, disponibilidades, slots e fuso por tenant | T1 |
+| T3 Avisar | Vinculação ao canal e confirmação imediata pelo WhatsApp (integração pendente, §8.3) | T2 |
+| T4 Lembrar | Worker com outbox, idempotência, backoff e tratamento dos limites do canal | T3 |
+| T5 Cancelar | Cancelar, reagendar e concluir no painel e cancelar pela mensagem; remoção de membro | T2 no painel; T3 e T4 só para os avisos e o descarte do lembrete |
+| T6 Configurar | Serviços com preço, disponibilidades, slots e fuso por tenant | T1, 2.7 |
 | T7 Acompanhar | Calendário semanal, resumo financeiro mensal e exportação `.ics` | T5, T6 (6.1) |
 | T8 Entregar | Deploy e documentação | T0–T7 |
+
+A primeira publicação (Fatia P, piloto com uma empresa) tem cards próprios no board.
 
 **Teste que fecha a Fatia 2:** criar dois tenants, popular ambos, autenticar como
 usuário do tenant A e verificar que nenhum endpoint retorna dado do tenant B (item
@@ -557,9 +563,10 @@ usuário do tenant A e verificar que nenhum endpoint retorna dado do tenant B (i
 |---|---|---|
 | Query sem escopo de tenant | Crítico | RLS + repositório + teste automatizado |
 | Vazamento entre prestadores da mesma empresa | Alto | Filtro no repositório (`Escopo`) + teste 2.16 |
-| Cliente nunca abre o deep link | Não recebe lembrete | Estado explícito na UI |
-| Webhook sem autenticação | Update forjado | `secret_token` (RNF10) |
-| Baixa adoção do Telegram | Produto inútil na prática | Decidir cedo |
+| Cliente sem canal de aviso | Não recebe lembrete | Estado explícito na UI |
+| Evento do canal sem autenticação | Evento forjado | Autenticar cada evento (RNF10) |
+| Fornecedor, custo e prazo do WhatsApp indefinidos | Avisos sem data para entrar | Decidir antes da Fatia 3 (§8.3) |
+| Abuso da página pública, sem SMS | Agenda ocupada por pedidos falsos | Limite por IP (na `main`); limites por telefone e antecedência (#169) |
 | Escopo maior que a equipe | Não entrega | Cortar RF10 e RF17; RF14 só em último caso (ordem no backlog) |
 | Troca de Go para .NET no meio da Fatia 2 | Retrabalho | Porte com paridade de comportamento e os mesmos testes, antes de código novo |
 | Notificação duplicada | Perda de confiança | `UNIQUE` + `SKIP LOCKED` + backoff |
@@ -569,10 +576,10 @@ usuário do tenant A e verificar que nenhum endpoint retorna dado do tenant B (i
 | Tema | Decisão |
 |---|---|
 | Multi-tenancy | Shared schema com `tenant_id` + RLS |
-| Telefone do cliente | Contato manual; nunca referenciado pelo worker. No agendamento público, os dígitos do telefone identificam o cliente dentro da empresa (#162) |
-| Dados pessoais | Seed fictício; finalidade e retenção no README |
+| Telefone do cliente | Contato e, no agendamento público, identificação do cliente dentro da empresa pelos dígitos (#162). Nenhum aviso usa o telefone hoje; o uso como destino do WhatsApp está pendente (§8.3) |
+| Dados pessoais | Seed só com dados fictícios; regras do piloto nas decisões de 18/11/2026 abaixo |
 | Criação de tenant | Signup self-service cria tenant + membership administrador e grava `tenants.criado_por` |
-| Bot | Único no MVP, coluna por tenant já prevista |
+| Canal de avisos | WhatsApp (§8), no lugar do bot do Telegram |
 | Sessão | Cookie `HttpOnly` + tabela `sessoes` |
 | Papéis | `text` + `CHECK`, não `ENUM` |
 | Backend | C# com ASP.NET Core (.NET 10), minimal APIs; um projeto de API e um de testes (xUnit). Decidido em 15/11/2026, no lugar de Go (#144) |
@@ -631,7 +638,22 @@ Decidido em 18/11/2026 (#162):
 | Janela do agendamento público | Segunda a sábado, início a partir de 08:00 e fim até 19:00, no fuso da empresa (`tenants.fuso_horario`). Regra fixa até existir o cadastro de disponibilidade. O `POST /api/agendamentos` do painel não muda |
 | Profissionais na página pública | Todos os memberships ativos da empresa, sem marca de "atende" |
 | Limite das rotas públicas | Por IP: 60 leituras e 10 envios por minuto. Acima disso, 429 `muitas_tentativas` com `Retry-After`. O IP vem do `CF-Connecting-IP`, que a Cloudflare do Render sobrescreve; o `X-Forwarded-For` não é usado, porque o cliente controla o começo dele. IPv6 conta por bloco /64. Contador em memória na API |
-| Dados da empresa na página pública | Só nome e fuso: `tenants` não tem endereço nem telefone |
+| Dados da empresa na página pública | Hoje a API devolve só nome e fuso. Revisto abaixo: o contato entra pelo #170 |
+
+Decidido em 18/11/2026, para o piloto (#180):
+
+| Tema | Decisão |
+|---|---|
+| Primeira publicação | Piloto com uma empresa |
+| Hospedagem | Render e Neon, com frontend e API no mesmo endereço, deploy da `main` depois do CI e migrations aplicadas fora do deploy (RNF09, #173) |
+| Serviços do piloto | Cadastrados por SQL no provisionamento (#174) |
+| `POST /api/agendamentos` do painel | Grava o serviço e o prestador fixos da empresa piloto (`SERVICO_FIXO` e `PRESTADOR_FIXO`) e copia o preço desse serviço. O corpo traz só `cliente_id`, `inicio` e `fim` |
+| Regras planejadas do agendamento público | Até 60 dias de antecedência, grade de 30 minutos, até 3 agendamentos futuros por telefone e telefone brasileiro normalizado, sem SMS (#169) |
+| Contato na página pública | A página mostra um contato da empresa (#170); o endereço fica fora |
+| Convites | Ficam para depois do piloto |
+| Dados pessoais | A empresa é a controladora; retenção de 12 meses após o último atendimento; validação jurídica pendente (#175) |
+| Aviso de privacidade | Texto atual do formulário público (#163, PR #167): "Seu nome e telefone ficam guardados com esta empresa para registrar o agendamento e identificar você nos próximos." |
+| Aprovação de PR | PR para a `main` exige 1 aprovação |
 
 ## 13. Estimativa de prazo
 
@@ -652,7 +674,7 @@ Base: 3 pessoas × ~5h/semana = 15h/semana nominais. Esforço por fatia no
 | **Total** | **~481h** |
 
 Escopo completo: ~33 semanas nominais, ~46 com 70% de eficiência real. Com os
-cortes do backlog (Fatia 6 exceto 6.1, 6.4 e 6.5a, botões inline, `.ics` e
+cortes do backlog (Fatia 6 exceto 6.1, 6.4 e 6.5a, botões na mensagem, `.ics` e
 financeiro por prestador), ~417h: ~28 semanas nominais, ~40 realistas. Cortar
 também o calendário semanal, o último recurso, leva a ~402h.
 
@@ -661,7 +683,7 @@ o backlog atual, mesmo o escopo cortado passa de 9 meses no ritmo realista — o
 time sobe as horas semanais, ou corta mais, ou comunica outro prazo.
 
 Dois fatores que puxam para cima e não aparecem na conta: a curva de aprendizado
-de Go (três pessoas ao mesmo tempo) e o fato de as Fatias 0 e 1 quase não
+de .NET (três pessoas ao mesmo tempo) e o fato de as Fatias 0 e 1 quase não
 paralelizarem. Nas primeiras ~8 semanas o time roda com uma ou duas pessoas
 produtivas no backend; o frontend base (1.7–1.9) é o que ocupa a terceira. A
 partir da Fatia 3 abrem três frentes.
