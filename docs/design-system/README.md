@@ -455,7 +455,7 @@ sem texto.
 | Estado vazio | §4.19 · `Estados` | `app-vazio` | no código |
 | Esqueleto | §4.20 · `Estados` | `web/src/styles.css` (`.esqueleto`), desenhado em cada tela | no código |
 | Gráfico de barras | §4.21 · `Financeiro` | — | só design |
-| Casca (menu, top-bar, cabeçalho) | §4.22 · todas | `web/src/app/layout.ts`, `app.html` (`.cabecalho-tela`) | no código, sem seletor de empresa nem rodapé de usuário (ainda não há login) |
+| Casca (menu, top-bar, cabeçalho) | §4.22 · todas | `web/src/app/layout.ts`, `painel.html` (`.cabecalho-tela`) | no código, sem seletor de empresa nem rodapé de usuário (ainda não há login) |
 | Painel de marca | §4.23 · `Entrar`, `Cadastro` | — | só design |
 
 ---
