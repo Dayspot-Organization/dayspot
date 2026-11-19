@@ -63,10 +63,15 @@ public static class Consultas
     /// prestador só com membership ativo e serviço só ativo, senão zero linhas (devolve
     /// nulo). Sem fim, inicio + duração do serviço. Sobreposição fica com a constraint
     /// sem_sobreposicao: sai como PostgresException 23P01, porque checar antes no
-    /// código abre condição de corrida.
+    /// código abre condição de corrida. A constraint checa depois de gravar a linha:
+    /// dois INSERTs simultâneos no mesmo horário esperariam um pelo outro (deadlock,
+    /// 40P01). O advisory lock por prestador os põe em fila até o fim da transação, e
+    /// vem sempre depois do lock de telefone (<see cref="ClienteDoTelefone"/>).
     /// </summary>
     public static async Task<Agendamento?> CriarAgendamento(this AppDb db, Guid tenantId, NovoAgendamento n, CancellationToken ct = default)
     {
+        await db.Database.ExecuteSqlAsync(
+            $"SELECT pg_advisory_xact_lock(hashtextextended({tenantId.ToString()} || ':prestador:' || {n.PrestadorId.ToString()}, 0))", ct);
         var criados = await db.Agendamentos.FromSql($"""
             INSERT INTO agendamentos (tenant_id, cliente_id, servico_id, prestador_id, inicio, fim, valor_centavos)
             SELECT s.tenant_id, {n.ClienteId}, s.id, m.usuario_id, {n.Inicio},
