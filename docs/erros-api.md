@@ -22,7 +22,7 @@ Toda resposta de erro (status 4xx/5xx) tem `Content-Type: application/json` e es
 
 | Status | `codigo`              | Quando |
 |--------|-----------------------|--------|
-| 400    | `requisicao_invalida` | JSON malformado, campo obrigatório ausente, valor inválido. |
+| 400    | `requisicao_invalida` | JSON malformado, corpo acima de 1 MiB, campo obrigatório ausente, valor inválido ou campo desconhecido no corpo. Exceção: `POST /api/publico/{slug}/agendamentos` ignora campo desconhecido, e nada além dos cinco campos da rota chega ao banco. |
 | 404    | `nao_encontrado`      | Recurso não existe (ou não pertence ao tenant), ou rota inexistente. |
 | 405    | `metodo_nao_permitido` | Rota existe, mas não com esse método. O cabeçalho `Allow` lista os métodos aceitos. |
 | 409    | `conflito_horario`    | Agendamento sobrepõe outro (SQLSTATE `23P01`). |
