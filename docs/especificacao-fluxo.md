@@ -1,11 +1,15 @@
 # Especificação de fluxo — Dayspot
 
-Versão **1.1** · 23/10/2026 (§8.1 e §8.2 decididos: req. §12)
+Versão **1.2** · 18/11/2026 (cliente final como ator, WhatsApp como canal, erros 405 e 429)
 
 Papéis, ciclo de vida do agendamento, telas e modelo de dados.
 
-**Fontes**: repositório, `main` em `3c46550`: `docs/requisitos.md` v0.9,
-`docs/guia-banco-de-dados.md` v1.5, `docs/backlog.md` v2.2, `docs/erros-api.md`.
+**Fontes**: repositório, `main` em `59985c5`: `docs/requisitos.md` v0.15,
+`docs/guia-banco-de-dados.md` v1.12, `docs/backlog.md`, `docs/erros-api.md`.
+
+**Estado atual:** a API tem clientes, agendamentos e as rotas públicas (`src/Api/Rotas.cs`).
+O restante desta especificação descreve o produto planejado, e nenhuma integração de
+avisos existe.
 
 Convenções: `RFxx`/`RNFxx` = requisitos; `n.m` = item do backlog; `§` = seção do
 documento citado (req. = requisitos, guia = guia de banco). **(inferido)** marca
@@ -17,9 +21,10 @@ dedução sem texto explícito nas fontes. **Em aberto** marca lacuna; todas est
 
 Cada empresa (tenant) é isolada das outras pelo RLS (RF04, req. §6.2). Dentro dela há
 dois papéis: **administrador**, que gerencia a empresa e também pode atender, e **prestador**, que
-opera só a própria agenda (RF03, RF15). O cliente não tem conta: é cadastrado pela
-equipe e recebe confirmação, lembrete e cancelamento pelo Telegram (RF08–RF10). O
-agendamento nasce `confirmado` e termina `cancelado` ou `concluido`; nunca é
+opera só a própria agenda (RF03, RF15). O **cliente final** não tem conta: agenda
+sozinho pela página pública da empresa (RF19) ou é cadastrado pela equipe. Os avisos de
+confirmação, lembrete e cancelamento serão enviados pelo WhatsApp, integração que ainda
+não existe (RF08–RF10, req. §8). O agendamento nasce `confirmado` e termina `cancelado` ou `concluido`; nunca é
 apagado (RF05). Só o `concluido` entra no financeiro (RF16).
 
 ```mermaid
@@ -29,12 +34,13 @@ flowchart LR
     PRE["Prestador<br/>vê só os próprios agendamentos<br/>cria, remarca, cancela e conclui<br/>financeiro só pessoal"]
     AG["Agendamento"]
   end
-  CLI["Cliente<br/>sem conta, cadastrado pela equipe"]
+  CLI["Cliente final<br/>sem conta, agenda pela página pública<br/>ou é cadastrado pela equipe"]
   OWN -->|"convida e remove"| PRE
   OWN -->|"opera todos"| AG
   PRE -->|"opera só os próprios"| AG
-  AG -->|"notifica pelo Telegram"| CLI
-  CLI -->|"botão Confirmar ou Cancelar"| AG
+  CLI -->|"agenda em /agendar/:slug"| AG
+  AG -.->|"avisa pelo WhatsApp (planejado)"| CLI
+  CLI -.->|"confirma ou cancela na mensagem (planejado)"| AG
 ```
 
 ---
@@ -64,7 +70,7 @@ sessão → 401 `nao_autenticado`.
 | Criar, editar, desativar serviço e preço | Sim | Não | Rota só de administrador → 403 | req. §9, 6.1 |
 | Disponibilidade | De qualquer membro, pelo seletor | Só a própria | Outro prestador → 403 (inferido do `Escopo`) | RF06, req. §12, 6.2 |
 | Horários livres (slots) | Qualquer membro ativo | Só os próprios | `Escopo`; outro → 403 | 6.3 |
-| Clientes (listar, criar, link do Telegram) | Sim | Sim | Clientes são da empresa, não do prestador | req. §3, 1.4, 3.8 |
+| Clientes (listar, criar) | Sim | Sim | Clientes são da empresa, não do prestador | req. §3, 1.4, 3.8 |
 | Convidar (administrador ou prestador) e listar convites | Sim | Não | 403 ao prestador; 409 `convite_invalido` | RF12, 2.18 |
 | Aceitar convite | — | — | Quem tem sessão com o e-mail do convite | 2.19, guia §011 |
 | Remover membro | Criador: qualquer um menos ele mesmo. Outro administrador: só prestadores | Não | Remover o criador → 403; administrador não criador removendo administrador → 403 | RF12, 5.8 |
@@ -105,7 +111,7 @@ sem policy extra (req. §6.2, guia §Acesso a dados).
 
 ```mermaid
 stateDiagram-v2
-  [*] --> confirmado: criar, pela equipe
+  [*] --> confirmado: criar, pela equipe ou pelo cliente final
   confirmado --> confirmado: remarcar ou trocar serviço
   confirmado --> cancelado: cancelar, pela equipe, pelo cliente ou na remoção do membro
   confirmado --> concluido: concluir, administrador ou prestador, após o início
@@ -122,15 +128,16 @@ Três status, `CHECK (status IN ('confirmado','cancelado','concluido'))`, defaul
 | De → para | Quem | Guarda | Efeitos | Inválida |
 |---|---|---|---|---|
 | — → `confirmado` (criar) | Administrador (qualquer membro ativo) ou prestador (si) | Prestador com membership ativo; serviço ativo (inferido); sem sobreposição | `valor_centavos` = `preco_centavos` do serviço; `fim = inicio + duracao_minutos`; na mesma transação, outbox `confirmacao` (imediata) e `lembrete` (`agendar_para = inicio − antecedência`) | 409 `conflito_horario` (23P01); 400 `requisicao_invalida` |
+| — → `confirmado` (criar, página pública) | Cliente final, sem conta (RF19) | Empresa do slug; serviço ativo; profissional com membership ativo; horário futuro, de segunda a sábado, com início a partir de 08:00 e fim até 19:00 no fuso da empresa; sem sobreposição | Cliente e agendamento na mesma transação; telefone já cadastrado reaproveita o cliente mais antigo; valor copiado do serviço; sem outbox por enquanto | 400 `requisicao_invalida`; 404 `nao_encontrado`; 409 `conflito_horario`; 429 `muitas_tentativas` |
 | `confirmado` → `confirmado` (remarcar) | Administrador ou dono do agendamento | Status `confirmado` | `fim = novo inicio + (fim − inicio)`; valor mantido; lembrete antigo → `descartado`, novo com `versao + 1` (5.3); nenhum aviso ao cliente (Em aberto §8.7) | 409 `status_invalido`; 409 `conflito_horario` |
 | `confirmado` → `confirmado` (trocar serviço) | Administrador ou dono do agendamento | Status `confirmado`; serviço novo ativo | `fim = inicio + duracao_minutos` do novo; valor recopiado; constraint de sobreposição roda de novo; lembrete não muda (inferido: `inicio` igual) | 409 `status_invalido`; 409 `conflito_horario`; serviço inativo (código a definir) |
 | `confirmado` → `cancelado` (equipe) | Administrador ou dono do agendamento | Status `confirmado`, a qualquer momento | Mesma transação: `lembrete` e `confirmacao` pendentes → `descartado`; outbox `cancelamento` imediato; horário liberado (`WHERE status <> 'cancelado'` na constraint) | 409 `status_invalido` |
-| `confirmado` → `cancelado` (cliente) | Cliente, botão Cancelar no Telegram | Update autenticado por `secret_token` (RNF10) | Mesmo caso de uso da 5.2; mensagem editada (5.7) | Resposta com agendamento já final: Em aberto §8.12 |
+| `confirmado` → `cancelado` (cliente, planejado) | Cliente, na mensagem do WhatsApp (forma pendente, req. §8.3) | Evento autenticado (RNF10) | Mesmo caso de uso da 5.2 | Resposta com agendamento já final: Em aberto §8.12 |
 | `confirmado` → `cancelado` (remoção) | Quem remove o membro (5.8) | `inicio > now()` | Cada agendamento futuro do removido pela 5.2, na transação que grava `removido_em` | — |
 | `confirmado` → `concluido` | Administrador ou dono do agendamento | `inicio <= now()` do banco, dentro do lock | Passa a contar no financeiro; nenhuma notificação | 409 `status_invalido` (zero linhas no `UPDATE`) |
 
-Botão **Confirmar** do Telegram não é transição: só registra a presença e edita a
-mensagem (req. §8.6, 5.7). Onde gravar: Em aberto §8.3.
+**Confirmar** pela mensagem não é transição: só registra a presença (req. §8.2). Onde
+gravar: Em aberto §8.3.
 
 ### 3.2 Remarcar e trocar serviço
 
@@ -164,6 +171,9 @@ papel = EXCLUDED.papel`, guia §011).
 
 ```mermaid
 flowchart TD
+  PUB["Página pública /agendar/:slug<br/>cliente final, sem login"]
+  CONF["Confirmação do agendamento"]
+  PUB --> CONF
   CAD["Cadastro da empresa<br/>cria usuário, empresa e administrador"]
   LOG["Login"]
   ACE["Aceite de convite<br/>cria ou reativa a membership"]
@@ -176,7 +186,7 @@ flowchart TD
     O2["Financeiro<br/>pessoal, total, por prestador"]
     O3["Prestadores<br/>convidar e remover"]
     O4["Serviços e preços"]
-    O5["Clientes<br/>cadastro e link do Telegram"]
+    O5["Clientes<br/>cadastro"]
     O6["Disponibilidade<br/>de quem atende"]
   end
   subgraph MP["Menu do prestador"]
@@ -262,8 +272,8 @@ erros no formato de `docs/erros-api.md`, lidos pelo cliente HTTP da 1.9.
   `concluido`; `METHOD:PUBLISH`, `UID:<id>@dayspot`, `DTSTAMP` = agora,
   `SEQUENCE` = epoch de `atualizado_em`, `DTSTART`/`DTEND` em UTC; cookie da sessão,
   sem token na URL.
-- **Estados:** semana vazia; cliente não vinculado ou que bloqueou o bot sinalizado
-  (3.9: "nunca vinculou" ≠ "bloqueou"); 409 `conflito_horario` ao salvar; 409
+- **Estados:** semana vazia; cliente que não pode receber aviso sinalizado (req. §8.2);
+  409 `conflito_horario` ao salvar; 409
   `status_invalido` em ação fora de hora; 403 se o prestador forçar outro id.
 - **Antes da T7:** a 1.10 (#57) é lista simples, consumindo a 1.6. A 7.1 a substitui.
   Na T1 não há sessão: tenant e prestador vêm de `TENANT_FIXO` e `PRESTADOR_FIXO`
@@ -320,15 +330,13 @@ erros no formato de `docs/erros-api.md`, lidos pelo cliente HTTP da 1.9.
 
 ### 4.8 Clientes
 
-- **Objetivo:** cadastrar clientes e vinculá-los ao Telegram.
+- **Objetivo:** cadastrar os clientes da empresa.
 - **Quem:** administrador e prestador; clientes são da empresa.
-- **Dados:** nome, telefone (contato manual, nunca canal), situação do Telegram:
-  não vinculado, vinculado, bloqueou o bot (`notificavel = false`).
-- **Ações:** listar, criar, copiar o link `https://t.me/<bot>?start=<vinculo_token>`.
-- **Regras:** o token é credencial de uso único, válido por 30 dias; `/start` com token
-  inválido, expirado ou já usado é recusado (3.7). Telefone sem validação E.164.
-- **Em aberto:** editar, remover (`removido_em`) e regenerar o token não têm item
-  (§8.10).
+- **Dados:** nome e telefone. O telefone é contato e identifica o cliente no agendamento
+  público; o uso como destino do WhatsApp está pendente (req. §8.3).
+- **Ações:** listar e criar.
+- **Regras:** telefone sem validação E.164 no painel.
+- **Em aberto:** editar e remover (`removido_em`) não têm item (§8.10).
 - **Backlog:** 1.4, 3.5, 3.8, 3.9. Rotas a definir.
 
 ### 4.9 Disponibilidade
@@ -341,6 +349,32 @@ erros no formato de `docs/erros-api.md`, lidos pelo cliente HTTP da 1.9.
   prestador de outra empresa. Slots (6.3) só de membros ativos.
 - **Corte:** 6.5b é cortável (disponibilidades no seed).
 - **Backlog:** 6.2, 6.3, 6.5b. Rotas a definir.
+
+### 4.10 Página pública de agendamento
+
+- **Objetivo:** o cliente final agenda sozinho, sem conta (RF19).
+- **Quem:** qualquer visitante com o link da empresa; sem login e sem menu do painel.
+- **Situação:** as rotas estão na `main` (#162); a tela entra pelo #163 (PR #167).
+- **Dados:** nome e fuso da empresa, serviços ativos, profissionais (todos os memberships
+  ativos) e intervalos ocupados do profissional escolhido.
+- **Campos:** serviço, profissional, dia e horário, nome e telefone. O `inicio` vai em
+  hora local da empresa, sem fuso.
+- **Regras na `main`:** de segunda a sábado, com início a partir de 08:00 e fim até 19:00,
+  no fuso da empresa; horário futuro; cliente e agendamento na mesma transação; telefone
+  já cadastrado reaproveita o cliente, sem alterar o nome gravado e sem revelar dados dele;
+  limite por IP de 60 leituras e 10 envios por minuto.
+- **Planejado:** até 60 dias de antecedência, grade de 30 minutos, até 3 agendamentos
+  futuros por telefone e telefone brasileiro normalizado, sem SMS (#169); contato da
+  empresa na página (#170); política de privacidade (#175). O endereço fica fora.
+- **Aviso no formulário (#163, PR #167):** "Seu nome e telefone ficam guardados com esta
+  empresa para registrar o agendamento e identificar você nos próximos."
+- **Erros:** slug inexistente ou serviço e profissional indisponíveis → 404
+  `nao_encontrado`; campo inválido → 400 `requisicao_invalida` com `detalhes.campo`;
+  horário tomado → 409 `conflito_horario`; acima do limite → 429 `muitas_tentativas` com
+  `Retry-After`.
+- **Rotas:** `GET /api/publico/{slug}`, `GET /api/publico/{slug}/servicos`,
+  `GET /api/publico/{slug}/prestadores`, `GET /api/publico/{slug}/ocupados` e
+  `POST /api/publico/{slug}/agendamentos`.
 
 ---
 
@@ -408,7 +442,7 @@ erDiagram
     uuid id PK
     uuid tenant_id FK
     text nome
-    text telefone "contato manual"
+    text telefone "contato e identificação"
     bigint telegram_chat_id
     uuid vinculo_token UK
     boolean notificavel
@@ -459,10 +493,13 @@ Toda tabela de negócio tem `tenant_id`. `usuarios` não tem: o vínculo mora em
 
 ### 5.1 Tabelas
 
-Só o que o guia v1.5 define. Ordem das migrations: 001 extensões → 002 tenants → 003
+Só o que o guia define. Ordem das migrations: 001 extensões → 002 tenants → 003
 usuarios, memberships, `tenants.criado_por` → 004 clientes → 005 servicos → 006
 disponibilidades → 007 agendamentos → 008 notificacoes → 009 RLS + `REVOKE` → 010
-sessoes → 011 convites.
+sessoes → 011 convites (pendente: fica para depois do piloto).
+
+As colunas `telegram_*` e `vinculo_*` são legado: continuam no schema, sem uso, até uma
+migration futura (req. §7).
 
 **tenants** (002, `criado_por` na 003)
 
@@ -472,7 +509,7 @@ sessoes → 011 convites.
 | `nome` | `text NOT NULL` |
 | `slug` | `text NOT NULL UNIQUE`, `CHECK slug_formato` |
 | `fuso_horario` | `text NOT NULL DEFAULT 'America/Sao_Paulo'`, validado na aplicação contra `pg_timezone_names` |
-| `telegram_bot_token` | `text` nulo (bot da plataforma); não preencher enquanto `tenants` estiver fora do RLS |
+| `telegram_bot_token` | `text`, legado; sempre nulo pelo `CHECK telegram_bot_token_nulo` |
 | `criado_por` | `uuid NOT NULL → usuarios ON DELETE RESTRICT`, gravado pelo signup |
 | `criado_em` | `timestamptz NOT NULL DEFAULT now()` |
 | antecedência do lembrete | a definir (4.6 a torna configurável por tenant; coluna não especificada) |
@@ -503,12 +540,12 @@ CASCADE`, `criado_em`, `expira_em` (`CHECK expira_em > criado_em`), `revogado_em
 | Coluna | Tipo e regra |
 |---|---|
 | `nome` | `text NOT NULL` |
-| `telefone` | `text` nulo, contato manual; nenhuma query do worker o referencia |
+| `telefone` | `text` nulo; contato e identificação do cliente no agendamento público |
 | `telegram_chat_id` | `bigint` nulo; `UNIQUE (tenant_id, telegram_chat_id)` sem `NULLS NOT DISTINCT` |
 | `vinculo_token` | `uuid UNIQUE DEFAULT gen_random_uuid()`, único global |
 | `vinculo_expira_em` | `NOT NULL DEFAULT now() + 30 days` |
 | `vinculado_em` | nulo; `CHECK vinculo_coerente` com `telegram_chat_id` |
-| `notificavel` | `boolean NOT NULL DEFAULT true`; `false` quando o Telegram responde 403 |
+| `notificavel` | `boolean NOT NULL DEFAULT true`; sem uso até existir a integração |
 | `removido_em` | exclusão lógica |
 | — | `UNIQUE (id, tenant_id)` |
 
@@ -584,17 +621,15 @@ card indicado.
 | 401 | `nao_autenticado` | Cookie ausente, expirado ou revogado (previsto) | 2.5 |
 | 401 | `credencial_invalida` | Login com e-mail inexistente ou senha errada (previsto) | 2.3 |
 | 403 | `sem_permissao` | Agendamento de outro prestador; `prestador_id` de outro pedido por prestador; rota só de administrador; remover o criador; administrador não criador removendo administrador; aceite com sessão de outro e-mail (previsto) | 2.7, 2.19, 5.8 |
-| 404 | `nao_encontrado` | Recurso inexistente ou de outro tenant; token de convite inexistente | 1.7 |
+| 404 | `nao_encontrado` | Recurso inexistente ou de outro tenant; rota inexistente; slug inexistente; token de convite inexistente | 1.7, #162 |
+| 405 | `metodo_nao_permitido` | Rota existe, mas não com esse método; o cabeçalho `Allow` lista os aceitos | 1.13 |
 | 409 | `conflito_horario` | Sobreposição (23P01) no `POST` e no `PATCH` | 1.5, 5.1 |
 | 409 | `status_invalido` | Concluir antes do início; cancelar, remarcar ou trocar serviço de `cancelado` ou `concluido` (previsto) | 5.1 |
 | 409 | `convite_invalido` | Convite expirado, já aceito ou para e-mail com membership ativo (previsto) | 2.18, 2.19, 2.22 |
 | 409 | `email_em_uso` | Cadastro ou criar conta pelo convite com e-mail que já tem conta (previsto) | 2.2, 2.22 |
 | 409 | `slug_em_uso` | Cadastro com slug já usado (previsto) | 2.2 |
-| 429 | `muitas_tentativas` | Login acima do limite, com `Retry-After` (previsto) | 2.8 |
+| 429 | `muitas_tentativas` | Rotas públicas acima de 60 leituras ou 10 envios por minuto, por IP, com `Retry-After`. No login, previsto | #162, 2.8 |
 | 500 | `erro_interno` | Falha inesperada; mensagem genérica, detalhe só no log | 1.7 |
-
-Fora do formato da API: o webhook do Telegram responde 401 quando o
-`X-Telegram-Bot-Api-Secret-Token` não bate (RNF10, 3.15).
 
 ---
 
@@ -607,9 +642,9 @@ Fora do formato da API: o webhook do Telegram responde 401 quando o
 | Papel `atendente` | Removido na v0.8 | req. §14 |
 | Excluir agendamento | Termina `cancelado` ou `concluido` | RF05, req. §12 |
 | Estado pendente / aprovação do agendamento | Nasce `confirmado` | RF05 |
-| Conta e login do cliente | Cliente só interage pelo Telegram | README |
-| Telefone como canal de notificação | Contato manual | req. §12 |
-| Bot por empresa | Bot único no MVP; coluna já prevista | req. §8.3 |
+| Conta e login do cliente | O cliente final agenda sem conta pela página pública | RF19 |
+| Endereço da empresa na página pública | Só o contato entra (#170) | req. §12 |
+| Telegram como canal de avisos | O canal é o WhatsApp | req. §8 |
 | Preço por prestador | Um preço por serviço (inferido do modelo) | guia §005 |
 
 ---
@@ -628,7 +663,7 @@ Fora do formato da API: o webhook do Telegram responde 401 quando o
    escolhe a empresa. *Recomendação:* com uma membership ativa, entra direto; com
    várias, tela de escolha após o login; decidir na 2.3/2.9. **Decidido em 23/10/2026
    (req. §12) conforme a recomendação, no card 2.3.**
-3. **Onde gravar o Confirmar do Telegram.** "Registra a confirmação de presença" sem
+3. **Onde gravar o Confirmar da mensagem.** "Registra a confirmação de presença" sem
    coluna no modelo. *Recomendação:* coluna nula `presenca_confirmada_em timestamptz`
    em `agendamentos`, por migration nova na 5.6, e indicador no calendário; decidir
    antes da 5.5.
@@ -659,12 +694,11 @@ Fora do formato da API: o webhook do Telegram responde 401 quando o
    **Decidido em 23/10/2026 (req. §12) para a Fatia 2:** 401 `credencial_invalida`, 429
    `muitas_tentativas`, 409 `email_em_uso` e `slug_em_uso`. Serviço inativo na troca (5.1) e
    prestador ou cliente removido ao criar agendamento seguem em aberto (fora da Fatia 2).
-10. **Clientes além de listar e criar.** Editar, remover (`removido_em`) e regenerar o
-    `vinculo_token` (expira em 30 dias) não têm item no backlog. *Recomendação:* card
-    pequeno na T3 junto da 3.8, ou registrar como corte consciente.
+10. **Clientes além de listar e criar.** Editar e remover (`removido_em`) não têm item
+    no backlog. *Recomendação:* card pequeno na T3 junto da 3.8, ou registrar como corte
+    consciente.
 11. **Log de mensagens e reenvio sem tela.** 6.8 e RF13 existem no backlog, mas não
     têm tela. *Recomendação:* exibir no detalhe do agendamento, no calendário.
-12. **Botão Cancelar com agendamento já final ou começado.** O callback (5.6) não tem
-    resposta definida para `cancelado`/`concluido`. *Recomendação:* não mudar nada,
-    responder com o status atual e editar a mensagem (5.7), sem retornar erro ao
-    Telegram.
+12. **Cancelar pela mensagem com agendamento já final ou começado.** Não há resposta
+    definida para `cancelado`/`concluido`. *Recomendação:* não mudar nada e responder com
+    o status atual; a forma depende da integração do WhatsApp (req. §8.3).
