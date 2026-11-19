@@ -27,6 +27,7 @@
               }
             ],
             "styles": [
+              "src/tokens.css",
               "src/styles.css"
             ]
           },

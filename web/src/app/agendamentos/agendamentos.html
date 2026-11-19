@@ -1,44 +1,174 @@
-<div class="cabecalho">
-  <div class="filtro">
-    <div>
-      <label for="de">De</label>
-      <input #campoDe id="de" type="date" [value]="de()" (input)="de.set(campoDe.value)" />
-    </div>
-    <div>
-      <label for="ate">Até</label>
-      <input #campoAte id="ate" type="date" [value]="ate()" (input)="ate.set(campoAte.value)" />
-    </div>
+<!-- Padrão B do sistema de design: cabeçalho, barra de filtros, grade de horas + painel de detalhe. -->
+<div class="cabecalho-tela">
+  <div>
+    <h1>{{ titulo() }}</h1>
+    @if (carregando()) {
+      <span class="esqueleto resumo-esqueleto" aria-hidden="true"></span>
+    } @else if (!erro()) {
+      <p class="resumo">{{ resumo() }}</p>
+    }
   </div>
-  <!-- Flutuante no celular, botão do cabeçalho no desktop (CSS .novo). -->
-  <a class="botao novo" routerLink="/agendamentos/novo">
-    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-    </svg>
-    <span>Novo agendamento</span>
-  </a>
+  <div class="acoes">
+    <a class="botao" routerLink="/agendamentos/novo">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+      </svg>
+      Novo agendamento
+    </a>
+  </div>
 </div>
 
-@if (invalido()) {
-  <app-mensagem-erro [mensagem]="invalido()" />
-} @else if (agendamentos.isLoading()) {
-  <app-carregando />
+<div class="filtros">
+  <button
+    type="button"
+    class="interruptor"
+    role="switch"
+    [attr.aria-checked]="mostrarCancelados()"
+    (click)="mostrarCancelados.set(!mostrarCancelados())"
+  >
+    <span class="interruptor-trilho" aria-hidden="true"></span>
+    Mostrar cancelados ({{ totalCancelados() }})
+  </button>
+  <div class="navegacao">
+    <button type="button" class="botao-icone" [attr.aria-label]="rotuloAnterior()" (click)="andar(-1)">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M14 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+    <button type="button" class="botao botao-secundario botao-pequeno" (click)="irParaHoje()">Hoje</button>
+    <button type="button" class="botao-icone" [attr.aria-label]="rotuloProximo()" (click)="andar(1)">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M10 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+  </div>
+  <div class="segmento" role="group" aria-label="Período">
+    <button type="button" [attr.aria-pressed]="modo() === 'dia'" (click)="trocarModo('dia')">Dia</button>
+    <button type="button" [attr.aria-pressed]="modo() === 'semana'" (click)="trocarModo('semana')">Semana</button>
+  </div>
+</div>
+
+@if (semConexao()) {
+  <section class="cartao">
+    <app-vazio ilustracao="conexao" titulo="Sem conexão">
+      <p>Tente de novo quando a internet voltar. Nada do que estava salvo foi perdido.</p>
+      <button type="button" class="botao" (click)="agendamentos.reload()">Tentar de novo</button>
+    </app-vazio>
+  </section>
 } @else if (erro()) {
-  <app-mensagem-erro [mensagem]="erro()" podeRepetir (tentarDeNovo)="agendamentos.reload()" />
-} @else if (agendamentos.hasValue()) {
-  @let lista = agendamentos.value();
-  @if (lista.length === 0) {
-    <app-vazio ilustracao="agenda">Nenhum agendamento nesse período.</app-vazio>
-  } @else {
-    <ul class="cartao lista">
-      @for (a of lista; track a.id) {
-        <li>
-          <time [attr.datetime]="a.inicio">
-            <span class="secundario">{{ formatarData(a.inicio) }}</span> {{ formatarHora(a.inicio) }}
-          </time>
-          <span>{{ a.cliente_nome }}</span>
-          <span class="secundario">{{ minutosEntre(a.inicio, a.fim) }} min</span>
-        </li>
-      }
-    </ul>
-  }
+  <app-mensagem-erro [mensagem]="mensagemErro()" podeRepetir (tentarDeNovo)="agendamentos.reload()" />
+} @else {
+  <div class="com-painel" [class.aberto]="selecionado()">
+    <section
+      class="cartao agenda"
+      [attr.aria-label]="modo() === 'semana' ? 'Agenda da semana' : 'Agenda do dia'"
+      [attr.aria-busy]="carregando()"
+    >
+      <div class="agenda-rolagem">
+        <div class="agenda-grade" [style.--colunas]="colunas().length">
+          <div class="agenda-cabecalho">
+            <div></div>
+            @for (c of colunas(); track c.dia) {
+              <div class="agenda-dia" [class.hoje]="c.hoje">
+                <p class="legenda">{{ c.rotulo }}</p>
+                <p class="agenda-numero">{{ c.numero }}</p>
+              </div>
+            }
+          </div>
+          <div class="agenda-corpo" [style.height.px]="alturaGrade()">
+            <div class="agenda-horas" aria-hidden="true">
+              @for (h of horas().rotulos; track h) {
+                <span class="legenda numeros">{{ pad(h) }}</span>
+              }
+            </div>
+            @for (c of colunas(); track c.dia; let i = $index) {
+              <div class="agenda-coluna" [class.hoje]="c.hoje">
+                @if (carregando()) {
+                  @for (e of esqueleto; track $index) {
+                    <span class="esqueleto agenda-esqueleto" [style.top.px]="e.topo + (i % 3) * 72" [style.height.px]="e.altura"></span>
+                  }
+                } @else {
+                  @for (b of c.blocos; track b.a.id) {
+                    <button
+                      type="button"
+                      class="bloco"
+                      [id]="'bloco-' + b.a.id"
+                      [class]="'bloco st-' + b.status"
+                      [class.compacto]="b.altura < 30"
+                      [class.selecionado]="selecionadoId() === b.a.id"
+                      [style.top.px]="b.topo"
+                      [style.height.px]="b.altura"
+                      [style.left]="'calc(' + b.esquerda + '% + 4px)'"
+                      [style.width]="'calc(' + b.largura + '% - 8px)'"
+                      [attr.aria-label]="b.rotulo"
+                      [attr.aria-pressed]="selecionadoId() === b.a.id"
+                      (click)="selecionar(b.a.id)"
+                    >
+                      <span class="bloco-linha">
+                        <span class="bloco-hora">{{ formatarHora(b.a.inicio) }}</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+                          <path
+                            [attr.d]="ICONE_STATUS[b.status]"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                        </svg>
+                      </span>
+                      @if (b.linhas === 2) {
+                        <span class="bloco-nome">{{ b.a.cliente_nome }}</span>
+                      }
+                    </button>
+                  }
+                  @if (c.hoje && agoraTopo() !== null) {
+                    <div class="agora" [style.top.px]="agoraTopo()" role="img" [attr.aria-label]="'Agora, ' + formatarHora(agora())">
+                      <span></span>
+                    </div>
+                  }
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    @if (selecionado(); as s) {
+      <aside id="painel-detalhe" class="cartao painel" tabindex="-1" aria-label="Detalhe do agendamento">
+        <div class="painel-topo">
+          <span class="chip" [class]="'chip st-' + s.status">
+            <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+              <path [attr.d]="s.icone" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            {{ s.rotuloStatus }}
+          </span>
+          <button type="button" class="botao-icone no-painel" aria-label="Fechar detalhe" (click)="fecharDetalhe()">
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+        <div>
+          <p class="horario-destaque">{{ s.inicio }} <small>às {{ s.fim }}</small></p>
+          <p class="secundario">{{ s.dia }}.</p>
+        </div>
+        <div class="pessoa">
+          <span class="avatar avatar-44" aria-hidden="true">{{ s.iniciais }}</span>
+          <p class="pessoa-nome">{{ s.a.cliente_nome }}</p>
+        </div>
+        <dl class="pares">
+          <div>
+            <dt>Duração</dt>
+            <dd>{{ s.duracao }}</dd>
+          </div>
+          <div>
+            <dt>Valor</dt>
+            <dd>{{ s.valor }}</dd>
+          </div>
+        </dl>
+      </aside>
+    }
+  </div>
 }
