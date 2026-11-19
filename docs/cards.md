@@ -18,6 +18,7 @@ Cards novos da Fatia 2, fora do `docs/backlog.md`:
 | #161 | — | Card novo: agenda semanal no design v2.1 (PR #157) |
 | #162 | — | Card novo: rotas públicas por slug e criação atômica de cliente e agendamento |
 | #163 | — | Card novo: página pública `/agendar/:slug` e novo agendamento no design v2.1 (PR #158) |
+| #165 | — | Card novo: CI em PR para qualquer base, build Docker e 1 aprovação para a `main` |
 
 ## Mudanças de 17/11/2026 (migração de stack)
 
@@ -157,6 +158,7 @@ Itens 0.1 a 0.6 não têm card: as issues da numeração antiga foram apagadas.
 | #161 | — | Agenda semanal no design v2.1 | M | frontend | 1.6, #146 |
 | #162 | — | Agendamento público: rotas por slug e criação atômica de cliente e agendamento | G | backend, banco, docs | 1.3, 1.5, 1.7, #148 |
 | #163 | — | Página pública /agendar/:slug e novo agendamento no design v2.1 | G | frontend | #161, #162 |
+| #165 | — | Proteger o fluxo de merge na main: CI em todo PR, build Docker e 1 aprovação | P | infra | — |
 
 A 2.14 vem antes da 2.3: a sessão mora na tabela `sessoes`. A 2.22 vem antes da 2.19: o aceite oferece "criar conta" a quem não tem conta. A fatia fecha quando 2.13 e 2.16 passam no CI.
 
