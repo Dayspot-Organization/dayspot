@@ -1,6 +1,6 @@
 # Especificação de fluxo — Dayspot
 
-Versão **1.2** · 18/11/2026 (cliente final como ator, WhatsApp como canal, erros 405 e 429)
+Versão **1.3** · 19/11/2026 (telas do piloto separadas das que ficam para depois)
 
 Papéis, ciclo de vida do agendamento, telas e modelo de dados.
 
@@ -169,39 +169,68 @@ papel = EXCLUDED.papel`, guia §011).
 
 ## 4. Telas
 
+O piloto é a primeira publicação, com uma empresa. As telas se dividem em duas listas.
+
+| Piloto | Rota | Seção | Card |
+|---|---|---|---|
+| Página pública | `/agendar/:slug` | §4.10 | #163 |
+| Confirmação do agendamento | `/agendar/:slug` (passo final) | §4.10 | #163 |
+| Empresa não encontrada | `/agendar` e `/agendar/:slug` com slug inexistente | §4.10 | #163 |
+| Política de privacidade | `/agendar/:slug/privacidade` | §4.13 | #175 |
+| Login | `/entrar` | §4.2 | #120 |
+| Escolha de empresa | `/empresa`; só com mais de uma membership, na prática não aparece | §4.11 | #120 |
+| Casca do painel: empresa ativa, menu e saída | todas as rotas do painel | abaixo | #121 |
+| Agenda | `/agendamentos` | §4.4 | #57 |
+| Novo agendamento | `/agendamentos/novo` | §4.12 | #58, #163 |
+| Cadastro da empresa | `/cadastro`; o endpoint entra, expor a tela é decisão pendente | §4.1 | #112, #120 |
+
+**Depois do piloto:** aceite de convite (§4.3), prestadores (§4.6), serviços e preços
+(§4.7, no piloto cadastrados por SQL, #174), financeiro (§4.5), clientes (§4.8),
+disponibilidade (§4.9), remarcar e trocar serviço, `.ics`, seletor de prestador (§4.4) e
+"Meus horários" do cliente.
+
 ```mermaid
 flowchart TD
-  PUB["Página pública /agendar/:slug<br/>cliente final, sem login"]
-  CONF["Confirmação do agendamento"]
-  PUB --> CONF
-  CAD["Cadastro da empresa<br/>cria usuário, empresa e administrador"]
-  LOG["Login"]
-  ACE["Aceite de convite<br/>cria ou reativa a membership"]
-  PAP{"Papel na empresa"}
-  CAD --> PAP
-  LOG --> PAP
-  ACE --> PAP
-  subgraph MO["Menu do administrador"]
-    O1["Calendário semanal<br/>todos, com seletor"]
-    O2["Financeiro<br/>pessoal, total, por prestador"]
-    O3["Prestadores<br/>convidar e remover"]
-    O4["Serviços e preços"]
-    O5["Clientes<br/>cadastro"]
-    O6["Disponibilidade<br/>de quem atende"]
+  subgraph PIL["Piloto"]
+    subgraph PUBG["Público, sem login e sem menu"]
+      PUB["Página pública<br/>/agendar/:slug"]
+      CONF["Confirmação do agendamento"]
+      NENC["Empresa não encontrada"]
+      POL["Política de privacidade<br/>/agendar/:slug/privacidade"]
+      PUB --> CONF
+      PUB -->|"link antes do envio"| POL
+    end
+    CAD["Cadastro da empresa<br/>/cadastro · exposição pendente"]
+    LOG["Login /entrar"]
+    ESC["Escolha de empresa /empresa<br/>só com mais de uma membership"]
+    subgraph CAS["Casca do painel: empresa ativa, menu e saída"]
+      AGE["Agenda /agendamentos"]
+      NOV["Novo agendamento<br/>/agendamentos/novo"]
+      AGE --> NOV
+    end
+    LOG -->|"várias memberships"| ESC
+    LOG -->|"uma membership"| AGE
+    ESC --> AGE
+    CAD -.-> AGE
+    CAS -->|"sair"| LOG
   end
-  subgraph MP["Menu do prestador"]
-    P1["Calendário semanal<br/>só os próprios"]
-    P2["Financeiro<br/>só pessoal"]
-    P5["Clientes"]
-    P6["Disponibilidade<br/>só a própria"]
+  subgraph DEP["Depois do piloto"]
+    ACE["Aceite de convite"]
+    D1["Prestadores"]
+    D2["Serviços e preços"]
+    D3["Financeiro"]
+    D4["Clientes"]
+    D5["Disponibilidade"]
+    D6["Remarcar e trocar serviço<br/>.ics, seletor de prestador"]
+    D7["Meus horários do cliente"]
   end
-  PAP -->|"administrador"| MO
-  PAP -->|"prestador"| MP
 ```
 
-Layout autenticado mostra a empresa ativa (2.11); o menu sai do papel devolvido por
-`GET /api/me` (2.9, inferido). Todas as rotas da API ficam sob `/api` (req. §12);
-erros no formato de `docs/erros-api.md`, lidos pelo cliente HTTP da 1.9.
+Sem sessão, as rotas do painel e qualquer rota desconhecida levam a `/entrar`;
+`/agendar/**` fica pública (#120). A casca mostra a empresa ativa e o botão de saída; no
+piloto o menu tem só Agenda, com Novo agendamento (#121). Depois do piloto, o menu sai do
+papel devolvido por `GET /api/me` (2.9, inferido). Todas as rotas da API ficam sob
+`/api` (req. §12); erros no formato de `docs/erros-api.md`, lidos pelo cliente HTTP da 1.9.
 
 ### 4.1 Cadastro da empresa
 
@@ -214,6 +243,8 @@ erros no formato de `docs/erros-api.md`, lidos pelo cliente HTTP da 1.9.
   transação: `usuarios` → `tenants` (com `criado_por`) → `memberships` administrador (2.2).
 - **Erros:** 400 `requisicao_invalida`; e-mail já usado → 409 `email_em_uso`; slug já
   usado → 409 `slug_em_uso` (decidido, req. §12; §8.9).
+- **Piloto:** o endpoint precisa existir (#112); expor a tela `/cadastro` é decisão
+  pendente (#120).
 - **Backlog:** 2.2, 2.10, 2.15. Rota `POST /api/signup`.
 
 ### 4.2 Login
@@ -225,7 +256,9 @@ erros no formato de `docs/erros-api.md`, lidos pelo cliente HTTP da 1.9.
   sessão. Só membership ativo entra. Logout revoga (`revogado_em`, 2.4).
 - **Empresa:** só e-mail e senha, sem slug. Uma membership ativa entra direto; com
   várias, a sessão nasce com `tenant_id` nulo e a tela de escolha grava a empresa pelo
-  slug (decidido, req. §12; §8.2).
+  slug (decidido, req. §12; §8.2). Tela de escolha em §4.11.
+- **Telas:** login em `/entrar` (#120); sem sessão, o painel leva para cá. A saída fica
+  na casca do painel (#121).
 - **Erros:** e-mail inexistente ou senha errada → 401 `credencial_invalida`, mesma
   mensagem; acima de 5 falhas por e-mail ou 20 por IP em 15 minutos → 429
   `muitas_tentativas` com `Retry-After` (decidido, req. §12; §8.9).
@@ -255,8 +288,10 @@ erros no formato de `docs/erros-api.md`, lidos pelo cliente HTTP da 1.9.
 
 - **Objetivo:** ver e operar a agenda da semana (RF14).
 - **Quem:** administrador (todos, com seletor) e prestador (só os próprios).
-- **Dados:** eixo de horas por dia da semana; cada agendamento com cliente, serviço,
-  horário e status; cor por status (paleta a definir, §8.6). Horários exibidos no fuso
+- **Piloto:** só a própria agenda, sem seletor de prestador, sem remarcar nem trocar
+  serviço e sem `.ics`; cancelar e concluir entram pelo #168.
+- **Dados:** eixo de horas por dia da semana; cada agendamento com cliente, horário e
+  status; o serviço aparece no bloco só com o #171; cor por status (paleta a definir, §8.6). Horários exibidos no fuso
   do tenant (RNF01).
 - **Navegação:** semana anterior e seguinte. A semana conta pelo `inicio`, no fuso do
   tenant: limites calculados no C# (`TimeZoneInfo`) e enviados como
@@ -264,8 +299,9 @@ erros no formato de `docs/erros-api.md`, lidos pelo cliente HTTP da 1.9.
 - **Seletor (administrador, 7.2):** lista membros, inclusive removidos marcados "(removido)".
   O calendário abre na própria agenda; a API sem `prestador_id` devolve a empresa
   toda (§8.5).
-- **Ações:** novo agendamento (cliente, serviço, prestador para o administrador, data e hora;
-  slots livres a partir da 6.6); por agendamento: remarcar, trocar serviço, cancelar,
+- **Ações:** novo agendamento, tela própria (§4.12): no piloto, sem serviço e sem
+  prestador; depois do piloto, cliente, serviço, prestador para o administrador, data e
+  hora, com slots livres a partir da 6.6. Por agendamento: remarcar, trocar serviço, cancelar,
   concluir (5.4); exportar `.ics` do período (7.7). Concluir só aparece com o início
   passado (inferido da guarda).
 - **`.ics` (7.6):** download, não feed; mesmo `Escopo` e período; só `confirmado` e
@@ -365,7 +401,11 @@ erros no formato de `docs/erros-api.md`, lidos pelo cliente HTTP da 1.9.
   limite por IP de 60 leituras e 10 envios por minuto.
 - **Planejado:** até 60 dias de antecedência, grade de 30 minutos, até 3 agendamentos
   futuros por telefone e telefone brasileiro normalizado, sem SMS (#169); contato da
-  empresa na página (#170); política de privacidade (#175). O endereço fica fora.
+  empresa na página (#170); política de privacidade (#175, §4.13). O endereço fica fora.
+- **Empresa não encontrada:** `/agendar` sem slug e slug inexistente mostram o aviso, sem
+  menu e sem levar ao painel (#163).
+- **Pendência (#174):** a página lista como profissional todo membership ativo (#162). Se
+  o administrador do piloto não atende, ele aparece para o cliente como profissional.
 - **Aviso no formulário (#163, PR #167):** "Seu nome e telefone ficam guardados com esta
   empresa para registrar o agendamento e identificar você nos próximos."
 - **Erros:** slug inexistente ou serviço e profissional indisponíveis → 404
@@ -375,6 +415,36 @@ erros no formato de `docs/erros-api.md`, lidos pelo cliente HTTP da 1.9.
 - **Rotas:** `GET /api/publico/{slug}`, `GET /api/publico/{slug}/servicos`,
   `GET /api/publico/{slug}/prestadores`, `GET /api/publico/{slug}/ocupados` e
   `POST /api/publico/{slug}/agendamentos`.
+
+### 4.11 Escolha de empresa
+
+- **Objetivo:** escolher a empresa da sessão quando o usuário tem mais de uma membership
+  ativa (decidido, req. §12; §8.2).
+- **Quem:** usuário logado com sessão sem `tenant_id`.
+- **Dados:** empresas devolvidas pelo login, com nome e papel.
+- **Piloto:** com uma empresa, o login entra direto e a tela não aparece na prática.
+- **Backlog:** 2.3, 2.10 (#120). Tela `/empresa`; rota `POST /api/sessao/empresa` com o slug.
+
+### 4.12 Novo agendamento
+
+- **Objetivo:** a equipe registra um agendamento pelo painel.
+- **Quem:** administrador e prestador, com sessão.
+- **Campos no piloto:** cliente, data, hora e duração livres, como na 1.11 (#58). Sem
+  serviço e sem prestador: o `POST` grava `SERVICO_FIXO` e `PRESTADOR_FIXO` (#163, #174).
+- **Erros:** 400 `requisicao_invalida`; 409 `conflito_horario` mantém o formulário
+  preenchido.
+- **Depois do piloto:** serviço, prestador para o administrador e slots livres (6.6).
+- **Backlog:** 1.11 (#58), #163. Tela `/agendamentos/novo`; rota `POST /api/agendamentos`.
+
+### 4.13 Política de privacidade
+
+- **Objetivo:** informar ao cliente final como os dados dele são tratados.
+- **Quem:** qualquer visitante, sem login e sem menu; link no formulário público antes
+  do envio.
+- **Dados:** empresa como controladora, dados coletados (nome e telefone), finalidade,
+  guarda do telefone para reconhecer o cliente, retenção de 12 meses após o último
+  atendimento e canal de exclusão (o contato da empresa, #170).
+- **Backlog:** #175. Tela `/agendar/:slug/privacidade`.
 
 ---
 
