@@ -16,6 +16,7 @@ A primeira publicação é um piloto com uma empresa (`docs/backlog.md` v2.6).
 | Card | Item | O que mudou |
 |---|---|---|
 | #128, #129, #130, #135, #136 | 2.18–2.22 | Passam para a Fatia 2E, depois do piloto; os itens mantêm a numeração |
+| #127 | 2.17 | Passa para a Fatia 2E (20/11/2026): só a 2E depende da migration de convites |
 | #150 | — | Passa para a Fatia 2E |
 | #149 | — | Passa para a Fatia P. Decidido: o Neon não será recriado |
 | #168 a #178 | — | Cards novos da Fatia P |
@@ -157,7 +158,6 @@ Itens 0.1 a 0.6 não têm card: as issues da numeração antiga foram apagadas.
 | #124 | 2.14 | Migration: sessoes | P | banco | 0.9 |
 | #125 | 2.15 | Normalizar e-mail (trim + minúsculas) no cadastro e no login | P | backend | — |
 | #126 | 2.16 | Teste: prestador não lê agendamento de outro prestador do mesmo tenant | M | backend | 2.2, 2.3, 2.7, 0.17 |
-| #127 | 2.17 | Migration: convites (papel administrador ou prestador) | P | banco | 0.9 |
 
 ### Cards da Fatia 2 sem item no backlog
 
@@ -173,8 +173,6 @@ Itens 0.1 a 0.6 não têm card: as issues da numeração antiga foram apagadas.
 | #165 | — | Proteger o fluxo de merge na main: CI em todo PR, build Docker e 1 aprovação | P | infra | — |
 
 A 2.14 vem antes da 2.3: a sessão mora na tabela `sessoes`. A fatia fecha quando 2.13 e 2.16 passam no CI.
-
-A 2.17 (#127) fica na Fatia 2 no board, mas só a Fatia 2E depende dela.
 
 Sem decisão em aberto no corpo das issues das Fatias 2 e 2E: as de 2.2, 2.3, 2.8, 2.18, 2.19 e 2.22 foram decididas em 23/10/2026 (`requisitos.md` §12).
 
@@ -207,6 +205,7 @@ Depois do piloto.
 
 | Card | Item | Título | Tam. | Área | Depende de |
 |---|---|---|---|---|---|
+| #127 | 2.17 | Migration: convites (papel administrador ou prestador) | P | banco | 0.9 |
 | #128 | 2.18 | POST e GET /convites: administrador convida administrador ou prestador | M | backend | 2.17 (#127), 2.7 (#117) |
 | #129 | 2.19 | Aceite do convite (endpoint e tela), reativando membership removido | M | backend, frontend | 2.17 (#127), 2.5 (#115), 2.10 (#120), 2.22 (#136) |
 | #130 | 2.20 | Tela de gestão de prestadores: listar membros e convidar | M | frontend | 2.18 (#128), 2.21 (#135), 2.11 (#121) |

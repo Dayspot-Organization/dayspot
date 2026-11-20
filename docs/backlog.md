@@ -134,7 +134,7 @@ O carregamento de config da 0.4 passou para a 1.1.
 
 ---
 
-## FATIA 2 — Entrar · ~66h · 🎯 multi-tenant real
+## FATIA 2 — Entrar · ~64h · 🎯 multi-tenant real
 
 **Entrega:** dois usuários de tenants diferentes fazem login e cada um vê apenas a própria agenda; dentro da empresa, o prestador vê só os seus agendamentos.
 
@@ -156,9 +156,8 @@ O carregamento de config da 0.4 passou para a 1.1.
 | 2.14 | `[T2] Migration: sessoes` | P |
 | 2.15 | `[T2] Normalizar e-mail (trim + minúsculas) no cadastro e no login` | P |
 | 2.16 | `[T2] Teste: prestador não lê agendamento de outro prestador do mesmo tenant` | M |
-| 2.17 | `[T2] Migration: convites (papel administrador ou prestador)` | P |
 
-Os itens 2.18 a 2.22 passaram para a Fatia 2E. A 2.17 (#127) continua na T2 no board, mas só a T2E depende dela: não entra na ordem até o piloto. Os cards da fatia sem número de item (#138, #146, #148, #151, #161, #162, #163 e #165) estão em `docs/cards.md`.
+Os itens 2.17 a 2.22 passaram para a Fatia 2E. Os cards da fatia sem número de item (#138, #146, #148, #151, #161, #162, #163 e #165) estão em `docs/cards.md`.
 
 **Sessão já decidida:** cookie `HttpOnly` + `Secure` + `SameSite=Lax` com a tabela `sessoes` (`requisitos.md` §9). Por isso a 2.14 vem antes da 2.3.
 
@@ -201,12 +200,13 @@ As ~65h somam os 12 cards acima; sem o #177, ~60h. A lista completa, com cards c
 
 ---
 
-## FATIA 2E — Equipe · ~24h · depois do piloto
+## FATIA 2E — Equipe · ~26h · depois do piloto
 
 **Entrega:** o administrador convida novos membros, e o convidado entra na empresa pelo link do convite.
 
 | #    | Issue | Tam. |
 |------|-------|------|
+| 2.17 | `[T2E] Migration: convites (papel administrador ou prestador)` | P |
 | 2.18 | `[T2E] POST e GET /convites: administrador convida administrador ou prestador` | M |
 | 2.19 | `[T2E] Aceite do convite (endpoint e tela), reativando membership removido` | M |
 | 2.20 | `[T2E] Tela de gestão de prestadores: listar membros e convidar` | M |
@@ -398,9 +398,9 @@ A 15h/semana nominais, com ~70% de eficiência real (~10,5h/semana):
 |--------------|----------|-------------|-------------|
 | 0 Fundação   | 63h      | sem. 1–5    | sem. 1–6    |
 | 1 Agendar    | 46h      | sem. 6–8    | sem. 7–11   |
-| 2 Entrar     | 66h      | a reestimar | a reestimar |
+| 2 Entrar     | 64h      | a reestimar | a reestimar |
 | P Publicar   | ~65h     | a reestimar | a reestimar |
-| 2E Equipe    | 24h      | a reestimar | a reestimar |
+| 2E Equipe    | 26h      | a reestimar | a reestimar |
 | 3 Avisar     | a reestimar | a reestimar | a reestimar |
 | 4 Lembrar    | a reestimar | a reestimar | a reestimar |
 | 5 Cancelar   | a reestimar | a reestimar | a reestimar |
@@ -409,7 +409,7 @@ A 15h/semana nominais, com ~70% de eficiência real (~10,5h/semana):
 | 8 Entregar   | 32h      | a reestimar | a reestimar |
 | **Total**    | **a reestimar** | **a reestimar** | **a reestimar** |
 
-Na v2.6, a T2 perde 22h para a T2E (2.18 a 2.22), que soma o #150 (+2h). As horas de T6, T7 e T8 são as da v2.5: não descontam o que já foi antecipado ou entregue (6.3, 6.4, 6.6, 7.1 e 8.1) nem reestimam 6.7 e 8.4, que dependem do WhatsApp. O total de 481h e as semanas das versões anteriores deixam de valer até o fornecedor do WhatsApp ser decidido.
+Na v2.6, a T2 perde 24h para a T2E (2.17 a 2.22), que soma o #150 (+2h). As horas de T6, T7 e T8 são as da v2.5: não descontam o que já foi antecipado ou entregue (6.3, 6.4, 6.6, 7.1 e 8.1) nem reestimam 6.7 e 8.4, que dependem do WhatsApp. O total de 481h e as semanas das versões anteriores deixam de valer até o fornecedor do WhatsApp ser decidido.
 
 O total subiu de 380h para 384h com o retrabalho de fatiar vertical, e para 397h com os itens reincorporados na v2.1. Em troca, a primeira demonstração sai na semana ~8 em vez da semana ~15.
 
