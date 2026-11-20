@@ -2,7 +2,16 @@
 
 Fatia 0 do backlog (itens 0.7 a 0.18) e base de acesso a dados da Fatia 1 (1.2 e
 1.3). Complementa `docs/requisitos.md`.
-Versão **1.11** · 18/11/2026
+Versão **1.12** · 18/11/2026
+
+## Mudanças desde a v1.11
+
+Decisões do piloto (#180, `requisitos.md` v0.15). Sem migration: o schema não muda.
+
+- **Canal de avisos:** passa a ser o WhatsApp, sem integração existente. As colunas do
+  Telegram ficam no schema, sem uso, até uma migration futura (§002, §004 e §008).
+- **Convites:** a migration 011 está pendente e fica para depois do piloto (§011).
+- **Rotas públicas:** a exceção da resolução por slug está registrada em §Acesso a dados.
 
 ## Mudanças desde a v1.10
 
@@ -10,7 +19,7 @@ Agendamento público (#162, `requisitos.md` v0.14). Sem migration: o schema não
 
 - **Rotas públicas:** o slug é resolvido em `tenants` (fora do RLS, com `WHERE` manual)
   antes da transação; dentro dela, o tenant entra por `set_config`, como nas demais rotas.
-- **`clientes.telefone`:** continua fora das notificações, mas identifica o cliente no
+- **`clientes.telefone`:** nenhum aviso o usa hoje, e ele identifica o cliente no
   agendamento público, com advisory lock por tenant e telefone (§004).
 
 ## Mudanças desde a v1.9
@@ -218,8 +227,10 @@ A ordem não é estética — é imposta pelas dependências de chave estrangeir
 008 notificacoes        ← depende de 007
 009 RLS + REVOKE DELETE ← depende de todas
 010 sessoes             ← depende de 003 (independe do resto)
-011 convites            ← depende de 002 e 003
+011 convites            ← depende de 002 e 003 (pendente: fica para depois do piloto)
 ```
+
+As migrations aplicadas vão até a 010 (`src/Api/Migrations/`).
 
 ## Dinheiro: centavos em `integer`
 
@@ -279,9 +290,11 @@ CREATE TABLE tenants (
   nome               text NOT NULL,
   slug               text NOT NULL UNIQUE,
   fuso_horario       text NOT NULL DEFAULT 'America/Sao_Paulo',
-  telegram_bot_token text,          -- NULL = usa o bot da plataforma
+  telegram_bot_token text,          -- legado do Telegram, sempre nulo
   criado_em          timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT slug_formato CHECK (slug ~ '^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$')
+  CONSTRAINT slug_formato CHECK (slug ~ '^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$'),
+  CONSTRAINT fuso_horario_iana CHECK (fuso_horario = 'UTC' OR fuso_horario ~ '^[A-Z][A-Za-z_]+(/[A-Za-z0-9_+-]+)+$'),
+  CONSTRAINT telegram_bot_token_nulo CHECK (telegram_bot_token IS NULL)
 );
 
 -- Down
@@ -292,17 +305,16 @@ DROP TABLE tenants;
 Guardar offset numérico (`-3`) quebra no horário de verão de qualquer país que o
 adote.
 
-`slug` é o identificador legível usado na URL e no header de tenant. O `CHECK`
-impede maiúscula, espaço ou caractere que quebre URL.
+`slug` é o identificador legível usado na URL da página pública e das rotas
+`/api/publico/{slug}`. O `CHECK` impede maiúscula, espaço ou caractere que quebre URL.
 
 **`criado_por` não está aqui.** A 002 já foi mergeada, e `usuarios` só nasce na
 003: a coluna entra por `ALTER TABLE` lá (ver 003).
 
-⚠️ **`telegram_bot_token` só pode ser preenchido depois que a 009 resolver o
-acesso a esta tabela.** `tenants` fica fora do RLS (o login precisa dela antes de
-existir contexto de tenant), então hoje qualquer sessão autenticada leria o token
-de todas as empresas. Enquanto a coluna for sempre nula, não há risco; no dia em
-que o bot por tenant entrar, o segredo sai para tabela própria com policy.
+⚠️ **`telegram_bot_token` é legado e fica sempre nulo**, garantido pelo `CHECK
+telegram_bot_token_nulo`. `tenants` fica fora do RLS (o login precisa dela antes de
+existir contexto de tenant), então nenhum segredo por tenant pode morar nesta tabela.
+A coluna sai numa migration futura.
 
 ## 003 — usuarios e memberships
 
@@ -425,13 +437,13 @@ CREATE INDEX idx_clientes_tenant ON clientes (tenant_id);
 DROP TABLE clientes;
 ```
 
-`telefone` é `text` e nulo, **sem** validação E.164. Decisão registrada: contato
-manual, não canal de notificação. Nenhuma query do worker pode referenciar essa
-coluna. Se alguém validar formato de telefone aqui, entendeu errado o propósito
-do campo.
+`telefone` é `text` e nulo, **sem** validação E.164 no banco: guarda o contato como foi
+digitado. Nenhum aviso usa essa coluna hoje; o uso como destino do WhatsApp está pendente
+(`requisitos.md` §8.3). A normalização do telefone brasileiro no agendamento público é
+da aplicação e está planejada no #169, sem reescrever cadastros antigos.
 
-**Agendamento público (#162).** O telefone continua fora das notificações, mas passa
-a identificar o cliente: `Consultas.ClienteDoTelefone` procura no tenant pelos dígitos,
+**Agendamento público (#162).** O telefone identifica o cliente:
+`Consultas.ClienteDoTelefone` procura no tenant pelos dígitos,
 com `removido_em IS NULL`, e reaproveita o mais antigo. Duas requisições simultâneas
 com o mesmo telefone novo não criam dois clientes porque
 `pg_advisory_xact_lock(hashtextextended(tenant || ':' || digitos, 0))` as serializa até
@@ -440,22 +452,12 @@ o fim da transação.
 ⚠️ **Não troque o advisory lock por `UNIQUE`.** `telefone` é texto livre e pode ter
 duplicados gravados: o índice único falharia na migration ou obrigaria a alterar dados.
 
-`telegram_chat_id` é `bigint`, não `int`. IDs do Telegram já passam de 2³¹.
-
-**`vinculo_token` é uma credencial.** Quem tiver o token vincula o próprio
-Telegram àquele cliente. Por isso tem prazo (`vinculo_expira_em`) e é de uso
-único: com `vinculado_em IS NOT NULL`, o handler do `/start` recusa. Regenerar o
-token é uma operação explícita da aplicação, não um efeito colateral.
-
-O token ser **único global** é o que permite o bot único: um `/start <token>`
-resolve cliente e tenant de uma vez, sem o bot saber de qual empresa veio o link.
-
-`vinculo_coerente` impede o estado inconsistente "tem chat_id mas nunca vinculou".
-Custa uma linha e elimina uma classe de bug que só aparece em produção.
-
-`notificavel` é desligado quando o Telegram retorna 403 (bot bloqueado). Separado
-de `telegram_chat_id IS NULL` de propósito: são causas diferentes de "não dá para
-avisar", e a UI precisa distinguir "nunca vinculou" de "bloqueou o bot".
+**Colunas do Telegram (legado).** O canal de avisos passou a ser o WhatsApp, e nenhuma
+integração existe. `telegram_chat_id`, `vinculo_token`, `vinculo_expira_em`,
+`vinculado_em`, `notificavel` e as constraints `chat_id_unico_por_tenant`,
+`vinculo_token_unico` e `vinculo_coerente` continuam no schema, sem uso, até uma
+migration futura. Nenhum código novo deve depender delas. `vinculo_token` segue fora do
+modelo do EF: é uma credencial do desenho antigo e nenhuma leitura de `clientes` o traz.
 
 `UNIQUE (id, tenant_id)` parece redundante com a PK. Não é: é o alvo obrigatório
 da FK composta em `agendamentos`. Sem ela, o Postgres recusa a chave estrangeira.
@@ -725,7 +727,10 @@ apaga de outro jeito).
 agendamento é dado órfão puro.
 
 `proxima_tentativa` guarda o backoff. Sem essa coluna, o worker reprocessa a mesma
-notificação falha em todo ciclo e queima o rate limit do Telegram.
+notificação falha em todo ciclo e queima o limite de envio do canal.
+
+`telegram_message_id` é legado do Telegram: fica no schema, sem uso, até uma migration
+futura.
 
 ## 009 — RLS
 
@@ -815,6 +820,7 @@ tabelas são consultadas **antes** de existir contexto de tenant. No login o
 sistema ainda não sabe qual é o tenant — é `memberships` que responde isso. A
 sessão é lida pelo cookie justamente para descobrir o tenant, e o aceite de
 convite acha o convite pelo token. Aplicar policy nelas cria dependência circular.
+`convites` entra nessa lista quando a 011 for criada, depois do piloto.
 
 Duas consequências a carregar:
 
@@ -859,6 +865,9 @@ exatamente o que um JWT sem estado não entrega.
 
 ## 011 — convites (RF12)
 
+> **Pendente.** Esta migration ainda não existe em `src/Api/Migrations/`: convites ficam
+> para depois do piloto. O SQL abaixo é o desenho previsto.
+
 ```sql
 -- Up
 CREATE TABLE convites (
@@ -881,8 +890,8 @@ CREATE INDEX idx_convites_tenant ON convites (tenant_id);
 DROP TABLE convites;
 ```
 
-Mesmo padrão do `vinculo_token`: token único, com prazo e de uso único. RF12 é
-prioridade alta e entra na Fatia 2 (2.17 a 2.20); a remoção de membro, na 5.8. A
+Token único, com prazo e de uso único. RF12 é prioridade alta e fica para depois do
+piloto (2.17 a 2.20); a remoção de membro, na 5.8. A
 tabela está no desenho desde a v1.1 para ninguém inventar convite por e-mail sem
 registro.
 
@@ -1051,8 +1060,8 @@ constraint de exclusão, FKs compostas e `FOR UPDATE SKIP LOCKED` na fila. Nada 
   compostas ficam no banco e os joins são explícitos na consulta.
 - **`DEFAULT` do banco** que a API precisa ler de volta (id, `criado_em`) é declarado
   com `HasDefaultValueSql` em `AppDb.OnModelCreating`: o `INSERT` não envia a coluna.
-- **`vinculo_token` não está no modelo**: é credencial (§004), e assim nenhuma
-  leitura de `clientes` o traz. Entra com a rota de vínculo (Fatia 4).
+- **`vinculo_token` não está no modelo**: é credencial do desenho antigo (§004), e assim
+  nenhuma leitura de `clientes` o traz.
 - **Leitura sem rastreamento** (`QueryTrackingBehavior.NoTracking`), configurada em
   `AppDb.Opcoes`. Para alterar, prefira `ExecuteUpdateAsync` com o `WHERE` explícito
   a carregar, mudar e salvar.
@@ -1065,7 +1074,9 @@ coluna com nome ou tipo errado aparece no CI, não em produção.
 `long`; `time` ↔ `TimeOnly`.
 
 As consultas ficam em `src/Api/Dados/Consultas.cs`, como métodos de extensão do
-`AppDb`. Toda uma recebe `tenantId` logo depois do contexto:
+`AppDb`. Toda uma recebe `tenantId` logo depois do contexto. A única exceção é
+`BuscarEmpresaPorSlug`, que descobre o tenant das rotas públicas (§O helper de transação
+com tenant):
 
 ```csharp
 public static Task<List<Cliente>> ListarClientes(this AppDb db, Guid tenantId, CancellationToken ct = default) =>
@@ -1099,7 +1110,9 @@ SQL injection.
 Uma consulta pelo `AppDb` fora de transação roda **sem** `set_config`, portanto sem
 tenant, portanto zero linhas (RLS falha fechado) ou, pior, bug silencioso nas
 tabelas fora do RLS. Por isso toda consulta roda dentro de uma transação aberta por
-este helper:
+este helper, com uma exceção: `BuscarEmpresaPorSlug` roda **antes** da transação nas
+rotas públicas, porque é ela que descobre o tenant. Lê só `tenants`, que fica fora do
+RLS, filtra pelo slug da rota e devolve só `id`, `nome` e `fuso_horario`.
 
 ```csharp
 public async Task<IDbContextTransaction> IniciarComTenant(Guid tenantId, CancellationToken ct = default)
@@ -1120,8 +1133,10 @@ public async Task<IDbContextTransaction> IniciarComTenant(Guid tenantId, Cancell
 ```
 
 Quem chama na API é o middleware da 1.3 (`UseTransacaoNasRotas`, em
-`src/Api/Transacao.cs`): uma transação por requisição, com o tenant vindo de
-`TENANT_FIXO` (e da sessão a partir da Fatia 2). Os handlers recebem o `AppDb` da
+`src/Api/Transacao.cs`): uma transação por requisição. Nas rotas públicas
+`/api/publico/{slug}`, o tenant vem do slug da rota, resolvido pelo `UsePublico`
+(`src/Api/Publico.cs`), nunca do corpo nem da query string; nas demais, de `TENANT_FIXO`
+(e da sessão a partir da Fatia 2). Os handlers recebem o `AppDb` da
 requisição, que já está nessa transação. Resposta 4xx/5xx ou exceção = `ROLLBACK`;
 o resto, `COMMIT`, e a resposta só sai depois dele.
 
@@ -1217,8 +1232,8 @@ zero linhas atualizadas → 409 `status_invalido` (o horário ainda não começo
 - [ ] `DELETE FROM tenants` roda sem erro de chave estrangeira *(novo)*
 - [ ] Cadastrar `Davi@x.com` e `davi@x.com` falha na segunda vez *(novo)*
 - [ ] Toda FK usada em filtro tem índice explícito *(novo)*
-- [ ] `INSERT` em `memberships` ou `convites` com papel que não seja `administrador` nem
-      `prestador` falha *(v1.4)*
+- [ ] `INSERT` em `memberships` (e em `convites`, quando a 011 existir) com papel que não
+      seja `administrador` nem `prestador` falha *(v1.4)*
 - [ ] Preço ou valor negativo falha (`servicos.preco_centavos`,
       `agendamentos.valor_centavos`); serviço sem preço falha *(v1.4)*
 - [ ] `DELETE FROM agendamentos` como `app_user` falha (`42501`) *(v1.4)*
@@ -1235,7 +1250,8 @@ na véspera da entrega.
 ## Checklist da Fatia 1 (1.2 e 1.3)
 
 - [ ] O modelo do EF casa com o schema das migrations (`ModeloCasaComOSchema` no CI)
-- [ ] Toda consulta de `Consultas.cs` recebe `tenantId` e filtra por ele
+- [ ] Toda consulta de `Consultas.cs` recebe `tenantId` e filtra por ele, menos
+      `BuscarEmpresaPorSlug`, que descobre o tenant antes da transação
 - [ ] Duas requisições seguidas na mesma conexão do pool, com tenants diferentes,
       não se enxergam
 - [ ] Nenhum `SET app.tenant_id` no repositório fora de `set_config(..., true)`

@@ -19,7 +19,7 @@
   <img alt="Status: em desenvolvimento" src="https://img.shields.io/badge/status-em_desenvolvimento-yellow?style=for-the-badge">
 </p>
 
-<p><strong>Plataforma multi-tenant de agendamentos: o cliente final agenda sem criar conta e recebe confirmação e lembrete pelo Telegram.</strong></p>
+<p><strong>Plataforma multi-tenant de agendamentos: o cliente final agenda sem criar conta, pela página pública da empresa.</strong></p>
 
 </div>
 
@@ -65,7 +65,11 @@ São dois papéis dentro de cada organização:
 | **Administrador** | Gerencia a empresa — convida membros, remove prestadores, define serviços e preços, vê o financeiro de todos. Também pode atender. |
 | **Prestador** | Vê e opera apenas a própria agenda. |
 
-O cliente final não tem conta. Ele se vincula ao bot por um link `t.me/<bot>?start=<token>` e passa a receber confirmação, lembrete e aviso de cancelamento no Telegram.
+O cliente final não tem conta. Ele agenda sozinho na página pública da empresa, em `/agendar/:slug`, de segunda a sábado, com início a partir de 08:00 e fim até 19:00, no fuso da empresa. As rotas da API já estão na `main`; a tela entra pelo card #163 (PR #167).
+
+Os avisos de confirmação, lembrete e cancelamento serão enviados pelo WhatsApp. Essa integração ainda não existe: fornecedor, custo e prazo são decisões pendentes ([requisitos, §8](docs/requisitos.md#8-avisos-pelo-whatsapp)).
+
+A primeira publicação é um piloto com uma empresa, hospedado no Render e no Neon.
 
 O isolamento entre organizações é garantido no banco, com Row Level Security, e não apenas na aplicação.
 
@@ -80,8 +84,9 @@ O isolamento entre organizações é garantido no banco, com Row Level Security,
 | Migrations | EF Core Migrations, com o SQL escrito à mão (`migrationBuilder.Sql`) |
 | Banco | PostgreSQL 16, com Row Level Security |
 | Frontend | Angular 22 + TypeScript (Angular CLI, componentes standalone, signals, `@angular/router`) |
-| Notificações | Telegram Bot API |
-| Ambiente | Docker Compose |
+| Notificações | WhatsApp (planejado; integração ainda não existe) |
+| Ambiente local | Docker Compose |
+| Hospedagem | Render e Neon |
 
 ---
 
@@ -270,37 +275,30 @@ Estrutura-alvo — cada pasta nasce no card que a usa:
 
 ```
 src/Worker/            # consumidor da fila de notificações (T3)
-src/Api/Notificador/   # interface Notificador + implementação Telegram (T3)
+src/Api/Notificador/   # interface Notificador + implementação WhatsApp (T3)
 ```
 
 ---
 
 ## 📍 API
 
-Os endpoints nascem na fatia T1 e são documentados conforme entram. O que já está definido é o **formato de erro**, usado por todos os handlers:
+Rotas de `src/Api/Rotas.cs`. Toda rota de leitura responde também a `HEAD`.
 
-```json
-{
-  "erro": {
-    "codigo": "conflito_horario",
-    "mensagem": "Já existe um agendamento nesse horário.",
-    "detalhes": { "prestador_id": "5f0c2a9e-3b7d-4c1e-9a8f-2d6b1e7c4a90" }
-  }
-}
-```
+| Método | Rota | O que faz | Acesso |
+| --- | --- | --- | --- |
+| `GET` | `/api/clientes` | Lista os clientes da empresa | Painel |
+| `POST` | `/api/clientes` | Cria um cliente | Painel |
+| `GET` | `/api/agendamentos` | Lista os agendamentos do período (`de`, `ate`, `prestador_id`) | Painel |
+| `POST` | `/api/agendamentos` | Cria um agendamento com o serviço e o prestador fixos da empresa | Painel |
+| `GET` | `/api/publico/{slug}` | Nome e fuso da empresa | Público |
+| `GET` | `/api/publico/{slug}/servicos` | Serviços ativos | Público |
+| `GET` | `/api/publico/{slug}/prestadores` | Profissionais: todos os memberships ativos | Público |
+| `GET` | `/api/publico/{slug}/ocupados` | Intervalos ocupados do profissional (`de`, `ate`, `prestador_id`) | Público |
+| `POST` | `/api/publico/{slug}/agendamentos` | Cria cliente e agendamento na mesma transação | Público |
 
-| Código | HTTP | Quando |
-| --- | --- | --- |
-| `requisicao_invalida` | 400 | JSON malformado, campo obrigatório ausente, valor inválido |
-| `nao_encontrado` | 404 | ID inexistente — ou de outro tenant |
-| `conflito_horario` | 409 | Agendamento sobrepõe outro (SQLSTATE `23P01`) |
-| `erro_interno` | 500 | Qualquer coisa não prevista |
+As rotas do painel ainda usam o tenant de `TENANT_FIXO`, porque o login entra na Fatia 2. Nas rotas públicas, o tenant vem do slug da rota, e o limite por IP é de 60 leituras e 10 envios por minuto.
 
-Os códigos previstos para fatias seguintes (401, 403 e outros 409) estão listados em [`docs/erros-api.md`](docs/erros-api.md).
-
-Nenhum erro de banco vaza para a resposta: nome de constraint, coluna e tabela ficam no log. Registro de outro tenant retorna 404 e não 403, para não confirmar que o ID existe.
-
-Especificação completa em [`docs/erros-api.md`](docs/erros-api.md).
+Formato de erro, códigos e exceções em [`docs/erros-api.md`](docs/erros-api.md).
 
 ---
 
@@ -327,9 +325,9 @@ O backlog é dividido em fatias verticais: cada uma atravessa banco, API e front
 | **T0** — Fundação | Repositório, Docker, CI, migrations, RLS, seed com dois tenants |
 | **T1** — Agendar | Criar e listar agendamentos no navegador (tenant fixo, sem login) |
 | **T2** — Entrar | Signup, login, sessão, isolamento real entre tenants, papéis e convites |
-| **T3** — Avisar | Vincular cliente ao Telegram e enviar confirmação |
+| **T3** — Avisar | Vincular cliente ao WhatsApp e enviar confirmação (integração pendente) |
 | **T4** — Lembrar | Lembrete automático X horas antes |
-| **T5** — Cancelar | Cancelar, reagendar e concluir, inclusive pelo bot; remover membro |
+| **T5** — Cancelar | Cancelar, reagendar e concluir, inclusive pela mensagem; remover membro |
 | **T6** — Configurar | Serviços com preço, disponibilidades, slots livres e fuso por tenant |
 | **T7** — Acompanhar | Calendário semanal, resumo financeiro do mês e exportação `.ics` |
 | **T8** — Entregar | Deploy e documentação final |
@@ -355,7 +353,9 @@ Backlog detalhado em [`docs/backlog.md`](docs/backlog.md); cards já criados em 
 
 ## 🔐 Dados pessoais
 
-Projeto acadêmico. O sistema armazena nome, telefone e identificador de Telegram de clientes, com a finalidade única de operar agendamentos e enviar as notificações correspondentes.
+Projeto acadêmico. O sistema armazena nome e telefone de clientes para registrar agendamentos e identificar o cliente nos próximos. Nenhuma mensagem é enviada hoje. A coluna `telegram_chat_id` é legado, fica sem uso e sai numa migration futura.
+
+No piloto, a empresa é a controladora dos dados, com retenção de 12 meses após o último atendimento. A validação jurídica, a política de privacidade e o procedimento de exclusão estão pendentes no card #175. O formulário público (card #163, PR #167) mostra este aviso: "Seu nome e telefone ficam guardados com esta empresa para registrar o agendamento e identificar você nos próximos."
 
 A exportação `.ics` é um download feito pelo prestador: o arquivo leva nome do cliente e horário de cada agendamento para o calendário do aparelho dele (e para o iCloud, se o calendário sincroniza). A finalidade é a mesma: o prestador consultar a própria agenda. O arquivo é uma fotografia; depois de baixado, o sistema não o atualiza nem o apaga.
 
