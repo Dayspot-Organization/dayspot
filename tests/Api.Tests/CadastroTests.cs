@@ -34,9 +34,10 @@ public class CadastroTests
         Add("email", "semarroba");
         Add("email", "a@");
         Add("email", "@b");
-        Add("email", new string('a', 255));
+        Add("email", new string('a', 250) + "@b.co"); // 255
         Add("senha", null);
         Add("senha", "1234567");
+        Add("senha", "😀😀😀😀😀😀😀"); // 7 caracteres, 14 unidades UTF-16
         Add("empresa_nome", "");
         Add("empresa_nome", new string('a', 121));
         Add("empresa_slug", "");
@@ -80,9 +81,20 @@ public class CadastroTests
     [InlineData("contato", 120)]
     [InlineData("empresa_nome", 120)]
     [InlineData("empresa_slug", " Minha-Loja ")]
+    [InlineData("empresa_slug", "abc")]
+    [InlineData("empresa_slug", "slug50")]
+    [InlineData("email", "email254")]
+    [InlineData("senha", "1234567 ")] // sem Trim: o espaço conta
+    [InlineData("senha", "çççççççç")] // 8 caracteres Unicode
     public async Task PassaDaValidacao(string campo, object valor)
     {
         var texto = valor is int n ? new string('x', n) : (string)valor;
+        texto = texto switch
+        {
+            "slug50" => new string('a', 50),
+            "email254" => new string('a', 249) + "@b.co",
+            _ => texto,
+        };
         await using var api = await Servidor.SemBanco();
         await Assert.ThrowsAnyAsync<Exception>(() => api.Chamar("POST", Rota, Corpo(campo, texto)));
     }

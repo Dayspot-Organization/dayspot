@@ -10,8 +10,10 @@ public sealed record NovoCadastroJson(string? Nome, string? Email, string? Senha
 public sealed record CadastroJson(Guid UsuarioId, Guid TenantId, string Slug, string Papel);
 
 /// <summary>
-/// Cadastro de empresa e do primeiro administrador (#112). Sem sessão: fica fora
-/// dos middlewares de autenticação.
+/// Cadastro de empresa e do primeiro administrador (#112). Roda dentro da transação
+/// por requisição (UseTransacaoNasRotas, com TENANT_FIXO): usuarios, tenants e
+/// memberships ficam fora do RLS (guia §009), então o tenant não importa, e um 4xx
+/// desfaz a transação.
 /// </summary>
 public static partial class Cadastro
 {
