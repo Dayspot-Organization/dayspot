@@ -7,6 +7,11 @@ public sealed record NovoAgendamento(Guid ClienteId, Guid ServicoId, Guid Presta
 
 public sealed record AgendamentoComCliente(Agendamento Agendamento, string ClienteNome);
 
+/// <summary>O que o cadastro grava: e-mail já normalizado, senha já em hash, slug já em minúsculas.</summary>
+public sealed record NovaEmpresa(string Email, string SenhaHash, string Nome, string EmpresaNome, string Slug, string Contato);
+
+public sealed record EmpresaCriada(Guid UsuarioId, Guid TenantId);
+
 public sealed record EmpresaPublica(Guid Id, string Nome, string FusoHorario);
 
 public sealed record PrestadorPublico(Guid Id, string Nome);
@@ -84,6 +89,32 @@ public static class Consultas
             RETURNING *
             """).ToListAsync(ct);
         return criados.SingleOrDefault();
+    }
+
+    /// <summary>
+    /// Cria usuário, empresa e membership de administrador numa instrução só. Exceção à
+    /// regra "toda consulta recebe tenantId": é ela que cria o tenant, e as três
+    /// tabelas ficam fora do RLS (guia §009). E-mail ou slug repetido sobe como
+    /// PostgresException 23505 (usuarios_email_unico, tenants_slug_key), e a transação
+    /// da requisição desfaz o que já tinha entrado.
+    /// </summary>
+    public static async Task<EmpresaCriada> CriarEmpresa(this AppDb db, NovaEmpresa n, CancellationToken ct = default)
+    {
+        var criadas = await db.Database.SqlQuery<EmpresaCriada>($"""
+            WITH u AS (
+              INSERT INTO usuarios (email, senha_hash, nome)
+              VALUES ({n.Email}, {n.SenhaHash}, {n.Nome})
+              RETURNING id
+            ), t AS (
+              INSERT INTO tenants (nome, slug, contato_publico, criado_por)
+              SELECT {n.EmpresaNome}, {n.Slug}, {n.Contato}, u.id FROM u
+              RETURNING id, criado_por
+            )
+            INSERT INTO memberships (usuario_id, tenant_id, papel)
+            SELECT criado_por, id, 'administrador' FROM t
+            RETURNING usuario_id, tenant_id
+            """).ToListAsync(ct);
+        return criadas.Single();
     }
 
     /// <summary>

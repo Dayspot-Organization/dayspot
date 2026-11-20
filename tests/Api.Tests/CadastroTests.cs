@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text.Json;
+using Dayspot.Api.Auth;
+using Npgsql;
 
 namespace Dayspot.Api.Tests;
 
@@ -97,5 +99,181 @@ public class CadastroTests
         };
         await using var api = await Servidor.SemBanco();
         await Assert.ThrowsAnyAsync<Exception>(() => api.Chamar("POST", Rota, Corpo(campo, texto)));
+    }
+}
+
+public class CadastroGravacaoTests
+{
+    private const string Rota = "/api/signup";
+
+    private static Task<Servidor> Api() => Servidor.ComTransacao(Banco.ConnectionString("DATABASE_URL"), app => app.MapApi());
+
+    private static string Unico() => $"c-{Guid.NewGuid():N}";
+
+    private static string Corpo(string email, string slug, string contato = "  (11) 99999-0000 ") =>
+        JsonSerializer.Serialize(new Dictionary<string, string>
+        {
+            ["nome"] = "Ana Souza",
+            ["email"] = email,
+            ["senha"] = "12345678",
+            ["empresa_nome"] = "Loja de Teste",
+            ["empresa_slug"] = slug,
+            ["contato"] = contato,
+        });
+
+    private static Task<HttpResponseMessage> Cadastrar(Servidor api, string corpo) =>
+        api.Chamar("POST", Rota, corpo, tenant: Seed.Alfa);
+
+    // Apaga pelo dono das tabelas: tenants antes (criado_por é RESTRICT).
+    private static async Task Limpar(NpgsqlConnection dono, string[] slugs, string[] emails)
+    {
+        foreach (var s in slugs)
+        {
+            await dono.Exec("DELETE FROM tenants WHERE slug = $1", s);
+        }
+        foreach (var e in emails)
+        {
+            await dono.Exec("DELETE FROM usuarios WHERE email = $1", e);
+        }
+    }
+
+    private static async Task<JsonElement> Exigir(HttpResponseMessage r, HttpStatusCode status)
+    {
+        var corpo = await r.Content.ReadAsStringAsync();
+        Assert.True(r.StatusCode == status, $"esperava {(int)status}, veio {(int)r.StatusCode} {corpo}");
+        return JsonDocument.Parse(corpo).RootElement;
+    }
+
+    private static async Task ExigirConflito(HttpResponseMessage r, string codigo, string campo)
+    {
+        await r.ExigirErro(HttpStatusCode.Conflict, codigo);
+        Assert.Equal(campo, (await r.Json()).GetProperty("erro").GetProperty("detalhes").GetProperty("campo").GetString());
+    }
+
+    [Fact]
+    public async Task CadastroValidoCriaUsuarioEmpresaEAdministrador()
+    {
+        var email = $"{Unico()}@teste.example";
+        var slug = Unico();
+        await using var dono = await Banco.Conectar("MIGRATIONS_DATABASE_URL");
+        try
+        {
+            await using var api = await Api();
+            var corpo = await Exigir(await Cadastrar(api, Corpo($" {email.ToUpperInvariant()} ", slug)), HttpStatusCode.Created);
+            Assert.Equal(["usuario_id", "tenant_id", "slug", "papel"], corpo.EnumerateObject().Select(p => p.Name).ToArray());
+            Assert.Equal("administrador", corpo.GetProperty("papel").GetString());
+            Assert.Equal(slug, corpo.GetProperty("slug").GetString());
+            var usuarioId = corpo.GetProperty("usuario_id").GetGuid();
+            var tenantId = corpo.GetProperty("tenant_id").GetGuid();
+
+            Assert.Equal(email, await dono.Escalar<string>("SELECT email FROM usuarios WHERE id = $1", usuarioId));
+            var hash = await dono.Escalar<string>("SELECT senha_hash FROM usuarios WHERE id = $1", usuarioId);
+            Assert.StartsWith("$argon2id$", hash);
+            Assert.True(Senha.Conferir("12345678", hash!));
+            Assert.Equal(usuarioId, await dono.Escalar<Guid>("SELECT criado_por FROM tenants WHERE id = $1", tenantId));
+            Assert.Equal("(11) 99999-0000", await dono.Escalar<string>("SELECT contato_publico FROM tenants WHERE id = $1", tenantId));
+            Assert.Equal("America/Sao_Paulo", await dono.Escalar<string>("SELECT fuso_horario FROM tenants WHERE id = $1", tenantId));
+            Assert.Equal(1, await dono.Escalar<int>(
+                "SELECT count(*) FROM memberships WHERE usuario_id = $1 AND tenant_id = $2 AND papel = 'administrador' AND removido_em IS NULL",
+                usuarioId, tenantId));
+        }
+        finally
+        {
+            await Limpar(dono, [slug], [email]);
+        }
+    }
+
+    [Fact]
+    public async Task EmailJaUsadoEh409()
+    {
+        var slug = Unico();
+        await using var dono = await Banco.Conectar("MIGRATIONS_DATABASE_URL");
+        try
+        {
+            await using var api = await Api();
+            await ExigirConflito(await Cadastrar(api, Corpo(" Admin@Alfa.example ", slug)), Erros.EmailEmUso, "email");
+            Assert.Equal(0, await dono.Escalar<int>("SELECT count(*) FROM tenants WHERE slug = $1", slug));
+        }
+        finally
+        {
+            await Limpar(dono, [slug], []);
+        }
+    }
+
+    [Fact]
+    public async Task SlugJaUsadoEh409NaoDeixaUsuario()
+    {
+        await using var e = await EmpresaDeTeste.Criar();
+        var email = $"{Unico()}@teste.example";
+        await using var api = await Api();
+        await ExigirConflito(await Cadastrar(api, Corpo(email, e.Slug)), Erros.SlugEmUso, "empresa_slug");
+        Assert.Equal(0, await e.Dono.Escalar<int>("SELECT count(*) FROM usuarios WHERE email = $1", email));
+    }
+
+    [Fact]
+    public async Task EmailESlugEmUsoEhEmailEmUso()
+    {
+        await using var e = await EmpresaDeTeste.Criar();
+        await using var api = await Api();
+        await ExigirConflito(await Cadastrar(api, Corpo("admin@alfa.example", e.Slug)), Erros.EmailEmUso, "email");
+    }
+
+    [Fact]
+    public async Task SlugGravadoMinusculo()
+    {
+        var email = $"{Unico()}@teste.example";
+        var slug = Unico();
+        await using var dono = await Banco.Conectar("MIGRATIONS_DATABASE_URL");
+        try
+        {
+            await using var api = await Api();
+            var corpo = await Exigir(await Cadastrar(api, Corpo(email, $" {slug.ToUpperInvariant()} ")), HttpStatusCode.Created);
+            Assert.Equal(slug, corpo.GetProperty("slug").GetString());
+            Assert.Equal(1, await dono.Escalar<int>("SELECT count(*) FROM tenants WHERE slug = $1", slug));
+        }
+        finally
+        {
+            await Limpar(dono, [slug], [email]);
+        }
+    }
+
+    [Fact]
+    public async Task SlugComOutraCaixaEhSlugEmUso()
+    {
+        var slug = Unico();
+        var email1 = $"{Unico()}@teste.example";
+        var email2 = $"{Unico()}@teste.example";
+        await using var dono = await Banco.Conectar("MIGRATIONS_DATABASE_URL");
+        try
+        {
+            await using var api = await Api();
+            await Exigir(await Cadastrar(api, Corpo(email1, slug)), HttpStatusCode.Created);
+            await ExigirConflito(await Cadastrar(api, Corpo(email2, slug.ToUpperInvariant())), Erros.SlugEmUso, "empresa_slug");
+        }
+        finally
+        {
+            await Limpar(dono, [slug], [email1, email2]);
+        }
+    }
+
+    [Fact]
+    public async Task MesmoEmailSimultaneoCriaUmaConta()
+    {
+        var email = $"{Unico()}@teste.example";
+        var slugs = new[] { Unico(), Unico() };
+        await using var dono = await Banco.Conectar("MIGRATIONS_DATABASE_URL");
+        try
+        {
+            await using var api = await Api();
+            var respostas = await Task.WhenAll(slugs.Select(s => Cadastrar(api, Corpo(email, s))));
+            Assert.Equal([HttpStatusCode.Created, HttpStatusCode.Conflict],
+                respostas.Select(r => r.StatusCode).Order().ToArray());
+            await ExigirConflito(respostas.Single(r => r.StatusCode == HttpStatusCode.Conflict), Erros.EmailEmUso, "email");
+            Assert.Equal(1, await dono.Escalar<int>("SELECT count(*) FROM usuarios WHERE email = $1", email));
+        }
+        finally
+        {
+            await Limpar(dono, slugs, [email]);
+        }
     }
 }

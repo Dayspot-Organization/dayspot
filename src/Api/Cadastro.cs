@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using Dayspot.Api.Auth;
 using Dayspot.Api.Dados;
-using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Dayspot.Api;
 
@@ -68,10 +68,24 @@ public static partial class Cadastro
             return Erros.CampoInvalido("contato", "Informe o contato da empresa (até 120 caracteres).");
         }
 
-        // Provisório: a gravação entra na Tarefa 4. Até lá, só garante que a validação
-        // passou tocando no banco.
-        await db.Database.OpenConnectionAsync(ct);
-        return Json.Responder(StatusCodes.Status501NotImplemented, new { });
+        // Depois do 23505 a transação está abortada: nada mais roda SQL neste handler.
+        try
+        {
+            var criada = await db.CriarEmpresa(
+                new NovaEmpresa(email, Senha.GerarHash(senha), nome, empresaNome, slug, contato), ct);
+            return Json.Responder(StatusCodes.Status201Created,
+                new CadastroJson(criada.UsuarioId, criada.TenantId, slug, "administrador"));
+        }
+        catch (PostgresException e) when (e.SqlState == PostgresErrorCodes.UniqueViolation && e.ConstraintName == "usuarios_email_unico")
+        {
+            return Erros.Responder(StatusCodes.Status409Conflict, Erros.EmailEmUso, "Este e-mail já tem cadastro.",
+                new() { ["campo"] = "email" });
+        }
+        catch (PostgresException e) when (e.SqlState == PostgresErrorCodes.UniqueViolation && e.ConstraintName == "tenants_slug_key")
+        {
+            return Erros.Responder(StatusCodes.Status409Conflict, Erros.SlugEmUso, "Este endereço já está em uso.",
+                new() { ["campo"] = "empresa_slug" });
+        }
     }
 
     // Exatamente um @, com texto dos dois lados.
