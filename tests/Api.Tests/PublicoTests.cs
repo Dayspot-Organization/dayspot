@@ -1,6 +1,8 @@
 using System.Net;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Dayspot.Api.Dados;
 
 namespace Dayspot.Api.Tests;
 
@@ -278,11 +280,53 @@ public class PublicoTests
     {
         await using var e = await EmpresaDeTeste.Criar();
         await using var api = await Api();
-        var respostas = await Task.WhenAll(Enumerable.Range(0, 2).Select(i =>
+        // Oito, abaixo do limite de envios: com duas, o deadlock só aparecia de vez em quando.
+        var respostas = await Task.WhenAll(Enumerable.Range(0, 8).Select(i =>
             Agendar(api, e, e.Corpo($"{Segunda}T10:00:00", telefone: $"11 9000-000{i}"))));
-        Assert.Equal([HttpStatusCode.Created, HttpStatusCode.Conflict], respostas.Select(r => r.StatusCode).Order());
-        await respostas.Single(r => r.StatusCode == HttpStatusCode.Conflict).ExigirErro(HttpStatusCode.Conflict, Erros.ConflitoHorario);
+        await ExigirCriado(Assert.Single(respostas, r => r.StatusCode != HttpStatusCode.Conflict));
+        foreach (var r in respostas.Where(r => r.StatusCode == HttpStatusCode.Conflict))
+        {
+            await r.ExigirErro(HttpStatusCode.Conflict, Erros.ConflitoHorario);
+        }
         Assert.Equal(1, await e.Clientes());
+        Assert.Equal(1, await e.Agendamentos());
+    }
+
+    // Determinístico: sem o lock por prestador, o segundo INSERT grava a linha e espera a
+    // transação do primeiro, não o advisory lock, e é assim que o deadlock começa.
+    [Fact]
+    public async Task SegundoAgendamentoDoPrestadorEsperaNaFilaAntesDeGravar()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var e = await EmpresaDeTeste.Criar();
+        var cliente = Guid.NewGuid();
+        await using (var tx = await e.Dono.ComTenant(e.Tenant))
+        {
+            await e.Dono.Exec("INSERT INTO clientes (id, tenant_id, nome) VALUES ($1, $2, 'Ana')", cliente, e.Tenant);
+            await tx.CommitAsync(ct);
+        }
+        var novo = new NovoAgendamento(cliente, e.Servico, e.Prestador, new DateTime(2026, 6, 8, 13, 0, 0, DateTimeKind.Utc), null);
+        var url = Banco.ConnectionString("DATABASE_URL");
+        await using var db1 = new AppDb(AppDb.Opcoes(url));
+        await using var db2 = new AppDb(AppDb.Opcoes(url));
+        await using var tx1 = await db1.IniciarComTenant(e.Tenant, ct);
+        await using var tx2 = await db2.IniciarComTenant(e.Tenant, ct);
+        Assert.NotNull(await db1.CriarAgendamento(e.Tenant, novo, ct));
+
+        var pid = ((NpgsqlConnection)db2.Database.GetDbConnection()).ProcessID;
+        var segundo = db2.CriarAgendamento(e.Tenant, novo, ct);
+        var naFila = false;
+        for (var i = 0; i < 100 && !naFila; i++)
+        {
+            await Task.Delay(50, ct);
+            naFila = await e.Dono.Escalar<int>("SELECT count(*) FROM pg_locks WHERE pid = $1 AND locktype = 'advisory' AND NOT granted", pid) == 1;
+        }
+        Assert.True(naFila, "o segundo INSERT não esperou o advisory lock do prestador");
+
+        await tx1.CommitAsync(ct);
+        var erro = await Assert.ThrowsAsync<PostgresException>(() => segundo);
+        Assert.Equal(PostgresErrorCodes.ExclusionViolation, erro.SqlState);
+        Assert.Equal(1, await e.Agendamentos());
     }
 
     [Theory]

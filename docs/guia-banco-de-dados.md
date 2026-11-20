@@ -623,6 +623,14 @@ catch (PostgresException e) when (e.SqlState == PostgresErrorCodes.ExclusionViol
 }
 ```
 
+- A constraint é checada depois de a linha entrar na tabela: duas escritas simultâneas
+  no mesmo horário esperam uma pela outra e o Postgres aborta uma com `40P01`
+  (`deadlock_detected`), que sairia como 500. Por isso `Consultas.CriarAgendamento` pega
+  `pg_advisory_xact_lock(hashtextextended(tenant || ':prestador:' || prestador, 0))` antes
+  do `INSERT`: a segunda espera o `COMMIT` da primeira e recebe `23P01`. Quem também pega
+  o lock de telefone (§004) pega esse **antes** do de prestador. O `PATCH` que remarca ou
+  troca o serviço (5.1) precisa do mesmo lock.
+
 **Ciclo de vida, sem `DELETE`.** O status nasce `confirmado`. Concluir só com
 `inicio <= now()`; cancelar a qualquer momento enquanto `confirmado`; `cancelado` e
 `concluido` são finais; remarcar e trocar serviço só em `confirmado`. O agendamento
