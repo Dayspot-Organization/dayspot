@@ -235,7 +235,12 @@ papel devolvido por `GET /api/me` (2.9, inferido). Todas as rotas da API ficam s
 - **Objetivo:** criar a conta e a empresa; quem cadastra vira administrador e criador (RF02).
 - **Quem:** visitante sem sessão.
 - **Campos:** nome, e-mail, senha do usuário; nome e slug da empresa (inferido das
-  colunas `NOT NULL` de `usuarios` e `tenants`). Fuso começa em `America/Sao_Paulo`.
+  colunas `NOT NULL` de `usuarios` e `tenants`) e contato da empresa (`contato`). Fuso
+  começa em `America/Sao_Paulo`.
+- **Contato:** obrigatório, com até 120 caracteres, gravado em `tenants.contato_publico`
+  (#170); a tela explica que ele aparece na página pública para os clientes. Sem contato,
+  ou acima de 120 caracteres → 400 `requisicao_invalida` com `detalhes.campo` = `contato`
+  (#112, #120).
 - **Regras:** e-mail normalizado (trim + minúsculas, 2.15) e único por `lower(email)`;
   senha com no mínimo 8 caracteres, em Argon2id (2.1, RNF04); nome da empresa obrigatório,
   com até 120 caracteres; slug `^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$` e único. Uma
