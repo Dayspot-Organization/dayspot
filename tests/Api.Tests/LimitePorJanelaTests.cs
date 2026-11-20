@@ -65,9 +65,9 @@ public class LimitePorJanelaTests
     {
         var (limite, _) = Criar();
         var aceitas = 0;
-        await Task.WhenAll(Enumerable.Range(0, 50).Select(_ => Task.Run(() =>
+        await Task.WhenAll(Enumerable.Range(0, 50).Select(i => Task.Run(() =>
         {
-            if (limite.Tentar("a", out var espera))
+            if (limite.Tentar("a", out _))
             {
                 Interlocked.Increment(ref aceitas);
             }
@@ -100,6 +100,7 @@ public class LimitePorJanelaTests
         Assert.Equal(2, limite.Quantidade); // viva + nova
         Assert.False(limite.Tentar("viva", out _)); // a viva manteve a contagem
     }
+
     [Fact]
     public void VarreduraNoMaximoUmaVezPorMinuto()
     {

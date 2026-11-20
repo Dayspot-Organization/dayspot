@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Dayspot.Api.Migrations;
 
 [DbContext(typeof(AppDb))]
-[Migration("00000000000011_AdicionarContatoPublico")]
+[Migration("20261120120000_AdicionarContatoPublico")]
 public sealed class AdicionarContatoPublico : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)

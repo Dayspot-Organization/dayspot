@@ -25,6 +25,10 @@ public static class CadastroServicos
     /// O limite em si é checado no handler, antes de ler o corpo.
     /// </summary>
     public static IApplicationBuilder UseCadastro(this IApplicationBuilder app) =>
-        app.UseWhen(ctx => HttpMethods.IsPost(ctx.Request.Method) && ctx.Request.Path == "/api/signup",
-            ramo => ramo.UseForwardedHeaders());
+        app.UseWhen(EhRotaDoCadastro, ramo => ramo.UseForwardedHeaders());
+
+    // Pelo endpoint, não pelo caminho: o roteamento também casa "/api/signup/".
+    private static bool EhRotaDoCadastro(HttpContext ctx) =>
+        HttpMethods.IsPost(ctx.Request.Method)
+        && ctx.GetEndpoint() is RouteEndpoint { RoutePattern.RawText: "/api/signup" };
 }

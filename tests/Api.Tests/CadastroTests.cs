@@ -40,6 +40,7 @@ public class CadastroTests
         Add("senha", null);
         Add("senha", "1234567");
         Add("senha", "😀😀😀😀😀😀😀"); // 7 caracteres, 14 unidades UTF-16
+        Add("senha", new string('x', 1025));
         Add("empresa_nome", "");
         Add("empresa_nome", new string('a', 121));
         Add("empresa_slug", "");
@@ -80,6 +81,7 @@ public class CadastroTests
     // Com o banco fora do ar, chegar a ele é a prova de que a validação passou.
     [Theory]
     [InlineData("senha", "12345678")]
+    [InlineData("senha", 1024)]
     [InlineData("contato", 120)]
     [InlineData("empresa_nome", 120)]
     [InlineData("empresa_slug", " Minha-Loja ")]
@@ -98,7 +100,7 @@ public class CadastroTests
             _ => texto,
         };
         await using var api = await Servidor.SemBanco();
-        await Assert.ThrowsAnyAsync<Exception>(() => api.Chamar("POST", Rota, Corpo(campo, texto)));
+        await Assert.ThrowsAnyAsync<NpgsqlException>(() => api.Chamar("POST", Rota, Corpo(campo, texto)));
     }
 }
 
@@ -282,9 +284,9 @@ public class LimiteCadastroTests
 {
     private const string Rota = "/api/signup";
 
-    private static Task<HttpResponseMessage> Enviar(Servidor api, string ip, string? encaminhado = null)
+    private static Task<HttpResponseMessage> Enviar(Servidor api, string ip, string? encaminhado = null, string rota = Rota)
     {
-        var req = new HttpRequestMessage(HttpMethod.Post, Rota)
+        var req = new HttpRequestMessage(HttpMethod.Post, rota)
         {
             Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json"),
         };
@@ -357,6 +359,20 @@ public class LimiteCadastroTests
         await Esgotar(api, "203.0.113.1");
         await ExigirLimite(await Enviar(api, "203.0.113.1"), 3600);
         Assert.NotEqual(HttpStatusCode.TooManyRequests, (await Enviar(api, "203.0.113.2")).StatusCode);
+    }
+
+    // O roteamento casa a barra final; o IP real e o limite valem igual.
+    [Fact]
+    public async Task BarraFinalTemOMesmoTratamentoDeIp()
+    {
+        await using var api = await Servidor.ComCadastro(Relogio());
+        for (var i = 0; i < 5; i++)
+        {
+            var r = await Enviar(api, "203.0.113.1", $"198.51.100.{i}", "/api/signup/");
+            Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
+        }
+        await ExigirLimite(await Enviar(api, "203.0.113.1", "198.51.100.200", "/api/signup/"), 3600);
+        Assert.NotEqual(HttpStatusCode.TooManyRequests, (await Enviar(api, "203.0.113.2", rota: "/api/signup/")).StatusCode);
     }
 
     [Fact]

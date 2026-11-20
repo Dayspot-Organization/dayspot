@@ -100,6 +100,8 @@ public static class Consultas
     /// </summary>
     public static async Task<EmpresaCriada> CriarEmpresa(this AppDb db, NovaEmpresa n, CancellationToken ct = default)
     {
+        // O SqlQuery mapeia o resultado pela convenção snake_case (RETURNING usuario_id, tenant_id):
+        // alias como AS "UsuarioId" quebra o mapeamento.
         var criadas = await db.Database.SqlQuery<EmpresaCriada>($"""
             WITH u AS (
               INSERT INTO usuarios (email, senha_hash, nome)
