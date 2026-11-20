@@ -1,4 +1,4 @@
-// A API fala em UTC (ISO 8601); a tela, no fuso do navegador.
+// A API fala em UTC (ISO 8601); o painel, no fuso do navegador; a página pública, no fuso da empresa.
 // Formatos da tela (DESIGN.md, Público e voz): "quarta, 10h" em frase; 10:00 em grade e lista;
 // "18 de novembro" em data.
 
@@ -52,11 +52,42 @@ export const nomeDoMes = (dia: string) => maiuscula(fmtMes.format(new Date(`${di
 /** "09:30", no fuso do navegador. */
 export const formatarHora = (iso: string | Date) => fmtHora.format(new Date(iso));
 
-/** "10h", "10h30": o horário dentro de frase. */
-export function horaEmFrase(iso: string | Date): string {
-  const d = new Date(iso);
-  const m = d.getMinutes();
-  return `${d.getHours()}h${m ? String(m).padStart(2, "0") : ""}`;
+/** "09:30" vira "9h30"; "10:00" vira "10h": o horário dentro de frase. */
+export const horaEmFrase = (hora: string) => `${Number(hora.slice(0, 2))}h${hora.endsWith(":00") ? "" : hora.slice(3)}`;
+
+/** "hoje", "amanhã", "quarta" (até 7 dias) ou "18 de novembro": o dia dentro de frase. */
+export function diaEmFrase(dia: string, hoje: string): string {
+  if (dia === hoje) return "hoje";
+  if (dia === somarDias(hoje, 1)) return "amanhã";
+  if (dia > hoje && dia < somarDias(hoje, 7)) return diaLongo(dia);
+  return diaEMes(dia);
+}
+
+/** Dia e hora de um instante no fuso informado: { dia: "AAAA-MM-DD", hora: "HH:MM" }. */
+export function noFuso(instante: number | string, fuso: string) {
+  const partes = new Intl.DateTimeFormat("en-CA", {
+    timeZone: fuso,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).formatToParts(new Date(instante));
+  const p = (tipo: Intl.DateTimeFormatPartTypes) => partes.find((x) => x.type === tipo)?.value;
+  return { dia: `${p("year")}-${p("month")}-${p("day")}`, hora: `${p("hour")}:${p("minute")}` };
+}
+
+/** Instante (ms) em que o relógio do fuso marca esse dia e hora. */
+export function instanteNoFuso(dia: string, hora: string, fuso: string): number {
+  const alvo = Date.parse(`${dia}T${hora}:00Z`);
+  // Duas passadas: o deslocamento certo é o do instante final, que pode cair depois de uma troca de horário de verão.
+  let t = alvo;
+  for (let i = 0; i < 2; i++) {
+    const lido = noFuso(t, fuso);
+    t += alvo - Date.parse(`${lido.dia}T${lido.hora}:00Z`);
+  }
+  return t;
 }
 
 /** Minutos desde a meia-noite local. */

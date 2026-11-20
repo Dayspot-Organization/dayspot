@@ -11,7 +11,6 @@
 app-root,
 app-menu,
 app-botao-tema,
-app-carregando,
 app-mensagem-erro,
 app-vazio,
 app-agendamentos,
@@ -1028,24 +1027,428 @@ select:disabled {
   background: var(--ds-texto);
 }
 
-/* ── Legado: formulário do Novo agendamento até a tela ser adaptada ────── */
+/* ── Novo agendamento: passos, opções, dia e horário (§4.3–4.5, §4.17, padrão C) ── */
 
-.formulario {
+.passo {
+  padding: var(--ds-e-6);
+  border-top: 1px solid var(--ds-divisoria);
+}
+
+.passo:first-child {
+  border-top: 0;
+}
+
+.passo-cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-e-3);
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.passo-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-e-3);
+  align-items: center;
+  margin-bottom: 14px;
+  font: var(--ds-tx-h3);
+}
+
+.passo-cabecalho .passo-titulo {
+  margin-bottom: 0;
+}
+
+.passo-numero {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ds-texto);
+  color: var(--ds-fundo);
+  font: 700 14px/1 var(--ds-texto-fonte);
+}
+
+.passo-titulo .legenda {
+  font: var(--ds-tx-legenda);
+}
+
+.opcoes {
+  display: grid;
+  gap: var(--ds-e-aviso);
+}
+
+.opcoes-rolagem {
+  max-height: 268px;
+  margin-top: var(--ds-e-3);
+  padding: 3px;
+  overflow-y: auto;
+}
+
+@media (min-width: 640px) {
+  .opcoes-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .opcoes-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.opcoes-linha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-e-aviso);
+}
+
+.opcao {
+  display: flex;
+  gap: var(--ds-e-3);
+  align-items: center;
+  min-width: 0;
+  padding: var(--ds-e-aviso) var(--ds-e-3);
+  border: var(--ds-borda-campo) solid var(--ds-borda);
+  border-radius: var(--ds-raio-medio);
+  background: var(--ds-superficie);
+  color: var(--ds-texto);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--ds-t-rapido);
+}
+
+.opcao:hover {
+  border-color: var(--ds-texto-2);
+}
+
+.opcao[aria-checked="true"],
+.opcao.escolhida {
+  border: var(--ds-borda-selecao) solid var(--ds-acao);
+  background: var(--ds-acao-suave);
+  cursor: default;
+}
+
+.opcao-pessoa {
+  padding: var(--ds-e-2) var(--ds-e-4) var(--ds-e-2) var(--ds-e-2);
+}
+
+.opcao-preco {
+  font-weight: 700;
+}
+
+/* Rádio da opção: anel na borda; marcado, anel ameixa com o miolo cheio. */
+.radio {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--ds-borda);
+  border-radius: 50%;
+}
+
+.opcao[aria-checked="true"] .radio {
+  border-color: var(--ds-acao);
+}
+
+.opcao[aria-checked="true"] .radio::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ds-acao);
+}
+
+.opcao-texto {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.opcao-texto .pessoa-nome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sem-resultado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-e-2);
+  align-items: center;
+  margin-top: var(--ds-e-3);
+}
+
+.campo-duracao input {
+  max-width: 200px;
+}
+
+input.invalido {
+  border-color: var(--ds-erro);
+}
+
+.ajuda-erro {
+  color: var(--ds-erro-texto);
+}
+
+.mes {
+  margin-right: 6px;
+  font-weight: 700;
+}
+
+.dias {
+  display: flex;
+  gap: var(--ds-e-2);
+  overflow-x: auto;
+  padding: 3px;
+  margin: -3px;
+}
+
+.dia {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 76px;
+  border: var(--ds-borda-campo) solid var(--ds-borda);
+  border-radius: var(--ds-raio-medio);
+  background: var(--ds-superficie);
+  color: var(--ds-texto-2);
+  font: 600 13px/18px var(--ds-texto-fonte);
+  cursor: pointer;
+  transition: border-color var(--ds-t-rapido);
+}
+
+.dia:hover {
+  border-color: var(--ds-texto-2);
+}
+
+.dia-numero {
+  color: var(--ds-texto);
+  font: 800 22px/26px var(--ds-titulo);
+  font-variant-numeric: tabular-nums;
+}
+
+.dia-hoje {
+  color: var(--ds-acao);
+  font-weight: 700;
+}
+
+.dia[aria-pressed="true"] {
+  border-color: var(--ds-acao);
+  background: var(--ds-acao);
+}
+
+.dia[aria-pressed="true"],
+.dia[aria-pressed="true"] span {
+  color: var(--ds-acao-texto);
+}
+
+.grupo-horarios {
+  margin-bottom: var(--ds-e-2);
+  font: var(--ds-tx-h4);
+}
+
+.horarios {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ds-e-2);
+  margin-bottom: var(--ds-e-4);
+}
+
+.horarios:last-child {
+  margin-bottom: 0;
+}
+
+@media (min-width: 640px) {
+  .horarios {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+.horario {
+  position: relative;
+  height: var(--ds-a-botao);
+  border: var(--ds-borda-campo) solid var(--ds-borda);
+  border-radius: var(--ds-raio-pilula);
+  background: var(--ds-superficie);
+  color: var(--ds-texto);
+  font: var(--ds-tx-horario-botao);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color var(--ds-t-rapido);
+}
+
+.horario:hover:not(:disabled) {
+  border-color: var(--ds-texto-2);
+}
+
+.horario:disabled {
+  border-color: var(--ds-hover);
+  background: var(--ds-hover);
+  color: var(--ds-texto-3);
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+/* Escolhido: ameixa cheio + o marcador pêssego no canto ("o horário marcado"). */
+.horario[aria-pressed="true"] {
+  border-color: var(--ds-acao);
+  background: var(--ds-acao);
+  color: var(--ds-acao-texto);
+}
+
+.horario[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ds-acento);
+  box-shadow: 0 0 0 2px var(--ds-superficie);
+}
+
+.resumo-dia {
+  font-weight: 600;
+}
+
+.resumo-falta {
+  color: var(--ds-texto-2);
+  font: var(--ds-tx-horario-lista);
+}
+
+.aviso-coluna {
+  flex-direction: column;
+}
+
+.aviso-linha {
+  display: flex;
+  gap: var(--ds-e-aviso);
+}
+
+.aviso-linha svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.aviso-acoes {
+  display: flex;
+  gap: var(--ds-e-2);
+  padding-left: 28px;
+}
+
+.aviso-acoes .botao {
+  margin: 0;
+}
+
+.campos-dados {
+  display: grid;
+  gap: var(--ds-e-4);
+}
+
+@media (min-width: 640px) {
+  .campos-dados {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.valor {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.centro {
+  text-align: center;
+}
+
+.avatar-36 {
+  width: 36px;
+  height: 36px;
+  font-size: 13px;
+}
+
+.avatar-56 {
+  width: 56px;
+  height: 56px;
+  background: var(--ds-acao);
+  color: var(--ds-acao-texto);
+  font-size: 18px;
+}
+
+/* ── Página do cliente (padrão F): sem menu, 1040 px, empresa no topo ───── */
+
+.publica {
   display: flex;
   flex-direction: column;
-  gap: var(--ds-e-4);
-  max-width: 560px;
+  gap: var(--ds-e-6);
+  max-width: var(--ds-l-publica);
+  margin: 0 auto;
+  padding: var(--ds-e-8) var(--ds-e-4);
+}
+
+@media (min-width: 1024px) {
+  .publica {
+    padding: var(--ds-e-12) var(--ds-e-10) var(--ds-e-10);
+  }
+
+  .com-painel.estreito {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: var(--ds-e-8);
+  }
+}
+
+.publica .cabecalho-tela {
+  margin-bottom: 0;
+}
+
+.publica-empresa {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.titulo-tela {
+  font: var(--ds-tx-h2);
+  letter-spacing: -0.01em;
+}
+
+.confirmado {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-e-3);
   padding: var(--ds-e-6);
 }
 
-.formulario label {
-  display: block;
-  margin-bottom: var(--ds-e-rotulo);
-  font: var(--ds-tx-controle);
+.publica-rodape {
+  display: flex;
+  gap: var(--ds-e-2);
+  align-items: center;
+  padding-top: var(--ds-e-6);
+  border-top: 1px solid var(--ds-divisoria);
 }
 
-.linha {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: var(--ds-e-3);
+.publica-rodape .logo {
+  padding: 0;
+}
+
+.publica-rodape .logo svg {
+  height: 20px;
+}
+
+/* Na página do cliente a coluna é mais estreita: serviços em duas colunas e nomes inteiros. */
+@media (min-width: 640px) {
+  .estreito .opcoes-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.opcoes-3 .opcao-texto .pessoa-nome {
+  white-space: normal;
 }

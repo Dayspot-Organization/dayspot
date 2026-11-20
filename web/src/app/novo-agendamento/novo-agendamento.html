@@ -1,49 +1,182 @@
-@if (erroClientes()) {
+<!-- Padrão C (passos + resumo). -->
+<div class="cabecalho-tela">
+  <div>
+    <h1>Novo agendamento</h1>
+    <p class="resumo">Escolha o cliente, a data, a hora e a duração.</p>
+  </div>
+</div>
+
+@if (semConexao()) {
+  <section class="cartao">
+    <app-vazio ilustracao="conexao" titulo="Sem conexão">
+      <p>Tente de novo quando a internet voltar. Nada do que estava salvo foi perdido.</p>
+      <button type="button" class="botao" (click)="clientes.reload()">Tentar de novo</button>
+    </app-vazio>
+  </section>
+} @else if (erroClientes()) {
   <app-mensagem-erro [mensagem]="erroClientes()" podeRepetir (tentarDeNovo)="clientes.reload()" />
-} @else if (!clientes.hasValue() || clientes.isLoading()) {
-  <app-carregando />
-} @else if (clientes.value().length === 0) {
-  <app-vazio ilustracao="clientes">Nenhum cliente cadastrado ainda.</app-vazio>
+} @else if (!clientes.hasValue()) {
+  <div class="com-painel largo" aria-busy="true">
+    <div class="cartao esqueleto-cartao">
+      <span class="so-leitor">Carregando</span>
+      <span class="esqueleto" style="width: 30%; height: 26px"></span>
+      <span class="esqueleto" style="width: 100%; height: 64px"></span>
+      <span class="esqueleto" style="width: 30%; height: 26px; margin-top: 24px"></span>
+      <span class="esqueleto" style="width: 100%; height: 64px"></span>
+    </div>
+    <div class="cartao esqueleto-cartao">
+      <span class="esqueleto" style="width: 40%; height: 26px"></span>
+      <span class="esqueleto" style="width: 100%; height: 84px"></span>
+    </div>
+  </div>
+} @else if (semClientes()) {
+  <section class="cartao">
+    <app-vazio ilustracao="clientes" titulo="Nenhum cliente ainda">
+      <p>Quando houver clientes cadastrados, eles aparecem aqui para você escolher.</p>
+    </app-vazio>
+  </section>
 } @else {
-  <form class="cartao formulario" (submit)="salvar($event)">
-    <div>
-      <label for="cliente">Cliente</label>
-      <select #campoCliente id="cliente" required (change)="clienteId.set(campoCliente.value)">
-        <option value="" [selected]="clienteId() === ''">Escolha o cliente</option>
-        @for (c of clientes.value(); track c.id) {
-          <option [value]="c.id" [selected]="clienteId() === c.id">{{ c.nome }}</option>
+  <form class="com-painel largo" aria-label="Novo agendamento" novalidate (submit)="agendar($event)">
+    <div class="cartao passos">
+      <!-- Cliente -->
+      <section class="passo" id="secao-cliente" tabindex="-1" aria-labelledby="passo-cliente">
+        <h2 class="passo-titulo" id="passo-cliente"><span class="passo-numero">1</span>Cliente</h2>
+        @if (cliente(); as c) {
+          <div class="opcao escolhida">
+            <span class="avatar" aria-hidden="true">{{ c.iniciais }}</span>
+            <span class="opcao-texto">
+              <span class="pessoa-nome">{{ c.nome }}</span>
+              <span class="legenda numeros">{{ c.meta }}</span>
+            </span>
+            <button type="button" class="botao botao-terciario botao-pequeno" (click)="clienteId.set('')">Trocar</button>
+          </div>
+        } @else {
+          <div class="busca">
+            <label class="so-leitor" for="busca-cliente">Buscar cliente</label>
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M10.5 17a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM15.5 15.5L20 20"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <input
+              #campoBusca
+              id="busca-cliente"
+              type="search"
+              placeholder="Buscar pelo nome ou telefone"
+              autocomplete="off"
+              [value]="busca()"
+              (input)="busca.set(campoBusca.value)"
+            />
+          </div>
+          @if (clientesFiltrados().length === 0) {
+            <div class="sem-resultado">
+              <p class="secundario">Nenhum cliente com "{{ busca() }}".</p>
+              <button type="button" class="botao botao-terciario botao-pequeno" (click)="busca.set('')">Limpar busca</button>
+            </div>
+          } @else {
+            <div class="opcoes opcoes-2 opcoes-rolagem" role="radiogroup" aria-labelledby="passo-cliente">
+              @for (c of clientesFiltrados(); track c.id) {
+                <button type="button" class="opcao" role="radio" aria-checked="false" (click)="escolherCliente(c.id)">
+                  <span class="avatar" aria-hidden="true">{{ c.iniciais }}</span>
+                  <span class="opcao-texto">
+                    <span class="pessoa-nome">{{ c.nome }}</span>
+                    <span class="legenda numeros">{{ c.meta }}</span>
+                  </span>
+                </button>
+              }
+            </div>
+          }
         }
-      </select>
+      </section>
+
+      <!-- Data, hora e duração: livres, sem grade de horários -->
+      <section class="passo" aria-labelledby="passo-quando">
+        <h2 class="passo-titulo" id="passo-quando"><span class="passo-numero">2</span>Data e hora</h2>
+        <div class="campos-dados">
+          <div class="campo">
+            <label for="data">Data</label>
+            <input
+              #campoData
+              id="data"
+              type="date"
+              [value]="data()"
+              [class.invalido]="tentou() && !data()"
+              [attr.aria-invalid]="tentou() && !data()"
+              (input)="data.set(campoData.value)"
+            />
+          </div>
+          <div class="campo">
+            <label for="hora">Hora de início</label>
+            <input
+              #campoHora
+              id="hora"
+              type="time"
+              [value]="hora()"
+              [class.invalido]="tentou() && !hora()"
+              [attr.aria-invalid]="tentou() && !hora()"
+              (input)="hora.set(campoHora.value)"
+            />
+          </div>
+          <div class="campo campo-duracao">
+            <label for="duracao">Duração (min)</label>
+            <input
+              #campoDuracao
+              id="duracao"
+              type="number"
+              min="5"
+              max="1440"
+              step="5"
+              [value]="duracao()"
+              [class.invalido]="tentou() && !duracaoValida()"
+              [attr.aria-invalid]="tentou() && !duracaoValida()"
+              aria-describedby="duracao-ajuda"
+              (input)="duracao.set(campoDuracao.value)"
+            />
+            <p class="ajuda" [class.ajuda-erro]="tentou() && !duracaoValida()" id="duracao-ajuda">De 5 em 5 minutos, até 24 horas.</p>
+          </div>
+        </div>
+      </section>
     </div>
-    <div class="linha">
-      <div>
-        <label for="data">Data</label>
-        <input #campoData id="data" type="date" required [value]="data()" (input)="data.set(campoData.value)" />
+
+    <aside class="cartao painel" aria-label="Resumo">
+      <h2 class="titulo-cartao">Resumo</h2>
+      <div class="quadro">
+        <p class="secundario resumo-dia">{{ data() ? dataLonga(data()) : "Escolha a data" }}</p>
+        @if (hora()) {
+          <p class="horario-destaque">
+            {{ hora() }}
+            @if (fim(); as f) {
+              <small>às {{ formatarHora(f) }}</small>
+            }
+          </p>
+        } @else {
+          <p class="resumo-falta">Escolha a hora</p>
+        }
       </div>
-      <div>
-        <label for="hora">Hora de início</label>
-        <input #campoHora id="hora" type="time" required [value]="hora()" (input)="hora.set(campoHora.value)" />
-      </div>
-      <div>
-        <label for="duracao">Duração (min)</label>
-        <input
-          #campoDuracao
-          id="duracao"
-          type="number"
-          required
-          min="5"
-          max="1440"
-          step="5"
-          [value]="duracao()"
-          (input)="duracao.set(campoDuracao.value)"
-        />
-      </div>
-    </div>
-    @if (erro()) {
-      <app-mensagem-erro [mensagem]="erro()" />
-    }
-    <div>
-      <button class="botao" type="submit" [disabled]="enviando()">{{ enviando() ? "Salvando…" : "Salvar" }}</button>
-    </div>
+      <dl class="pares">
+        <div>
+          <dt>Cliente</dt>
+          <dd>{{ cliente()?.nome ?? "—" }}</dd>
+        </div>
+        <div>
+          <dt>Duração</dt>
+          <dd>{{ duracaoValida() ? duracaoEmTexto(+duracao()) : "—" }}</dd>
+        </div>
+      </dl>
+      <button type="submit" class="botao botao-entrada" [attr.aria-busy]="enviando()" aria-describedby="falta-envio">
+        {{ rotuloBotao() }}
+      </button>
+      @if (falta()) {
+        <p class="ajuda centro" id="falta-envio">{{ falta() }}</p>
+      }
+      @if (erro()) {
+        <app-mensagem-erro [mensagem]="erro()" />
+      }
+    </aside>
   </form>
 }

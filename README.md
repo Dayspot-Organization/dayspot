@@ -169,7 +169,7 @@ npm run lint    # o CI roda lint e build em todo PR
 npm run build   # ng build (TypeScript strict e templates strict)
 ```
 
-Componentes standalone com signals. As rotas ficam em `web/src/app/app.routes.ts` (`@angular/router`); `app.ts`/`app.html` é o layout com a navegação e o `<router-outlet />` onde cada tela aparece. Chamadas à API passam pelo serviço `Api` (`web/src/app/api/`), com o `HttpClient` e um interceptor que converte as respostas de erro (`docs/erros-api.md`).
+Componentes standalone com signals. As rotas ficam em `web/src/app/app.routes.ts` (`@angular/router`); `Painel` (`layout.ts`/`painel.html`) é a rota de layout com a navegação e o `<router-outlet />` onde cada tela do painel aparece; a página pública `/agendar/:slug` fica fora dela. Chamadas à API passam pelo serviço `Api` (`web/src/app/api/`), com o `HttpClient` e um interceptor que converte as respostas de erro (`docs/erros-api.md`).
 
 Em dev, o `ng serve` repassa (`web/proxy.conf.json`) tudo que começa com `/api` para a API em `localhost:8080`, sem reescrever o caminho: a SPA chama `/api/agendamentos` na mesma origem e não precisa de CORS.
 

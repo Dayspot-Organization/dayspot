@@ -17,8 +17,17 @@ const mensagens = new Map([
 /** Texto em português para mostrar ao usuário, decidido pelo `codigo` (docs/erros-api.md). */
 export function mensagemDeErro(e: unknown): string {
   if (e instanceof ErroRede) return "Não foi possível falar com o servidor. Tente de novo em instantes.";
+  if (e instanceof ApiError && e.codigo === "muitas_tentativas" && e.esperaSegundos) {
+    return `Muitas tentativas. Aguarde ${esperaEmTexto(e.esperaSegundos)} e tente de novo.`;
+  }
   if (e instanceof ApiError) return mensagens.get(e.codigo) ?? e.mensagem;
   return "Erro inesperado. Tente de novo.";
+}
+
+function esperaEmTexto(segundos: number): string {
+  if (segundos < 60) return segundos === 1 ? "1 segundo" : `${segundos} segundos`;
+  const minutos = Math.ceil(segundos / 60);
+  return minutos === 1 ? "1 minuto" : `${minutos} minutos`;
 }
 
 /** Valores da coluna agendamentos.status (migration 00007). */
@@ -45,6 +54,45 @@ export interface Cliente {
   telefone: string | null;
 }
 
+/** O que a página pública recebe da empresa; horários são mostrados e enviados neste fuso. */
+export interface EmpresaPublica {
+  nome: string;
+  fuso_horario: string;
+}
+
+/** Serviço da empresa: a duração vem dele, não de quem agenda. */
+export interface ServicoPublico {
+  id: string;
+  nome: string;
+  duracao_minutos: number;
+  preco_centavos: number;
+}
+
+/** Profissional que atende (membership ativo). */
+export interface PrestadorPublico {
+  id: string;
+  nome: string;
+}
+
+/** Intervalo ocupado de um profissional, em UTC. */
+export interface Ocupado {
+  inicio: string;
+  fim: string;
+}
+
+/** `inicio` em hora local da empresa, sem offset: "2026-11-18T09:30:00". */
+export interface NovoAgendamentoPublico {
+  servico_id: string;
+  prestador_id: string;
+  inicio: string;
+  nome: string;
+  telefone: string;
+}
+
+export type AgendamentoPublico = Omit<Agendamento, "cliente_id" | "cliente_nome">;
+
+const rotaPublica = (slug: string) => `/api/publico/${encodeURIComponent(slug)}`;
+
 /** Única porta de entrada para a API. Os erros chegam convertidos pelo errosApiInterceptor. */
 @Injectable({ providedIn: "root" })
 export class Api {
@@ -67,5 +115,31 @@ export class Api {
   /** GET /api/clientes. */
   listarClientes() {
     return this.http.get<Cliente[]>("/api/clientes");
+  }
+
+  /** GET /api/publico/{slug}. 404 nao_encontrado quando o slug não existe. */
+  empresaPublica(slug: string) {
+    return this.http.get<EmpresaPublica>(rotaPublica(slug));
+  }
+
+  /** GET /api/publico/{slug}/servicos. */
+  servicosPublicos(slug: string) {
+    return this.http.get<ServicoPublico[]>(`${rotaPublica(slug)}/servicos`);
+  }
+
+  /** GET /api/publico/{slug}/prestadores. */
+  prestadoresPublicos(slug: string) {
+    return this.http.get<PrestadorPublico[]>(`${rotaPublica(slug)}/prestadores`);
+  }
+
+  /** GET /api/publico/{slug}/ocupados. `de` e `ate` em RFC 3339, período de até 31 dias. */
+  ocupadosPublicos(slug: string, de: string, ate: string, prestador_id: string) {
+    const params = new HttpParams().set("de", de).set("ate", ate).set("prestador_id", prestador_id);
+    return this.http.get<Ocupado[]>(`${rotaPublica(slug)}/ocupados`, { params });
+  }
+
+  /** POST /api/publico/{slug}/agendamentos: cria ou reaproveita o cliente e agenda numa chamada só. */
+  criarAgendamentoPublico(slug: string, novo: NovoAgendamentoPublico) {
+    return this.http.post<AgendamentoPublico>(`${rotaPublica(slug)}/agendamentos`, novo);
   }
 }

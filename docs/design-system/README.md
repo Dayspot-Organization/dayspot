@@ -436,9 +436,9 @@ sem texto.
 |---|---|---|---|
 | Botão | §4.1 · `Main` | `web/src/styles.css` (`.botao`, `.botao-secundario`, `.botao-terciario`, `.botao-pequeno`, `.botao-icone`) | no código |
 | Campo | §4.2 · `Main` | `web/src/styles.css` (`.campo`, `input`, `select`, `.busca`) | no código |
-| Horário | §4.3 · `Novo-agendamento-web` | — | só design |
-| Dia | §4.4 · `Novo-agendamento-web` | — | só design |
-| Opção em cartão | §4.5 · `Novo-agendamento-web` | — | só design |
+| Horário | §4.3 · `Novo-agendamento-web` | `web/src/styles.css` (`.horario`) | no código |
+| Dia | §4.4 · `Novo-agendamento-web` | `web/src/styles.css` (`.dia`) | no código, sem "fechado" (ainda não há disponibilidade) |
+| Opção em cartão | §4.5 · `Novo-agendamento-web` | `web/src/styles.css` (`.opcao`) | no código |
 | Segmento | §4.6 · `Main`, `Agenda-semana` | `web/src/styles.css` (`.segmento`) | no código |
 | Interruptor | §4.7 · `Main`, `Disponibilidade` | `web/src/styles.css` (`.interruptor`) | no código |
 | Filtro de pessoa / abas | §4.8 · `Agenda-semana`, `Financeiro`, `Disponibilidade` | — | só design |
@@ -450,12 +450,12 @@ sem texto.
 | Tabela | §4.14 · `Clientes`, `Servicos`, `Financeiro` | — | só design |
 | Lista de pares | §4.15 · `Agenda-semana` | `web/src/styles.css` (`.pares`) | no código |
 | Avatar | §4.16 · todas | `web/src/styles.css` (`.avatar`) | no código |
-| Passo numerado | §4.17 · `Novo-agendamento-web` | — | só design |
+| Passo numerado | §4.17 · `Novo-agendamento-web` | `web/src/styles.css` (`.passo`) | no código |
 | Faixa de horário | §4.18 · `Disponibilidade` | — | só design |
 | Estado vazio | §4.19 · `Estados` | `app-vazio` | no código |
-| Esqueleto | §4.20 · `Estados` | `.esqueleto`; `app-carregando` (genérico) | no código |
+| Esqueleto | §4.20 · `Estados` | `web/src/styles.css` (`.esqueleto`), desenhado em cada tela | no código |
 | Gráfico de barras | §4.21 · `Financeiro` | — | só design |
-| Casca (menu, top-bar, cabeçalho) | §4.22 · todas | `web/src/app/layout.ts`, `app.html` (`.cabecalho-tela`) | no código, sem seletor de empresa nem rodapé de usuário (ainda não há login) |
+| Casca (menu, top-bar, cabeçalho) | §4.22 · todas | `web/src/app/layout.ts`, `painel.html` (`.cabecalho-tela`) | no código, sem seletor de empresa nem rodapé de usuário (ainda não há login) |
 | Painel de marca | §4.23 · `Entrar`, `Cadastro` | — | só design |
 
 ---

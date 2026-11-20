@@ -7,13 +7,19 @@ export class ApiError extends Error {
   status: number;
   codigo: string;
   mensagem: string;
+  /** `detalhes.campo` do 400 requisicao_invalida. */
+  campo?: string;
+  /** Cabeçalho `Retry-After` do 429 muitas_tentativas, em segundos. */
+  esperaSegundos?: number;
 
-  constructor(status: number, codigo: string, mensagem: string) {
+  constructor(status: number, codigo: string, mensagem: string, campo?: string, esperaSegundos?: number) {
     super(mensagem);
     this.name = "ApiError";
     this.status = status;
     this.codigo = codigo;
     this.mensagem = mensagem;
+    this.campo = campo;
+    this.esperaSegundos = esperaSegundos;
   }
 }
 
@@ -32,9 +38,17 @@ export function converterErro(resp: HttpErrorResponse): Error {
   // 2xx com corpo que não é JSON: o HttpClient acusa erro de parse. Não é erro da API.
   if (resp.status >= 200 && resp.status < 300) return new Error("Resposta inválida da API.", { cause: resp });
 
-  const erro = (resp.error as { erro?: { codigo?: unknown; mensagem?: unknown } } | null)?.erro;
+  const erro = (resp.error as { erro?: { codigo?: unknown; mensagem?: unknown; detalhes?: { campo?: unknown } } } | null)?.erro;
   if (typeof erro?.codigo === "string" && typeof erro?.mensagem === "string") {
-    return new ApiError(resp.status, erro.codigo, erro.mensagem);
+    const campo = erro.detalhes?.campo;
+    const espera = Number(resp.headers.get("Retry-After"));
+    return new ApiError(
+      resp.status,
+      erro.codigo,
+      erro.mensagem,
+      typeof campo === "string" ? campo : undefined,
+      espera > 0 ? espera : undefined,
+    );
   }
   // Corpo fora do formato: 502/503/504 é o proxy (ng serve em dev) sem alcançar a API;
   // o resto (HTML de erro etc.) vira erro_interno.
