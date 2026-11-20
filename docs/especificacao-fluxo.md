@@ -181,7 +181,7 @@ O piloto é a primeira publicação, com uma empresa. As telas se dividem em dua
 | Casca do painel: empresa ativa, menu e saída | todas as rotas do painel | abaixo | #121 |
 | Agenda | `/agendamentos` | §4.4 | #57 |
 | Novo agendamento | `/agendamentos/novo` | §4.12 | #58, #163 |
-| Cadastro da empresa | `/cadastro`; o endpoint entra, expor a tela é decisão pendente | §4.1 | #112, #120 |
+| Cadastro da empresa | `/cadastro` | §4.1 | #112, #120 |
 
 **Depois do piloto:** escolha de empresa (§4.11; no piloto, com uma empresa só, o login
 leva direto à agenda), aceite de convite (§4.3), prestadores (§4.6), serviços e preços
@@ -200,7 +200,7 @@ flowchart TD
       PUB --> CONF
       PUB -->|"link antes do envio"| POL
     end
-    CAD["Cadastro da empresa<br/>/cadastro · exposição pendente"]
+    CAD["Cadastro da empresa<br/>/cadastro"]
     LOG["Login /entrar"]
     subgraph CAS["Casca do painel: empresa ativa, menu e saída"]
       AGE["Agenda /agendamentos"]
@@ -208,7 +208,7 @@ flowchart TD
       AGE --> NOV
     end
     LOG -->|"uma empresa"| AGE
-    CAD -.-> AGE
+    CAD --> AGE
     CAS -->|"sair"| LOG
   end
   subgraph DEP["Depois do piloto"]
@@ -241,8 +241,8 @@ papel devolvido por `GET /api/me` (2.9, inferido). Todas as rotas da API ficam s
   transação: `usuarios` → `tenants` (com `criado_por`) → `memberships` administrador (2.2).
 - **Erros:** 400 `requisicao_invalida`; e-mail já usado → 409 `email_em_uso`; slug já
   usado → 409 `slug_em_uso` (decidido, req. §12; §8.9).
-- **Piloto:** o endpoint precisa existir (#112); expor a tela `/cadastro` é decisão
-  pendente (#120).
+- **Piloto:** a tela `/cadastro` entra no piloto (#120), sobre o endpoint do #112. A
+  empresa piloto também pode ser provisionada pelo roteiro do #174.
 - **Backlog:** 2.2, 2.10, 2.15. Rota `POST /api/signup`.
 
 ### 4.2 Login
@@ -257,6 +257,8 @@ papel devolvido por `GET /api/me` (2.9, inferido). Todas as rotas da API ficam s
   slug (decidido, req. §12; §8.2). Tela de escolha em §4.11, depois do piloto.
 - **Telas:** login em `/entrar` (#120); sem sessão, o painel leva para cá. A saída fica
   na casca do painel (#121).
+- **Sessão expirada:** se a sessão expirar com a tela aberta, qualquer resposta 401 da
+  API leva a `/entrar`, tratada de forma central no cliente HTTP, não tela a tela (#120).
 - **Erros:** e-mail inexistente ou senha errada → 401 `credencial_invalida`, mesma
   mensagem; acima de 5 falhas por e-mail ou 20 por IP em 15 minutos → 429
   `muitas_tentativas` com `Retry-After` (decidido, req. §12; §8.9).
