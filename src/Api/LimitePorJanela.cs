@@ -10,6 +10,7 @@ namespace Dayspot.Api;
 public sealed class LimitePorJanela(int limite, TimeSpan janela, TimeProvider relogio)
 {
     private const int MaxChaves = 10_000;
+    private static readonly TimeSpan IntervaloVarredura = TimeSpan.FromMinutes(1);
 
     private sealed class Entrada
     {
@@ -18,13 +19,18 @@ public sealed class LimitePorJanela(int limite, TimeSpan janela, TimeProvider re
     }
 
     private readonly ConcurrentDictionary<string, Entrada> _entradas = new();
+    private long _ultimaVarredura = 0; // UtcTicks
+
+    /// <summary>Chaves hoje no mapa (para teste).</summary>
+    internal int Quantidade => _entradas.Count;
 
     /// <summary>Conta a tentativa; true se ainda está dentro do limite. Ao recusar, espera é o que falta para a janela fechar.</summary>
     public bool Tentar(string chave, out TimeSpan espera)
     {
         var agora = relogio.GetUtcNow();
-        if (_entradas.Count > MaxChaves)
+        if (_entradas.Count > MaxChaves && (agora.UtcTicks - Volatile.Read(ref _ultimaVarredura)) >= IntervaloVarredura.Ticks)
         {
+            Volatile.Write(ref _ultimaVarredura, agora.UtcTicks);
             Varrer(agora);
         }
         var entrada = _entradas.GetOrAdd(chave, _ => new Entrada { Abertura = agora });
@@ -46,9 +52,10 @@ public sealed class LimitePorJanela(int limite, TimeSpan janela, TimeProvider re
         }
     }
 
-    // Sem timer: a limpeza pega carona na tentativa que encontra o mapa grande demais.
-    // Remover uma entrada que outra thread acabou de pegar só reinicia a contagem dela,
-    // e isso só acontece com a janela já vencida.
+    // Sem timer: a limpeza pega carona na tentativa que encontra o mapa grande demais, no
+    // máximo uma vez por minuto. Se outra thread já tinha pego uma entrada vencida que a
+    // varredura removeu, ela conta na entrada órfã: a chave pode aceitar até `limite`
+    // tentativas a mais por um instante, e só quando a janela dela já tinha vencido.
     private void Varrer(DateTimeOffset agora)
     {
         foreach (var (chave, entrada) in _entradas)

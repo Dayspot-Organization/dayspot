@@ -65,9 +65,9 @@ public class LimitePorJanelaTests
     {
         var (limite, _) = Criar();
         var aceitas = 0;
-        await Task.WhenAll(Enumerable.Range(0, 50).Select(__ => Task.Run(() =>
+        await Task.WhenAll(Enumerable.Range(0, 50).Select(_ => Task.Run(() =>
         {
-            if (limite.Tentar("a", out _))
+            if (limite.Tentar("a", out var espera))
             {
                 Interlocked.Increment(ref aceitas);
             }
@@ -75,21 +75,48 @@ public class LimitePorJanelaTests
         Assert.Equal(5, aceitas);
     }
 
+    private static void Encher(LimitePorJanela limite, string prefixo, int quantas)
+    {
+        for (var i = 0; i < quantas; i++)
+        {
+            limite.Tentar(prefixo + i, out _);
+        }
+    }
+
     [Fact]
-    public void EntradasVencidasSaemQuandoOMapaCresce()
+    public void VarreVencidasEPreservaAsVivas()
     {
         var (limite, relogio) = Criar();
-        for (var i = 0; i < 10_001; i++)
-        {
-            limite.Tentar("k" + i, out _);
-        }
-        relogio.Agora += Hora;
-        // Uma chave nova com o mapa acima do teto varre as vencidas; a antiga recomeça do zero.
-        Assert.True(limite.Tentar("nova", out _));
+        Encher(limite, "velha", 10_001);
+        relogio.Agora += TimeSpan.FromMinutes(30);
         for (var i = 0; i < 5; i++)
         {
-            Assert.True(limite.Tentar("k0", out _));
+            limite.Tentar("viva", out _); // abre a janela dela aqui e chega ao limite
         }
-        Assert.False(limite.Tentar("k0", out _));
+        relogio.Agora += TimeSpan.FromMinutes(45); // as velhas venceram, a viva ainda não
+        Assert.Equal(10_002, limite.Quantidade);
+
+        Assert.True(limite.Tentar("nova", out _)); // mapa acima do teto: varre
+        Assert.Equal(2, limite.Quantidade); // viva + nova
+        Assert.False(limite.Tentar("viva", out _)); // a viva manteve a contagem
+    }
+    [Fact]
+    public void VarreduraNoMaximoUmaVezPorMinuto()
+    {
+        var relogio = new RelogioAjustavel(new DateTimeOffset(2026, 11, 20, 12, 0, 0, TimeSpan.Zero));
+        var limite = new LimitePorJanela(5, TimeSpan.FromSeconds(10), relogio);
+        Encher(limite, "a", 10_001);
+        relogio.Agora += TimeSpan.FromSeconds(30);
+        limite.Tentar("x", out _); // 1ª varredura
+        Assert.Equal(1, limite.Quantidade);
+
+        Encher(limite, "b", 10_001);
+        relogio.Agora += TimeSpan.FromSeconds(20); // as "b" já venceram, mas faz só 20 s da varredura
+        limite.Tentar("y", out _);
+        Assert.Equal(10_003, limite.Quantidade);
+
+        relogio.Agora += TimeSpan.FromSeconds(40); // 60 s: varre de novo
+        limite.Tentar("z", out _);
+        Assert.Equal(1, limite.Quantidade);
     }
 }
