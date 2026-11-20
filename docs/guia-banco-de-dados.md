@@ -311,6 +311,11 @@ adote.
 **`criado_por` não está aqui.** A 002 já foi mergeada, e `usuarios` só nasce na
 003: a coluna entra por `ALTER TABLE` lá (ver 003).
 
+**`contato_publico` entra depois, por `ALTER TABLE`** (migration 011, #112): telefone,
+WhatsApp ou e-mail da empresa, dado público exibido na página de agendamento. Até 120
+caracteres (`CHECK contato_publico_tamanho`), nulo nas empresas antigas e no seed,
+obrigatório no cadastro (`POST /api/signup`).
+
 ⚠️ **`telegram_bot_token` é legado e fica sempre nulo**, garantido pelo `CHECK
 telegram_bot_token_nulo`. `tenants` fica fora do RLS (o login precisa dela antes de
 existir contexto de tenant), então nenhum segredo por tenant pode morar nesta tabela.
