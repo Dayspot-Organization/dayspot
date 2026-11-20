@@ -237,10 +237,16 @@ papel devolvido por `GET /api/me` (2.9, inferido). Todas as rotas da API ficam s
 - **Campos:** nome, e-mail, senha do usuário; nome e slug da empresa (inferido das
   colunas `NOT NULL` de `usuarios` e `tenants`). Fuso começa em `America/Sao_Paulo`.
 - **Regras:** e-mail normalizado (trim + minúsculas, 2.15) e único por `lower(email)`;
-  senha Argon2id (2.1, RNF04); slug `^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$` e único. Uma
+  senha com no mínimo 8 caracteres, em Argon2id (2.1, RNF04); nome da empresa obrigatório,
+  com até 120 caracteres; slug `^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$` e único. Uma
   transação: `usuarios` → `tenants` (com `criado_por`) → `memberships` administrador (2.2).
+  Limite de 5 cadastros por hora por IP, como no login (2.8) (decidido, #112).
+- **Depois de cadastrar:** a resposta já abre a sessão, com a empresa criada ativa e papel
+  administrador, e a tela vai direto para a agenda (`/agendamentos`), sem passar pelo login
+  (#112, #120).
 - **Erros:** 400 `requisicao_invalida`; e-mail já usado → 409 `email_em_uso`; slug já
-  usado → 409 `slug_em_uso` (decidido, req. §12; §8.9).
+  usado → 409 `slug_em_uso` (decidido, req. §12; §8.9); acima do limite → 429
+  `muitas_tentativas` com `Retry-After`.
 - **Piloto:** a tela `/cadastro` entra no piloto (#120), sobre o endpoint do #112. A
   empresa piloto também pode ser provisionada pelo roteiro do #174.
 - **Backlog:** 2.2, 2.10, 2.15. Rota `POST /api/signup`.
@@ -402,10 +408,14 @@ papel devolvido por `GET /api/me` (2.9, inferido). Todas as rotas da API ficam s
 - **Planejado:** até 60 dias de antecedência, grade de 30 minutos, até 3 agendamentos
   futuros por telefone e telefone brasileiro normalizado, sem SMS (#169); contato da
   empresa na página (#170); política de privacidade (#175, §4.13). O endereço fica fora.
-- **Empresa não encontrada:** `/agendar` sem slug e slug inexistente mostram o aviso, sem
-  menu e sem levar ao painel (#163).
-- **Pendência (#174):** a página lista como profissional todo membership ativo (#162). Se
-  o administrador do piloto não atende, ele aparece para o cliente como profissional.
+- **Contato da empresa (#170):** obrigatório para a página funcionar. Empresa sem contato
+  responde 404 `nao_encontrado` nas rotas públicas e mostra o aviso de empresa não
+  encontrada. É o canal de pedidos de exclusão da política (#175).
+- **Empresa não encontrada:** `/agendar` sem slug, slug inexistente e empresa sem contato
+  mostram o aviso, sem menu e sem levar ao painel (#163, #170).
+- **Profissionais (#174, decidido):** a página lista todo membership ativo (#162); por
+  isso a empresa piloto é uma em que o administrador também atende. A empresa confirma
+  que o horário real cabe na janela de segunda a sábado, das 08:00 às 19:00.
 - **Aviso no formulário (#163, PR #167):** "Seu nome e telefone ficam guardados com esta
   empresa para registrar o agendamento e identificar você nos próximos."
 - **Erros:** slug inexistente ou serviço e profissional indisponíveis → 404
@@ -432,10 +442,13 @@ papel devolvido por `GET /api/me` (2.9, inferido). Todas as rotas da API ficam s
 - **Quem:** administrador e prestador, com sessão.
 - **Campos no piloto:** cliente, data, hora e duração livres, como na 1.11 (#58). Sem
   serviço e sem prestador: o `POST` grava `SERVICO_FIXO` e `PRESTADOR_FIXO` (#163, #174).
+- **Novo cliente:** opção de cadastrar um cliente na hora, com nome e telefone, pela rota
+  `POST /api/clientes`, que já existe; o cliente criado fica escolhido no formulário (#171).
 - **Erros:** 400 `requisicao_invalida`; 409 `conflito_horario` mantém o formulário
   preenchido.
 - **Depois do piloto:** serviço, prestador para o administrador e slots livres (6.6).
-- **Backlog:** 1.11 (#58), #163. Tela `/agendamentos/novo`; rota `POST /api/agendamentos`.
+- **Backlog:** 1.11 (#58), #163, #171. Tela `/agendamentos/novo`; rotas
+  `POST /api/agendamentos` e `POST /api/clientes`.
 
 ### 4.13 Política de privacidade
 
