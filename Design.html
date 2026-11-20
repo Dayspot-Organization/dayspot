@@ -1,0 +1,1119 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dayspot v3 · Design system</title>
+<style>:root,[data-theme="light"]{color-scheme:light;--ds-fundo:#f7f7f8;--ds-superficie:#ffffff;--ds-hover:#f4f4f5;--ds-hover-leve:#f6f6f7;--ds-faixa:#fafafa;--ds-casca-hover:#efeff1;--ds-divisoria:#e8e8eb;--ds-divisoria-suave:#f0f0f1;--ds-contorno:#e4e4e7;--ds-contorno-forte:#e4e4e7;--ds-contorno-hover:#d4d4d8;--ds-tracejado:#b4b4bb;--ds-borda:#8a8a93;--ds-grade-hora:#f0f0f2;--ds-grade-meia:#f5f5f6;--ds-rolagem:#d4d4d8;--ds-texto:#18181b;--ds-texto-2:#52525b;--ds-texto-3:#71717a;--ds-icone:#3f3f46;--ds-acao:#eaa2c1;--ds-acao-pressionada:#e391b4;--ds-acao-texto:#18181b;--ds-tinta:#a83b70;--ds-foco:var(--ds-tinta);--ds-acao-suave:#fdf2f7;--ds-menu-hover:#fdf5f9;--ds-menu-ativo:#fcedf3;--ds-hoje:#fef9fb;--ds-acento:#f4a08a;--ds-marca:#86315c;--ds-degrade-1:#fbe1ed;--ds-degrade-2:#eaa2c1;--ds-degrade-3:#b994dc;--ds-arco:rgba(255, 255, 255, 0.24);--ds-simbolo-degrade:#ffffff;--ds-veu:rgba(24, 24, 27, 0.48);--ds-aguardando:#a47817;--ds-aguardando-texto:#7a5200;--ds-aguardando-chip:#fdf6e1;--ds-confirmado:#458f49;--ds-confirmado-texto:#22622a;--ds-confirmado-chip:#eef7ee;--ds-feito:#4086b6;--ds-feito-texto:#1b527a;--ds-feito-chip:#edf3f9;--ds-cancelado:#867e77;--ds-cancelado-texto:#5f5750;--ds-cancelado-chip:#f4f1ee;--ds-faltou:#8971cb;--ds-faltou-texto:#5a3bb8;--ds-faltou-chip:#f4f1fd;--ds-erro:#d5555d;--ds-erro-texto:#a8161f;--ds-erro-chip:#fdeeee;--ds-sombra:0 1px 2px rgba(24, 24, 27, 0.08);--ds-sombra-flutuante:0 12px 32px -12px rgba(24, 24, 27, 0.18), 0 2px 6px -2px rgba(24, 24, 27, 0.06);}
+[data-theme="dark"]{color-scheme:dark;--ds-fundo:#141414;--ds-superficie:#1c1c1c;--ds-hover:#282627;--ds-hover-leve:#232122;--ds-faixa:#1a1a1a;--ds-casca-hover:#222021;--ds-divisoria:#383536;--ds-divisoria-suave:#2a2829;--ds-contorno:#3d3a3b;--ds-contorno-forte:#4a4647;--ds-contorno-hover:#6e696b;--ds-tracejado:#5c5759;--ds-borda:#858083;--ds-grade-hora:#2b2929;--ds-grade-meia:#232222;--ds-rolagem:#3d3a3b;--ds-texto:#f3f1f2;--ds-texto-2:#bdb8ba;--ds-texto-3:#938d90;--ds-icone:#c4bfc1;--ds-acao:#eaa2c1;--ds-acao-pressionada:#f2bbd2;--ds-acao-texto:#141414;--ds-tinta:#eaa2c1;--ds-foco:var(--ds-tinta);--ds-acao-suave:#2b2428;--ds-menu-hover:#241f22;--ds-menu-ativo:#33282e;--ds-hoje:#1f1a1d;--ds-acento:#f4b49a;--ds-marca:#86315c;--ds-degrade-1:#2c2220;--ds-degrade-2:#33232b;--ds-degrade-3:#45283a;--ds-arco:rgba(255, 255, 255, 0.05);--ds-simbolo-degrade:#eaa2c1;--ds-veu:rgba(0, 0, 0, 0.6);--ds-aguardando:#bf973a;--ds-aguardando-texto:#f2c14e;--ds-aguardando-chip:#342c17;--ds-confirmado:#6aac70;--ds-confirmado-texto:#7fcf86;--ds-confirmado-chip:#1e3022;--ds-feito:#79a1c2;--ds-feito-texto:#8dbce3;--ds-feito-chip:#1b2935;--ds-cancelado:#a09c98;--ds-cancelado-texto:#b3ada8;--ds-cancelado-chip:#2c2a29;--ds-faltou:#a492da;--ds-faltou-texto:#b9a5f5;--ds-faltou-chip:#29243d;--ds-erro:#e1827e;--ds-erro-texto:#ff8a85;--ds-erro-chip:#3e2324;--ds-sombra:0 0 #0000;--ds-sombra-flutuante:0 0 #0000;}
+:root{--ds-e-1:4px;--ds-e-rotulo:6px;--ds-e-2:8px;--ds-e-aviso:10px;--ds-e-3:12px;--ds-e-4:16px;--ds-e-6:24px;--ds-e-8:32px;--ds-e-12:48px;--ds-e-16:64px;--ds-raio-bloco:8px;--ds-raio-campo:10px;--ds-raio-menu:12px;--ds-raio-painel:16px;--ds-raio-pilula:999px;--ds-a-etiqueta:24px;--ds-a-controle:32px;--ds-a-alvo:36px;--ds-a-menu:38px;--ds-a-linha:40px;--ds-a-campo-grande:44px;--ds-a-acao-grande:48px;--ds-l-topo:48px;--ds-l-menu:60px;--ds-l-barra:64px;--ds-l-busca:320px;--ds-l-lateral:360px;--ds-l-formulario:400px;--ds-l-hora:72px;--ds-b-fio:1px;--ds-b-selecao:1.5px;--ds-b-foco:2px;--font-sans:"Geist", system-ui, -apple-system, "Segoe UI", sans-serif;--font-mono:ui-monospace, "SF Mono", Menlo, Consolas, monospace;}
+.tx-titulo-entrada{font-family:var(--font-sans);font-size:32px;line-height:38px;font-weight:500;letter-spacing:-0.03em;}
+.tx-titulo{font-family:var(--font-sans);font-size:18px;line-height:26px;font-weight:500;letter-spacing:-0.015em;}
+.tx-numero{font-family:var(--font-sans);font-size:20px;line-height:28px;font-weight:500;letter-spacing:-0.02em;}
+.tx-corpo{font-family:var(--font-sans);font-size:13px;line-height:20px;font-weight:400;}
+.tx-controle{font-family:var(--font-sans);font-size:13px;line-height:20px;font-weight:500;}
+.tx-legenda{font-family:var(--font-sans);font-size:13px;line-height:18px;font-weight:400;}
+.tx-campo-grande{font-family:var(--font-sans);font-size:15px;line-height:22px;font-weight:400;}
+.tx-botao-grande{font-family:var(--font-sans);font-size:15px;line-height:20px;font-weight:500;}
+.tx-corpo-grande{font-family:var(--font-sans);font-size:16px;line-height:24px;font-weight:400;}
+</style>
+<style>@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500&display=swap");
+
+/* Dayspot v3 · componentes. Só var(--ds-*): nenhum valor de cor solto.
+   Cada estado também pode ser forçado com data-estado="hover|pressionado|foco", para as matrizes do guia. */
+
+:root {
+  --ds-t-rapido: 120ms;
+  --ds-t-medio: 220ms;
+  --ds-t-saida: 160ms;
+  --ds-curva: cubic-bezier(.2, .8, .2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --ds-t-rapido: 0ms; --ds-t-medio: 0ms; --ds-t-saida: 0ms; }
+}
+
+.ds { font-family: var(--font-sans); font-size: 13px; line-height: 20px; color: var(--ds-texto); font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+.ds-ic { width: 14px; height: 14px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+@keyframes ds-gira { to { transform: rotate(1turn); } }
+
+/* ── Botão ─────────────────────────────────────────────── */
+.ds-botao {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: var(--ds-e-rotulo);
+  height: var(--ds-a-controle); padding: 0 var(--ds-e-3); border: 0; border-radius: var(--ds-raio-pilula);
+  background: var(--ds-superficie); box-shadow: inset 0 0 0 1px var(--ds-divisoria); color: var(--ds-texto);
+  font: 500 13px/1 var(--font-sans); white-space: nowrap; cursor: pointer;
+  transition: background-color var(--ds-t-rapido), box-shadow var(--ds-t-rapido), color var(--ds-t-rapido);
+}
+.ds-botao::before { content: ""; position: absolute; inset: -2px; } /* clique de 36 px */
+.ds-botao .ds-ic { color: var(--ds-icone); }
+.ds-botao:hover, .ds-botao[data-estado="hover"] { background: var(--ds-hover-leve); }
+.ds-botao:active, .ds-botao[data-estado="pressionado"] { background: var(--ds-hover); }
+.ds-botao:focus-visible, .ds-botao[data-estado="foco"] { outline: var(--ds-b-foco) solid var(--ds-foco); outline-offset: 2px; }
+
+.ds-botao--principal { background: var(--ds-acao); color: var(--ds-acao-texto); box-shadow: none; }
+.ds-botao--principal .ds-ic { color: currentColor; }
+.ds-botao--principal:hover, .ds-botao--principal[data-estado="hover"],
+.ds-botao--principal:active, .ds-botao--principal[data-estado="pressionado"] { background: var(--ds-acao-pressionada); }
+
+.ds-botao--fantasma { background: transparent; box-shadow: none; }
+.ds-botao--fantasma:hover, .ds-botao--fantasma[data-estado="hover"] { background: var(--ds-hover-leve); }
+.ds-botao--fantasma:active, .ds-botao--fantasma[data-estado="pressionado"] { background: var(--ds-hover); }
+
+.ds-botao--icone { width: var(--ds-a-controle); padding: 0; }
+
+.ds-botao--texto-perigo { background: transparent; box-shadow: none; color: var(--ds-erro-texto); }
+.ds-botao--texto-perigo .ds-ic { color: currentColor; }
+.ds-botao--texto-perigo:hover, .ds-botao--texto-perigo[data-estado="hover"],
+.ds-botao--texto-perigo:active, .ds-botao--texto-perigo[data-estado="pressionado"] { background: var(--ds-erro-chip); }
+
+.ds-botao--perigo { background: var(--ds-erro-texto); color: var(--ds-superficie); box-shadow: none; }
+.ds-botao--perigo .ds-ic { color: currentColor; }
+.ds-botao--perigo:hover, .ds-botao--perigo[data-estado="hover"],
+.ds-botao--perigo:active, .ds-botao--perigo[data-estado="pressionado"] { background: var(--ds-erro-texto); }
+
+.ds-botao--grande { height: var(--ds-a-acao-grande); padding: 0 var(--ds-e-6); font-size: 15px; }
+.ds-botao--grande::before { inset: 0; }
+
+.ds-botao:disabled, .ds-botao[aria-disabled="true"] {
+  background: transparent; box-shadow: inset 0 0 0 1px var(--ds-divisoria-suave); color: var(--ds-texto-3); cursor: not-allowed;
+}
+.ds-botao:disabled .ds-ic, .ds-botao[aria-disabled="true"] .ds-ic { color: var(--ds-texto-3); }
+
+.ds-botao[aria-busy="true"] { color: transparent !important; pointer-events: none; }
+.ds-botao[aria-busy="true"] .ds-ic { visibility: hidden; }
+.ds-botao[aria-busy="true"]::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%;
+  border: 1.75px solid var(--ds-texto); border-right-color: transparent; animation: ds-gira .8s linear infinite;
+}
+.ds-botao--principal[aria-busy="true"]::after { border-color: var(--ds-acao-texto); border-right-color: transparent; }
+.ds-botao--perigo[aria-busy="true"]::after { border-color: var(--ds-superficie); border-right-color: transparent; }
+.ds-botao--texto-perigo[aria-busy="true"]::after { border-color: var(--ds-erro-texto); border-right-color: transparent; }
+
+/* ── Campo ─────────────────────────────────────────────── */
+.ds-campo { display: grid; gap: var(--ds-e-rotulo); align-content: start; min-width: 0; }
+.ds-campo > label, .ds-rotulo { font: 500 13px/18px var(--font-sans); color: var(--ds-texto); }
+.ds-entrada, .ds-selecao select {
+  width: 100%; height: var(--ds-a-alvo); padding: 0 var(--ds-e-3); border: 1px solid var(--ds-borda); border-radius: var(--ds-raio-campo);
+  background: var(--ds-superficie); color: var(--ds-texto); font: 400 13px/1 var(--font-sans); transition: border-color var(--ds-t-rapido);
+}
+.ds-entrada::placeholder { color: var(--ds-texto-3); }
+.ds-entrada:hover, .ds-entrada[data-estado="hover"], .ds-selecao select:hover, .ds-selecao select[data-estado="hover"] { border-color: var(--ds-texto-3); }
+.ds-entrada:focus-visible, .ds-entrada[data-estado="foco"], .ds-selecao select:focus-visible, .ds-selecao select[data-estado="foco"] { outline: none; border-color: var(--ds-tinta); }
+.ds-entrada:disabled, .ds-selecao select:disabled { background: transparent; border-color: var(--ds-divisoria-suave); color: var(--ds-texto-3); cursor: not-allowed; }
+.ds-campo--erro .ds-entrada, .ds-campo--erro .ds-selecao select, .ds-campo--erro .ds-prefixo { border-color: var(--ds-erro); }
+.ds-ajuda { display: flex; align-items: flex-start; gap: var(--ds-e-rotulo); font: 400 13px/18px var(--font-sans); color: var(--ds-texto-2); }
+.ds-ajuda .ds-ic { width: 13px; height: 13px; margin-top: 2px; }
+.ds-campo--erro .ds-ajuda { color: var(--ds-erro-texto); }
+
+.ds-campo--grande .ds-entrada, .ds-campo--grande .ds-prefixo { height: var(--ds-a-campo-grande); font-size: 15px; }
+.ds-prefixo {
+  display: flex; align-items: center; height: var(--ds-a-alvo); padding: 0 var(--ds-e-3); border: 1px solid var(--ds-borda); border-radius: var(--ds-raio-campo);
+  background: var(--ds-superficie); font: 400 13px/1 var(--font-sans); transition: border-color var(--ds-t-rapido);
+}
+.ds-prefixo > span { color: var(--ds-texto-3); }
+.ds-prefixo .ds-entrada { height: 100%; padding: 0; border: 0; border-radius: 0; background: transparent; font-size: inherit; }
+.ds-prefixo:hover { border-color: var(--ds-texto-3); }
+.ds-prefixo:focus-within { border-color: var(--ds-tinta); }
+.ds-prefixo .ds-entrada:focus-visible { outline: none; }
+
+/* ── Select ────────────────────────────────────────────── */
+.ds-selecao { position: relative; }
+.ds-selecao select { appearance: none; -webkit-appearance: none; padding-right: 36px; cursor: pointer; }
+.ds-selecao > .ds-ic { position: absolute; right: var(--ds-e-3); top: 50%; translate: 0 -50%; color: var(--ds-icone); pointer-events: none; }
+
+/* ── Menu suspenso ─────────────────────────────────────── */
+.ds-menu {
+  display: grid; width: 240px; padding: var(--ds-e-1); border-radius: var(--ds-raio-menu); background: var(--ds-superficie);
+  box-shadow: 0 0 0 1px var(--ds-divisoria), var(--ds-sombra-flutuante);
+}
+.ds-opcao {
+  display: flex; align-items: center; gap: var(--ds-e-aviso); height: var(--ds-a-alvo); padding: 0 var(--ds-e-aviso); border-radius: var(--ds-raio-bloco);
+  color: var(--ds-texto); font: 400 13px/1 var(--font-sans); cursor: pointer; transition: background-color var(--ds-t-rapido);
+}
+.ds-opcao:hover, .ds-opcao[data-estado="hover"] { background: var(--ds-hover-leve); }
+.ds-opcao:active, .ds-opcao[data-estado="pressionado"] { background: var(--ds-hover); }
+.ds-opcao:focus-visible, .ds-opcao[data-estado="foco"] { outline: var(--ds-b-foco) solid var(--ds-foco); outline-offset: -2px; }
+.ds-opcao[aria-disabled="true"] { color: var(--ds-texto-3); cursor: not-allowed; background: transparent; }
+.ds-opcao .ds-ok { margin-left: auto; color: var(--ds-tinta); visibility: hidden; }
+.ds-opcao[aria-selected="true"] .ds-ok { visibility: visible; }
+.ds-menu-sep { height: 1px; margin: var(--ds-e-1) 6px; background: var(--ds-divisoria-suave); }
+
+/* ── Avatar ────────────────────────────────────────────── */
+.ds-avatar {
+  display: inline-grid; place-items: center; flex: none; width: var(--ds-a-etiqueta); height: var(--ds-a-etiqueta); border-radius: var(--ds-raio-pilula);
+  background: var(--ds-hover); color: var(--ds-texto); font: 500 11px/1 var(--font-sans);
+}
+.ds-avatar .ds-ic { width: 13px; height: 13px; }
+
+/* ── Etiqueta de status ────────────────────────────────── */
+.ds-etiqueta {
+  display: inline-flex; align-items: center; gap: var(--ds-e-rotulo); height: var(--ds-a-etiqueta); padding: 0 var(--ds-e-aviso) 0 var(--ds-e-2);
+  border-radius: var(--ds-raio-pilula); background: var(--ds-hover); color: var(--ds-texto); font: 500 13px/1 var(--font-sans); white-space: nowrap;
+}
+.ds-etiqueta .ds-ic { color: var(--ds-icone); }
+.ds-etiqueta[data-status="aguardando"] .ds-ic { color: var(--ds-aguardando); }
+.ds-etiqueta[data-status="confirmado"] .ds-ic { color: var(--ds-confirmado); }
+.ds-etiqueta[data-status="feito"] .ds-ic { color: var(--ds-feito); }
+.ds-etiqueta[data-status="cancelado"] .ds-ic { color: var(--ds-cancelado); }
+.ds-etiqueta[data-status="faltou"] .ds-ic { color: var(--ds-faltou); }
+.ds-etiqueta[data-status="erro"] .ds-ic { color: var(--ds-erro); }
+
+/* ── Segmento ──────────────────────────────────────────── */
+.ds-segmento { display: inline-flex; gap: 2px; padding: 3px; border-radius: var(--ds-raio-pilula); background: var(--ds-hover); }
+.ds-segmento button {
+  position: relative; height: 26px; padding: 0 var(--ds-e-3); border: 0; border-radius: var(--ds-raio-pilula); background: transparent;
+  color: var(--ds-texto-2); font: 500 13px/1 var(--font-sans); cursor: pointer; transition: background-color var(--ds-t-rapido), color var(--ds-t-rapido);
+}
+.ds-segmento button::before { content: ""; position: absolute; inset: -5px 0; } /* clique de 36 px */
+.ds-segmento button:hover, .ds-segmento button[data-estado="hover"] { color: var(--ds-texto); }
+.ds-segmento button:active, .ds-segmento button[data-estado="pressionado"] { color: var(--ds-texto); background: var(--ds-hover-leve); }
+.ds-segmento button:focus-visible, .ds-segmento button[data-estado="foco"] { outline: var(--ds-b-foco) solid var(--ds-foco); outline-offset: 2px; }
+.ds-segmento button[aria-pressed="true"] { background: var(--ds-superficie); color: var(--ds-texto); box-shadow: var(--ds-sombra); }
+.ds-segmento button:disabled { color: var(--ds-texto-3); cursor: not-allowed; background: transparent; }
+
+/* ── Abas ──────────────────────────────────────────────── */
+.ds-abas { display: inline-flex; gap: var(--ds-e-1); }
+.ds-aba {
+  position: relative; display: inline-flex; align-items: center; gap: var(--ds-e-rotulo); height: var(--ds-a-controle); padding: 0 var(--ds-e-3);
+  border: 0; border-radius: var(--ds-raio-pilula); background: transparent; color: var(--ds-texto-2); font: 500 13px/1 var(--font-sans); cursor: pointer;
+  transition: background-color var(--ds-t-rapido), color var(--ds-t-rapido);
+}
+.ds-aba::before { content: ""; position: absolute; inset: -2px; }
+.ds-aba:hover, .ds-aba[data-estado="hover"] { background: var(--ds-hover-leve); color: var(--ds-texto); }
+.ds-aba:active, .ds-aba[data-estado="pressionado"] { background: var(--ds-hover); color: var(--ds-texto); }
+.ds-aba:focus-visible, .ds-aba[data-estado="foco"] { outline: var(--ds-b-foco) solid var(--ds-foco); outline-offset: 2px; }
+.ds-aba[aria-pressed="true"], .ds-aba[aria-selected="true"] { background: var(--ds-menu-ativo); color: var(--ds-tinta); }
+.ds-aba[aria-pressed="true"] .ds-avatar, .ds-aba[aria-selected="true"] .ds-avatar { background: var(--ds-superficie); color: var(--ds-tinta); }
+.ds-aba:disabled { background: transparent; color: var(--ds-texto-3); cursor: not-allowed; }
+.ds-aba:disabled .ds-avatar { color: var(--ds-texto-3); }
+
+/* ── Lista ─────────────────────────────────────────────── */
+.ds-lista { display: grid; width: 100%; }
+.ds-linha {
+  display: grid; grid-template-columns: 24px minmax(0, 1fr) auto auto 14px; gap: var(--ds-e-3); align-items: center; height: var(--ds-a-linha); padding: 0 var(--ds-e-3);
+  border-bottom: 1px solid var(--ds-divisoria-suave); color: var(--ds-texto); cursor: pointer; transition: background-color var(--ds-t-rapido);
+}
+.ds-linha:hover, .ds-linha[data-estado="hover"] { background: var(--ds-hover-leve); border-radius: var(--ds-raio-campo); border-bottom-color: transparent; }
+.ds-linha:active, .ds-linha[data-estado="pressionado"] { background: var(--ds-hover); border-radius: var(--ds-raio-campo); border-bottom-color: transparent; }
+.ds-linha:focus-visible, .ds-linha[data-estado="foco"] { outline: var(--ds-b-foco) solid var(--ds-foco); outline-offset: -2px; border-radius: var(--ds-raio-campo); }
+.ds-linha[aria-current="true"] { background: var(--ds-acao-suave); border-radius: var(--ds-raio-campo); border-bottom-color: transparent; }
+.ds-linha[aria-current="true"] .ds-linha-nome { color: var(--ds-tinta); }
+.ds-linha[aria-disabled="true"] { color: var(--ds-texto-3); cursor: default; background: transparent; }
+.ds-linha-nome { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ds-linha-meta { color: var(--ds-texto-2); white-space: nowrap; }
+.ds-linha > .ds-ic { color: var(--ds-texto-3); }
+
+/* ── Horário ───────────────────────────────────────────── */
+.ds-horario {
+  display: inline-flex; align-items: center; justify-content: center; height: var(--ds-a-alvo); min-width: 72px; padding: 0 var(--ds-e-3);
+  border: 1px solid var(--ds-contorno-forte); border-radius: var(--ds-raio-campo); background: var(--ds-superficie); color: var(--ds-texto);
+  font: 500 13px/1 var(--font-sans); font-variant-numeric: tabular-nums; cursor: pointer; transition: border-color var(--ds-t-rapido), background-color var(--ds-t-rapido);
+}
+.ds-horario:hover, .ds-horario[data-estado="hover"] { border-color: var(--ds-contorno-hover); background: var(--ds-hover-leve); }
+.ds-horario:active, .ds-horario[data-estado="pressionado"] { border-color: var(--ds-contorno-hover); background: var(--ds-hover); }
+.ds-horario:focus-visible, .ds-horario[data-estado="foco"] { outline: var(--ds-b-foco) solid var(--ds-foco); outline-offset: 2px; }
+.ds-horario[aria-pressed="true"] { background: var(--ds-acao); border-color: var(--ds-acao); color: var(--ds-acao-texto); }
+.ds-horario:disabled { border-color: transparent; background: var(--ds-faixa); color: var(--ds-texto-3); text-decoration: line-through; cursor: not-allowed; }
+.ds-prefixo[data-estado="hover"] { border-color: var(--ds-texto-3); }
+.ds-prefixo[data-estado="foco"] { border-color: var(--ds-tinta); }
+.ds-prefixo:has(.ds-entrada:disabled) { background: transparent; border-color: var(--ds-divisoria-suave); }
+.ds-prefixo:has(.ds-entrada:disabled) > span { color: var(--ds-texto-3); }
+.ds-botao--fantasma:disabled, .ds-botao--fantasma[aria-disabled="true"],
+.ds-botao--texto-perigo:disabled, .ds-botao--texto-perigo[aria-disabled="true"] { box-shadow: none; }
+.ds-botao, .ds-entrada, .ds-prefixo, .ds-selecao select, .ds-menu, .ds-opcao, .ds-etiqueta, .ds-segmento, .ds-segmento button,
+.ds-aba, .ds-lista, .ds-linha, .ds-horario, .ds-avatar { box-sizing: border-box; }
+.ds-opcao { min-width: 0; }
+.ds-opcao > span:not(.ds-avatar) { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-linha { grid-template-columns: 24px minmax(0, 1fr) 80px 56px 14px; }
+.ds-linha-meta { text-align: right; overflow: hidden; text-overflow: ellipsis; }
+</style>
+<style>
+  
+  .capa { position: relative; width: 960px; height: 300px; overflow: hidden; background: var(--ds-superficie); font-family: var(--font-sans); }
+  .capa svg { position: absolute; left: 0; top: 0; }
+  .t { rx: var(--ds-raio-bloco); }
+  .rosa { fill: var(--ds-acao); }
+  .tinta { fill: var(--ds-tinta); }
+  .tinta-escura { fill: var(--ds-texto); }
+  .lilas { fill: var(--ds-degrade-3); }
+  .pessego { fill: var(--ds-acento); }
+  .alivio { fill: var(--ds-hover); }
+  .texto { position: absolute; left: 40px; bottom: 40px; max-width: 440px; }
+  .nome { margin: 0; color: var(--ds-texto); font-size: 72px; line-height: .95; font-weight: 500; letter-spacing: -0.035em; }
+  .linha { margin: 16px 0 0; color: var(--ds-texto-2); font-size: 14px; line-height: 20px; }
+</style>
+<style>
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--ds-fundo);color:var(--ds-texto);font:400 14px/22px var(--font-sans);-webkit-font-smoothing:antialiased}
+code{font:500 12.5px/1.4 var(--font-mono);color:var(--ds-texto)}
+a{color:var(--ds-tinta)}
+.topo{position:sticky;top:0;z-index:20;height:56px;display:flex;align-items:center;gap:12px;padding:0 24px;background:var(--ds-fundo);border-bottom:1px solid var(--ds-divisoria)}
+.topo .simbolo{width:20px;height:22px}
+.topo b{font-weight:500;font-size:14px;margin-right:auto}
+.simbolo path{fill:#86315c}[data-theme="dark"] .simbolo path{fill:#ee9dbf}
+.casca{display:grid;grid-template-columns:232px minmax(0,1fr);max-width:1440px;margin:0 auto}
+nav.lado{position:sticky;top:56px;align-self:start;height:calc(100vh - 56px);overflow:auto;padding:20px 12px 40px 16px;display:grid;align-content:start;gap:2px}
+nav.lado a{display:block;padding:6px 10px;border-radius:var(--ds-raio-campo);color:var(--ds-texto-2);text-decoration:none;font-size:13px;line-height:20px}
+nav.lado a:hover{background:var(--ds-casca-hover);color:var(--ds-texto)}
+nav.lado a.ativo{background:var(--ds-menu-ativo);color:var(--ds-tinta)}
+nav.lado a.sub{padding-left:22px}
+main{min-width:0;grid-template-columns:minmax(0,1fr);padding:24px 32px 96px 16px;display:grid;gap:24px}
+.painel{background:var(--ds-superficie);border:1px solid var(--ds-divisoria);border-radius:var(--ds-raio-painel);overflow:hidden}
+.capa-wrap{background:var(--ds-superficie);border:1px solid var(--ds-divisoria);border-radius:var(--ds-raio-painel);overflow:hidden}
+.capa-wrap{position:relative;height:calc(300px * var(--e,1))}
+.capa-wrap .capa{position:absolute;left:50%;top:0;margin-left:calc(-480px * var(--e,1));transform:scale(var(--e,1));transform-origin:0 0}
+.sec{grid-template-columns:minmax(0,1fr);background:var(--ds-superficie);border:1px solid var(--ds-divisoria);border-radius:var(--ds-raio-painel);padding:32px;display:grid;gap:24px;min-width:0}
+.sec h2{margin:0;font-size:22px;line-height:28px;font-weight:500;letter-spacing:-.015em}
+.sec h3{margin:8px 0 0;font-size:15px;line-height:22px;font-weight:500}
+.md{max-width:900px;min-width:0;overflow-wrap:anywhere;color:var(--ds-texto)}
+.md p,.md li{color:var(--ds-texto-2)}.md strong{color:var(--ds-texto);font-weight:500}
+.md h3{margin:20px 0 6px}
+.md table{display:block;overflow-x:auto;max-width:100%;border-collapse:collapse;width:100%;font-size:13px;line-height:20px;margin:8px 0}
+.md th{text-align:left;font-weight:500;color:var(--ds-texto-2);padding:0 12px 8px 0;border-bottom:1px solid var(--ds-divisoria)}
+.md td{padding:10px 12px 10px 0;border-bottom:1px solid var(--ds-divisoria-suave);vertical-align:top;color:var(--ds-texto-2)}
+.md td:first-child{color:var(--ds-texto)}
+.md blockquote{margin:0;padding:12px 16px;border-radius:var(--ds-raio-campo);background:var(--ds-faixa);box-shadow:inset 0 0 0 1px var(--ds-divisoria)}
+.md blockquote p{margin:0}
+.sw-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px 20px}
+.sw{display:grid;grid-template-columns:40px minmax(0,1fr);gap:12px;align-items:start}
+.sw-am{width:40px;height:40px;border-radius:var(--ds-raio-campo);box-shadow:inset 0 0 0 1px var(--ds-divisoria)}
+.sw p{margin:0}.sw-val{font:400 12px/18px var(--font-mono);color:var(--ds-texto-2)}
+.sw-uso{font-size:12.5px;line-height:18px;color:var(--ds-texto-2)}
+[data-mostra]{display:none}[data-theme="light"] [data-mostra="light"],[data-theme="dark"] [data-mostra="dark"]{display:inline}
+.ty{display:grid;border-top:1px solid var(--ds-divisoria)}
+.ty>div{display:grid;grid-template-columns:220px minmax(0,1fr) 260px;gap:20px;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--ds-divisoria-suave)}
+.ty-rot{margin:0;font-size:12.5px;color:var(--ds-texto-2);display:grid}.ty-uso{margin:0;font-size:12.5px;line-height:18px;color:var(--ds-texto-2)}
+.esp{display:grid;border-top:1px solid var(--ds-divisoria)}
+.esp>div{display:grid;grid-template-columns:150px 60px 80px minmax(0,1fr);gap:16px;align-items:center;padding:10px 0;border-bottom:1px solid var(--ds-divisoria-suave)}
+.esp b{font-weight:500}.esp p{margin:0;color:var(--ds-texto-2);font-size:13px}
+.esp-barra{height:12px;border-radius:3px;background:var(--ds-acao)}
+.alt-barra{width:40px;border-radius:6px;background:var(--ds-hover);box-shadow:inset 0 0 0 1px var(--ds-divisoria)}
+.cartas{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:24px}
+.cartas>div{display:grid;gap:8px;align-content:start}.cartas b{font-weight:500}.cartas p{margin:0;font-size:12.5px;line-height:18px;color:var(--ds-texto-2)}
+.forma{height:56px;background:var(--ds-hover)}.forma.sombra{background:var(--ds-superficie);border-radius:var(--ds-raio-menu);box-shadow:inherit}
+.icg{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.icg>div{display:grid;justify-items:center;gap:6px;padding:14px 8px;border-radius:var(--ds-raio-campo);background:var(--ds-faixa)}
+.icg .ds-ic{width:20px;height:20px;color:var(--ds-icone)}.icg code{font-size:11.5px;color:var(--ds-texto-2)}
+.logo-demo{display:flex;gap:20px;align-items:center}.logo-demo .simbolo{width:48px;height:56px}.logo-demo p{margin:0;color:var(--ds-texto-2)}
+.comp{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding-top:28px;border-top:1px solid var(--ds-divisoria)}
+.comp-t{font-size:18px!important;line-height:26px!important;margin:0!important}
+.comp-demo{padding:24px;border-radius:var(--ds-raio-campo);background:var(--ds-superficie);box-shadow:inset 0 0 0 1px var(--ds-divisoria);display:grid;gap:12px}
+.comp-demo .rot{margin:0;font:500 13px/18px var(--font-sans);color:var(--ds-texto-2)}
+.comp-guia summary{cursor:pointer;color:var(--ds-tinta);font-weight:500;font-size:13px;padding:4px 0}
+.comp-matriz{overflow-x:auto}
+.pv-bloco{display:grid;gap:12px}.pv-bloco h4{margin:0;font:500 13px/18px var(--font-sans);color:var(--ds-texto-2)}
+.pv-fila{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.pv-grade{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}
+.pv-m{border-collapse:collapse;width:100%;min-width:900px}
+.pv-m th{text-align:left;font:500 13px/18px var(--font-sans);color:var(--ds-texto-2);padding:0 12px 10px 0;border-bottom:1px solid var(--ds-divisoria);white-space:nowrap}
+.pv-m td{padding:12px 12px 12px 0;border-bottom:1px solid var(--ds-divisoria-suave);vertical-align:top}
+.pv-m td:first-child{font:500 13px/18px var(--font-sans);white-space:nowrap}
+.pv-na{font:400 13px/18px var(--font-sans);color:var(--ds-texto-3)}
+.saida{margin:0;font-size:13px;color:var(--ds-texto)}.dica{margin:0;font-size:13px;line-height:20px;color:var(--ds-texto-2);max-width:72ch}
+.saida:empty{display:none}
+.confirma{display:grid;gap:12px;max-width:440px;padding:20px;border-radius:var(--ds-raio-painel);background:var(--ds-superficie);box-shadow:0 0 0 1px var(--ds-divisoria),var(--ds-sombra-flutuante)}
+.confirma[hidden]{display:none}.confirma p{margin:0;color:var(--ds-texto-2)}.confirma b{color:var(--ds-texto);font-weight:500;display:block}
+.menu-ex{position:relative;display:inline-grid;justify-items:start}
+.menu-ex .ds-menu{position:absolute;top:calc(100% + 6px);left:0;z-index:5}
+.menu-ex .ds-menu[hidden]{display:none}
+.comp-demo:has(.menu-ex){min-height:300px;align-content:start}
+.ds-opcao.ativa{background:var(--ds-hover-leve)}
+.comp-demo .ds-abas{max-width:100%;overflow-x:auto;padding:4px;margin:-4px}
+.ds-menu:focus{outline:none}
+.ds-menu:focus-visible .ds-opcao.ativa{outline:var(--ds-b-foco) solid var(--ds-foco);outline-offset:-2px}
+.md>:first-child{margin-top:0}.md>:last-child{margin-bottom:0}
+@media (max-width:900px){.esp>div{grid-template-columns:minmax(0,1fr) auto}.esp>div>span,.esp>div>p{grid-column:1/-1}.topo b{font-size:13px}.casca{grid-template-columns:minmax(0,1fr)}nav.lado{display:none}main{padding:16px}.pv-grade{grid-template-columns:minmax(0,1fr)}.ty>div{grid-template-columns:minmax(0,1fr)}.sec{padding:20px}}
+</style>
+</head>
+<body>
+<header class="topo"><svg class="simbolo" viewBox="4 0 56 64" role="img" aria-label="Dayspot"><path d="M15 6A6 6 0 0 1 21 12V52A6 6 0 0 1 9 52V12A6 6 0 0 1 15 6Z"/><path d="M15 58H30A26 26 0 0 0 54.727 23.966A5.976 5.976 0 0 0 43.361 27.659A15 15 0 0 1 29 47H15Z"/><path d="M27.25 12.75A7.25 7.25 0 1 0 41.75 12.75A7.25 7.25 0 1 0 27.25 12.75Z"/></svg><b>Dayspot v3 · Design system</b>
+<div class="ds-segmento" role="group" aria-label="Tema"><button type="button" data-tema="light" aria-pressed="false">Claro</button><button type="button" data-tema="dark" aria-pressed="false">Escuro</button><button type="button" data-tema="sistema" aria-pressed="true">Sistema</button></div>
+</header>
+<div class="casca">
+<nav class="lado" aria-label="Seções"><a href="#inicio">Início</a><a href="#para-quem">Para quem</a><a href="#cinco-regras">Cinco regras</a><a href="#cor">Cor</a><a href="#tipo">Tipo</a><a href="#espaco-forma-e-altura">Espaço, forma e altura</a><a href="#elevacao">Elevação</a><a href="#movimento">Movimento</a><a href="#icones">Ícones</a><a href="#logo">Logo</a><a href="#como-escrevemos">Como escrevemos</a><a href="#regras-de-interacao">Regras de interação</a><a href="#onde-a-v3-foge-do-padrao-do-craft">Onde a v3 foge do padrão do Craft</a><a href="#componentes">Componentes</a><a class="sub" href="#c-botao">Botão</a><a class="sub" href="#c-campo">Campo</a><a class="sub" href="#c-selecao">Select</a><a class="sub" href="#c-menususpenso">Menu suspenso</a><a class="sub" href="#c-etiqueta">Etiqueta de status</a><a class="sub" href="#c-segmento">Segmento</a><a class="sub" href="#c-abas">Abas</a><a class="sub" href="#c-lista">Lista</a><a class="sub" href="#c-horario">Horário</a><a href="#proximos-passos">Próximos passos</a></nav>
+<main>
+<section id="inicio" class="capa-wrap"><div class="capa">
+  <!--
+    blocos: ds-acao em três blocos grandes (o rosa é a marca), ds-tinta em dois, ds-texto em um, ds-degrade-3 (lilás) e ds-acento (pêssego) em um cada, ds-hover como alívio; alturas em múltiplos de ds-e-8/ds-e-4, largura 88 com folga ds-e-2.
+    arranjo: cinco colunas como dias da semana, blocos empilhados como horários marcados, sangrando no topo e embaixo.
+    padrão: blocos modulares cortados pelo raio (UI densa e modular); escolhido porque o Dayspot é uma grade de horários.
+    passos e raios: ds-e-2 (8) entre blocos, ds-raio-bloco (8) em todos.
+  -->
+  <svg width="960" height="300" viewBox="0 0 960 300" aria-hidden="true">
+    <!-- coluna 1 -->
+    <rect class="t rosa"    x="488" y="-8"  width="88" height="112"/>
+    <rect class="t alivio"  x="488" y="112" width="88" height="56"/>
+    <rect class="t lilas"   x="488" y="176" width="88" height="140"/>
+    <!-- coluna 2 -->
+    <rect class="t alivio"  x="584" y="-16" width="88" height="56"/>
+    <rect class="t tinta"   x="584" y="48"  width="88" height="136"/>
+    <rect class="t alivio"  x="584" y="192" width="88" height="56"/>
+    <!-- coluna 3 -->
+    <rect class="t rosa"    x="680" y="8"   width="88" height="168"/>
+    <rect class="t tinta-escura" x="680" y="184" width="88" height="132"/>
+    <!-- coluna 4 -->
+    <rect class="t pessego" x="776" y="40"  width="88" height="56"/>
+    <rect class="t alivio"  x="776" y="104" width="88" height="64"/>
+    <rect class="t rosa"    x="776" y="176" width="88" height="140"/>
+    <!-- coluna 5 -->
+    <rect class="t alivio"  x="872" y="-8"  width="88" height="136"/>
+    <rect class="t tinta"   x="872" y="136" width="88" height="72"/>
+    <rect class="t alivio"  x="872" y="216" width="88" height="100"/>
+  </svg>
+  <div class="texto">
+    <p class="nome">Dayspot v3</p>
+    <p class="linha">Cinza na estrutura, rosa na interação.</p>
+  </div>
+</div></section>
+<section class="sec"><div class="md"><p>Design system do Dayspot, a agenda online de salões, barbearias, clínicas e estúdios de bairro. Esta versão parte da proposta "Dayspot v3" (revisão 11, 19/11/2026): a mesma marca, com cara de ferramenta. A estrutura é cinza e neutra, dividida por fios, e a marca aparece no rosa claro #EAA2C1, só no que é interação.</p>
+<blockquote>
+<p><strong>Situação:</strong> fundações aprovadas e primeira leva de componentes (20/11/2026). Telas não fazem parte do sistema.</p>
+</blockquote></div></section>
+<section class="sec" id="para-quem"><h2>Para quem</h2><div class="md"><p>Donos e prestadores de salão de bairro, pouco técnicos, usando entre um atendimento e outro, às vezes sob luz forte e com a mão molhada. Clientes finais de todas as idades, que chegam pelo link do WhatsApp sem ter conta.</p>
+<p>Clima: calma, precisa, acolhedora, como uma grade de horários bem cuidada. Nunca um dashboard SaaS genérico, um app "fofo", um salão cor-de-rosa ou uma tela com degradê e brilho.</p></div></section><section class="sec" id="cinco-regras"><h2>Cinco regras</h2><div class="md"><ol>
+<li><strong>Branco primeiro.</strong> O conteúdo fica num painel <code>ds-superficie</code> com canto <code>ds-raio-painel</code> sobre a casca <code>ds-fundo</code>, onde ficam o topo e o menu. Dentro do painel, as áreas se separam por um fio <code>ds-divisoria</code> de 1 px. Nada de cartão dentro de cartão.</li>
+<li><strong>Espaço no lugar de caixa.</strong> 32 px (<code>ds-e-8</code>) dentro do painel, 24 (<code>ds-e-6</code>) entre grupos, 48 (<code>ds-e-12</code>) entre seções. Linha de lista de 40 px e controle de 32. O texto continua compacto.</li>
+<li><strong>Cinza na estrutura, rosa na interação.</strong> Texto, fios e fundos em cinza neutro de contraste alto. <code>ds-acao</code> preenche a ação principal, o hoje e o horário escolhido, sempre com <code>ds-acao-texto</code> em cima. Texto, ícone e linha da marca usam <code>ds-tinta</code>, e só no que está ativo ou escolhido. O pêssego <code>ds-acento</code> fica nas peças de marca.</li>
+<li><strong>Uma família, dois pesos.</strong> Geist 400 e 500 em toda a interface, com corpo de 13 px no painel. A hierarquia vem do tamanho e da cor de apoio. Número sempre tabular.</li>
+<li><strong>Ícone de traço fino.</strong> Lucide, traço 1,75 (1,5 no menu), 14 px nos controles e 20 no menu. Status sempre com ícone e palavra.</li>
+</ol></div></section><section class="sec" id="cor"><h2>Cor</h2><div class="vis"><h3>Neutros</h3><div class="sw-grade"><div class="sw"><span class="sw-am" style="background:var(--ds-fundo)"></span><div><code>ds-fundo</code><p class="sw-val"><span data-mostra="light">#f7f7f8</span><span data-mostra="dark">#141414</span></p><p class="sw-uso">Casca: atrás do painel, onde ficam o topo e o menu. Nunca atrás de texto longo.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-superficie)"></span><div><code>ds-superficie</code><p class="sw-val"><span data-mostra="light">#ffffff</span><span data-mostra="dark">#1c1c1c</span></p><p class="sw-uso">Painel, cartão, campo, menu suspenso. O chão padrão do conteúdo.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-hover)"></span><div><code>ds-hover</code><p class="sw-val"><span data-mostra="light">#f4f4f5</span><span data-mostra="dark">#282627</span></p><p class="sw-uso">Preenchimento cinza: chip de status, trilho do segmento, botão secundário pressionado.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-hover-leve)"></span><div><code>ds-hover-leve</code><p class="sw-val"><span data-mostra="light">#f6f6f7</span><span data-mostra="dark">#232122</span></p><p class="sw-uso">Hover de peças sem contorno e do botão secundário (mais leve que ds-hover).</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-faixa)"></span><div><code>ds-faixa</code><p class="sw-val"><span data-mostra="light">#fafafa</span><span data-mostra="dark">#1a1a1a</span></p><p class="sw-uso">Fundo de aviso, horário já feito e horário ocupado. ds-texto-3 em cima: 4,6:1 e 5,4:1.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-casca-hover)"></span><div><code>ds-casca-hover</code><p class="sw-val"><span data-mostra="light">#efeff1</span><span data-mostra="dark">#222021</span></p><p class="sw-uso">Hover de peças que ficam na casca (empresa no topo, botões do topo).</p></div></div></div><h3>Linhas</h3><div class="sw-grade"><div class="sw"><span class="sw-am" style="background:var(--ds-divisoria-suave)"></span><div><code>ds-divisoria-suave</code><p class="sw-val"><span data-mostra="light">#f0f0f1</span><span data-mostra="dark">#2a2829</span></p><p class="sw-uso">Fio entre linhas de lista e entre grupos de menu; contorno do botão desabilitado.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-divisoria)"></span><div><code>ds-divisoria</code><p class="sw-val"><span data-mostra="light">#e8e8eb</span><span data-mostra="dark">#383536</span></p><p class="sw-uso">O fio de 1 px que separa áreas (barra, painel, detalhe) e contorna o botão secundário. Só decorativo.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-contorno)"></span><div><code>ds-contorno</code><p class="sw-val"><span data-mostra="light">#e4e4e7</span><span data-mostra="dark">#3d3a3b</span></p><p class="sw-uso">Contorno de bloco da agenda e trilho da barra de etapas.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-contorno-forte)"></span><div><code>ds-contorno-forte</code><p class="sw-val"><span data-mostra="light">#e4e4e7</span><span data-mostra="dark">#4a4647</span></p><p class="sw-uso">Contorno do horário livre (no escuro, um passo mais forte que ds-contorno para ler como clicável).</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-contorno-hover)"></span><div><code>ds-contorno-hover</code><p class="sw-val"><span data-mostra="light">#d4d4d8</span><span data-mostra="dark">#6e696b</span></p><p class="sw-uso">Contorno no hover de bloco e horário.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-tracejado)"></span><div><code>ds-tracejado</code><p class="sw-val"><span data-mostra="light">#b4b4bb</span><span data-mostra="dark">#5c5759</span></p><p class="sw-uso">Contorno tracejado: horário cancelado e espaço vazio da grade.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-borda)"></span><div><code>ds-borda</code><p class="sw-val"><span data-mostra="light">#8a8a93</span><span data-mostra="dark">#858083</span></p><p class="sw-uso">Borda de campo e select em repouso: 3,4:1 e 4,4:1, passa os 3:1 de controle.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-grade-hora)"></span><div><code>ds-grade-hora</code><p class="sw-val"><span data-mostra="light">#f0f0f2</span><span data-mostra="dark">#2b2929</span></p><p class="sw-uso">Linha de cada hora na grade da agenda.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-grade-meia)"></span><div><code>ds-grade-meia</code><p class="sw-val"><span data-mostra="light">#f5f5f6</span><span data-mostra="dark">#232222</span></p><p class="sw-uso">Linha da meia hora e listra do intervalo na grade.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-rolagem)"></span><div><code>ds-rolagem</code><p class="sw-val"><span data-mostra="light">#d4d4d8</span><span data-mostra="dark">#3d3a3b</span></p><p class="sw-uso">Polegar da barra de rolagem fina.</p></div></div></div><h3>Texto</h3><div class="sw-grade"><div class="sw"><span class="sw-am" style="background:var(--ds-texto)"></span><div><code>ds-texto</code><p class="sw-val"><span data-mostra="light">#18181b</span><span data-mostra="dark">#f3f1f2</span></p><p class="sw-uso">Texto principal: 17,7:1 e 15,2:1 na superfície.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-texto-2)"></span><div><code>ds-texto-2</code><p class="sw-val"><span data-mostra="light">#52525b</span><span data-mostra="dark">#bdb8ba</span></p><p class="sw-uso">Apoio, legenda, rótulo secundário: 7,7:1 e 8,7:1.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-texto-3)"></span><div><code>ds-texto-3</code><p class="sw-val"><span data-mostra="light">#71717a</span><span data-mostra="dark">#938d90</span></p><p class="sw-uso">Placeholder, hora da grade, desabilitado: 4,8:1 e 5,2:1. Nunca texto que precisa ser lido para agir.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-icone)"></span><div><code>ds-icone</code><p class="sw-val"><span data-mostra="light">#3f3f46</span><span data-mostra="dark">#c4bfc1</span></p><p class="sw-uso">Ícone parado em botão, etiqueta e menu: 10,4:1 e 9,4:1.</p></div></div></div><h3>Marca</h3><div class="sw-grade"><div class="sw"><span class="sw-am" style="background:var(--ds-acao)"></span><div><code>ds-acao</code><p class="sw-val"><span data-mostra="light">#eaa2c1</span><span data-mostra="dark">#eaa2c1</span></p><p class="sw-uso">Rosa da marca, só como preenchimento: botão principal, hoje, horário escolhido, hora de agora. Sempre com ds-acao-texto em cima. Nunca texto ou linha sobre branco (2:1).</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-acao-pressionada)"></span><div><code>ds-acao-pressionada</code><p class="sw-val"><span data-mostra="light">#e391b4</span><span data-mostra="dark">#f2bbd2</span></p><p class="sw-uso">Hover e toque do botão principal; ds-acao-texto em cima: 7,6:1 e 11,2:1.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-acao-texto)"></span><div><code>ds-acao-texto</code><p class="sw-val"><span data-mostra="light">#18181b</span><span data-mostra="dark">#141414</span></p><p class="sw-uso">Texto e ícone sobre o rosa: 8,8:1 e 9,2:1.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-tinta)"></span><div><code>ds-tinta</code><p class="sw-val"><span data-mostra="light">#a83b70</span><span data-mostra="dark">#eaa2c1</span></p><p class="sw-uso">Rosa legível: texto, ícone, linha e foco da marca, só no que está ativo ou escolhido. 6,0:1 e 8,5:1.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-foco)"></span><div><code>ds-foco</code><p class="sw-val"><span data-mostra="light">{ds-tinta}</span><span data-mostra="dark">{ds-tinta}</span></p><p class="sw-uso">Anel de foco do teclado: 2 px, afastado 2 px. Mesmo valor que a tinta.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-acao-suave)"></span><div><code>ds-acao-suave</code><p class="sw-val"><span data-mostra="light">#fdf2f7</span><span data-mostra="dark">#2b2428</span></p><p class="sw-uso">Fundo de linha, opção e bloco selecionados; tinta em cima 5,5:1 e 7,5:1.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-menu-hover)"></span><div><code>ds-menu-hover</code><p class="sw-val"><span data-mostra="light">#fdf5f9</span><span data-mostra="dark">#241f22</span></p><p class="sw-uso">Hover do item do menu e de ações em tinta (atalho do WhatsApp).</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-menu-ativo)"></span><div><code>ds-menu-ativo</code><p class="sw-val"><span data-mostra="light">#fcedf3</span><span data-mostra="dark">#33282e</span></p><p class="sw-uso">Item ativo do menu e aba escolhida; tinta em cima 5,3:1 e 7,0:1.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-hoje)"></span><div><code>ds-hoje</code><p class="sw-val"><span data-mostra="light">#fef9fb</span><span data-mostra="dark">#1f1a1d</span></p><p class="sw-uso">Fundo da coluna de hoje na agenda.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-acento)"></span><div><code>ds-acento</code><p class="sw-val"><span data-mostra="light">#f4a08a</span><span data-mostra="dark">#f4b49a</span></p><p class="sw-uso">Pêssego: só em peças de marca e ilustração, como preenchimento. Nunca em tela de trabalho.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-marca)"></span><div><code>ds-marca</code><p class="sw-val"><span data-mostra="light">#86315c</span><span data-mostra="dark">#86315c</span></p><p class="sw-uso">Ameixa da logo. Só dentro dos SVGs oficiais do símbolo D e do wordmark, enquanto a marca não for revista. Nunca em interface.</p></div></div></div><h3>Peças de marca</h3><div class="sw-grade"><div class="sw"><span class="sw-am" style="background:var(--ds-degrade-1)"></span><div><code>ds-degrade-1</code><p class="sw-val"><span data-mostra="light">#fbe1ed</span><span data-mostra="dark">#2c2220</span></p><p class="sw-uso">Primeira parada do degradê das peças de marca (Entrar, Cadastro, divulgação). Sem texto em cima.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-degrade-2)"></span><div><code>ds-degrade-2</code><p class="sw-val"><span data-mostra="light">#eaa2c1</span><span data-mostra="dark">#33232b</span></p><p class="sw-uso">Parada do meio do degradê.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-degrade-3)"></span><div><code>ds-degrade-3</code><p class="sw-val"><span data-mostra="light">#b994dc</span><span data-mostra="dark">#45283a</span></p><p class="sw-uso">Última parada do degradê (lilás no claro).</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-arco)"></span><div><code>ds-arco</code><p class="sw-val"><span data-mostra="light">rgba(255, 255, 255, 0.24)</span><span data-mostra="dark">rgba(255, 255, 255, 0.05)</span></p><p class="sw-uso">Arcos de 1 px sobre o degradê.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-simbolo-degrade)"></span><div><code>ds-simbolo-degrade</code><p class="sw-val"><span data-mostra="light">#ffffff</span><span data-mostra="dark">#eaa2c1</span></p><p class="sw-uso">Símbolo D desenhado sobre o degradê.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-veu)"></span><div><code>ds-veu</code><p class="sw-val"><span data-mostra="light">rgba(24, 24, 27, 0.48)</span><span data-mostra="dark">rgba(0, 0, 0, 0.6)</span></p><p class="sw-uso">Atrás de diálogo e gaveta.</p></div></div></div><h3>Status</h3><div class="sw-grade"><div class="sw"><span class="sw-am" style="background:var(--ds-aguardando)"></span><div><code>ds-aguardando</code><p class="sw-val"><span data-mostra="light">#a47817</span><span data-mostra="dark">#bf973a</span></p><p class="sw-uso">Aguardando resposta do cliente. Ícone: relógio. Cor do ícone do status (3,6:1 e 5,5:1 sobre ds-hover). Na etiqueta, só o ícone leva a cor.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-aguardando-texto)"></span><div><code>ds-aguardando-texto</code><p class="sw-val"><span data-mostra="light">#7a5200</span><span data-mostra="dark">#f2c14e</span></p><p class="sw-uso">Texto de aguardando quando a palavra precisa da cor: aviso, mensagem de campo, ação. Mais de 6:1 sobre ds-aguardando-chip.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-aguardando-chip)"></span><div><code>ds-aguardando-chip</code><p class="sw-val"><span data-mostra="light">#fdf6e1</span><span data-mostra="dark">#342c17</span></p><p class="sw-uso">Fundo tingido de aguardando: aviso e banner. A etiqueta de status usa ds-hover, não este.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-confirmado)"></span><div><code>ds-confirmado</code><p class="sw-val"><span data-mostra="light">#458f49</span><span data-mostra="dark">#6aac70</span></p><p class="sw-uso">Cliente confirmou. Ícone: círculo com check. Cor do ícone do status (3,6:1 e 5,5:1 sobre ds-hover). Na etiqueta, só o ícone leva a cor.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-confirmado-texto)"></span><div><code>ds-confirmado-texto</code><p class="sw-val"><span data-mostra="light">#22622a</span><span data-mostra="dark">#7fcf86</span></p><p class="sw-uso">Texto de confirmado quando a palavra precisa da cor: aviso, mensagem de campo, ação. Mais de 6:1 sobre ds-confirmado-chip.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-confirmado-chip)"></span><div><code>ds-confirmado-chip</code><p class="sw-val"><span data-mostra="light">#eef7ee</span><span data-mostra="dark">#1e3022</span></p><p class="sw-uso">Fundo tingido de confirmado: aviso e banner. A etiqueta de status usa ds-hover, não este.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-feito)"></span><div><code>ds-feito</code><p class="sw-val"><span data-mostra="light">#4086b6</span><span data-mostra="dark">#79a1c2</span></p><p class="sw-uso">Atendimento feito. Ícone: check duplo. Cor do ícone do status (3,6:1 e 5,5:1 sobre ds-hover). Na etiqueta, só o ícone leva a cor.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-feito-texto)"></span><div><code>ds-feito-texto</code><p class="sw-val"><span data-mostra="light">#1b527a</span><span data-mostra="dark">#8dbce3</span></p><p class="sw-uso">Texto de feito quando a palavra precisa da cor: aviso, mensagem de campo, ação. Mais de 6:1 sobre ds-feito-chip.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-feito-chip)"></span><div><code>ds-feito-chip</code><p class="sw-val"><span data-mostra="light">#edf3f9</span><span data-mostra="dark">#1b2935</span></p><p class="sw-uso">Fundo tingido de feito: aviso e banner. A etiqueta de status usa ds-hover, não este.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-cancelado)"></span><div><code>ds-cancelado</code><p class="sw-val"><span data-mostra="light">#867e77</span><span data-mostra="dark">#a09c98</span></p><p class="sw-uso">Horário cancelado. Ícone: círculo com X. Cor do ícone do status (3,6:1 e 5,5:1 sobre ds-hover). Na etiqueta, só o ícone leva a cor.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-cancelado-texto)"></span><div><code>ds-cancelado-texto</code><p class="sw-val"><span data-mostra="light">#5f5750</span><span data-mostra="dark">#b3ada8</span></p><p class="sw-uso">Texto de cancelado quando a palavra precisa da cor: aviso, mensagem de campo, ação. Mais de 6:1 sobre ds-cancelado-chip.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-cancelado-chip)"></span><div><code>ds-cancelado-chip</code><p class="sw-val"><span data-mostra="light">#f4f1ee</span><span data-mostra="dark">#2c2a29</span></p><p class="sw-uso">Fundo tingido de cancelado: aviso e banner. A etiqueta de status usa ds-hover, não este.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-faltou)"></span><div><code>ds-faltou</code><p class="sw-val"><span data-mostra="light">#8971cb</span><span data-mostra="dark">#a492da</span></p><p class="sw-uso">Cliente faltou. Ícone: pessoa com X. Cor do ícone do status (3,6:1 e 5,5:1 sobre ds-hover). Na etiqueta, só o ícone leva a cor.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-faltou-texto)"></span><div><code>ds-faltou-texto</code><p class="sw-val"><span data-mostra="light">#5a3bb8</span><span data-mostra="dark">#b9a5f5</span></p><p class="sw-uso">Texto de faltou quando a palavra precisa da cor: aviso, mensagem de campo, ação. Mais de 6:1 sobre ds-faltou-chip.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-faltou-chip)"></span><div><code>ds-faltou-chip</code><p class="sw-val"><span data-mostra="light">#f4f1fd</span><span data-mostra="dark">#29243d</span></p><p class="sw-uso">Fundo tingido de faltou: aviso e banner. A etiqueta de status usa ds-hover, não este.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-erro)"></span><div><code>ds-erro</code><p class="sw-val"><span data-mostra="light">#d5555d</span><span data-mostra="dark">#e1827e</span></p><p class="sw-uso">Erro e destrutivo. Ícone: círculo com exclamação. Cor do ícone do status (3,6:1 e 5,5:1 sobre ds-hover). Na etiqueta, só o ícone leva a cor.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-erro-texto)"></span><div><code>ds-erro-texto</code><p class="sw-val"><span data-mostra="light">#a8161f</span><span data-mostra="dark">#ff8a85</span></p><p class="sw-uso">Texto de erro quando a palavra precisa da cor: aviso, mensagem de campo, ação. Mais de 6:1 sobre ds-erro-chip.</p></div></div><div class="sw"><span class="sw-am" style="background:var(--ds-erro-chip)"></span><div><code>ds-erro-chip</code><p class="sw-val"><span data-mostra="light">#fdeeee</span><span data-mostra="dark">#3e2324</span></p><p class="sw-uso">Fundo tingido de erro: aviso e banner. A etiqueta de status usa ds-hover, não este.</p></div></div></div></div><div class="md"><p>Os nomes são por função: uma tela pede <code>ds-texto-2</code>, nunca <code>#52525B</code>. Claro e escuro usam os mesmos nomes. Nenhum valor solto em tela ou código: só <code>var(--ds-*)</code>.</p>
+<p><strong>Neutros.</strong> <code>ds-fundo</code> é a casca e <code>ds-superficie</code> o painel. <code>ds-hover</code> é o cinza de preenchimento (etiqueta, trilho do segmento), e <code>ds-hover-leve</code> é o hover das peças sem contorno. <code>ds-faixa</code> é para aviso e horário já feito. As linhas, da mais leve para a mais forte: <code>ds-divisoria-suave</code> (entre linhas de lista), <code>ds-divisoria</code> (entre áreas), <code>ds-contorno</code> (bloco), <code>ds-contorno-hover</code>, <code>ds-borda</code> (campo, a única linha que precisa de 3:1).</p>
+<p><strong>Texto.</strong> <code>ds-texto</code> (17,7:1), <code>ds-texto-2</code> (7,7:1), <code>ds-texto-3</code> (4,8:1, só placeholder, hora da grade e desabilitado) e <code>ds-icone</code> para ícone parado.</p>
+<p><strong>Marca.</strong></p>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th>Claro</th>
+<th>Escuro</th>
+<th>Onde</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ds-acao</code></td>
+<td>#EAA2C1</td>
+<td>#EAA2C1</td>
+<td>preenchimento: botão principal, hoje, horário escolhido</td>
+</tr>
+<tr>
+<td><code>ds-acao-texto</code></td>
+<td>#18181B</td>
+<td>#141414</td>
+<td>texto sobre o rosa (8,8:1 e 9,2:1)</td>
+</tr>
+<tr>
+<td><code>ds-tinta</code></td>
+<td>#A83B70</td>
+<td>#EAA2C1</td>
+<td>texto, ícone, linha e foco da marca (6,0:1 e 8,5:1)</td>
+</tr>
+<tr>
+<td><code>ds-acao-suave</code></td>
+<td>#FDF2F7</td>
+<td>#2B2428</td>
+<td>linha, opção e bloco selecionados</td>
+</tr>
+<tr>
+<td><code>ds-menu-ativo</code></td>
+<td>#FCEDF3</td>
+<td>#33282E</td>
+<td>item ativo do menu, aba escolhida</td>
+</tr>
+<tr>
+<td><code>ds-marca</code></td>
+<td>#86315C</td>
+<td>#86315C</td>
+<td>só dentro dos SVGs oficiais da logo</td>
+</tr>
+</tbody>
+</table>
+<p>O rosa sobre branco fica em 2:1. Por isso <code>ds-acao</code> nunca é texto nem linha no tema claro: para isso existe <code>ds-tinta</code>.</p>
+<p><strong>Status.</strong> Seis, fora da marca: Aguardando, Confirmado, Feito, Cancelado, Faltou e Erro. Cada um tem três tokens: <code>ds-&lt;status&gt;</code> é a cor do ícone, <code>ds-&lt;status&gt;-texto</code> é a palavra quando ela precisa de cor, e <code>ds-&lt;status&gt;-chip</code> é o fundo de um aviso tingido. Na etiqueta de status o fundo é cinza (<code>ds-hover</code>) e só o ícone leva a cor. O rosa nunca é status.</p>
+<p><strong>Peças de marca.</strong> O degradê (<code>ds-degrade-1</code> a <code>-3</code>, rosa claro ao lilás) com os arcos <code>ds-arco</code> aparece só em Entrar, Cadastro e divulgação, nunca atrás de texto e nunca numa tela de trabalho.</p>
+<p>Todos os pares de texto passam AA nos dois temas (conferido em 19/11/2026). Ícones de status ficam acima de 3,6:1 sobre <code>ds-hover</code>.</p></div></section><section class="sec" id="tipo"><h2>Tipo</h2><div class="vis"><div class="ty"><div><p class="ty-rot"><code>titulo-entrada</code>500 32px/38px · -0.03em</p><p class="tx-titulo-entrada" style="margin:0">Entre no Dayspot</p><p class="ty-uso">Título de Entrar, Cadastro e peças de marca. Um por tela.</p></div><div><p class="ty-rot"><code>titulo</code>500 18px/26px · -0.015em</p><p class="tx-titulo" style="margin:0">16 a 21 de novembro</p><p class="ty-uso">Título de tela e de painel lateral.</p></div><div><p class="ty-rot"><code>numero</code>500 20px/28px · -0.02em</p><p class="tx-numero" style="margin:0">10:30 · R$ 4.380,00</p><p class="ty-uso">Horário e valor em destaque. Sempre com números tabulares (font-variant-numeric: tabular-nums).</p></div><div><p class="ty-rot"><code>corpo</code>400 13px/20px</p><p class="tx-corpo" style="margin:0">5 horários hoje: 2 confirmados e 2 aguardando resposta no WhatsApp.</p><p class="ty-uso">Corpo padrão do painel.</p></div><div><p class="ty-rot"><code>controle</code>500 13px/20px</p><p class="tx-controle" style="margin:0">Novo horário · Semana · Toda a equipe</p><p class="ty-uso">Botão, aba, segmento, rótulo de campo, item de menu.</p></div><div><p class="ty-rot"><code>legenda</code>400 13px/18px</p><p class="tx-legenda" style="margin:0">3 visitas · a última em 2 de novembro</p><p class="ty-uso">O menor texto da interface. Nada abaixo de 13 px.</p></div><div><p class="ty-rot"><code>campo-grande</code>400 15px/22px</p><p class="tx-campo-grande" style="margin:0">ana@salaoaurora.com.br</p><p class="ty-uso">Texto de campo de 44 px e frase sob título de entrada.</p></div><div><p class="ty-rot"><code>botao-grande</code>500 15px/20px</p><p class="tx-botao-grande" style="margin:0">Entrar</p><p class="ty-uso">Botão de 48 px.</p></div><div><p class="ty-rot"><code>corpo-grande</code>400 16px/24px</p><p class="tx-corpo-grande" style="margin:0">Seu horário é quinta, às 10h30.</p><p class="ty-uso">Corpo onde quem lê não está no painel (cliente final).</p></div></div></div><div class="md"><p>Geist, pelo Google Fonts (400 e 500), com <code>system-ui</code> de reserva.</p>
+<table>
+<thead>
+<tr>
+<th>Estilo</th>
+<th>Medida</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>titulo-entrada</code></td>
+<td>500 32/38, −3%</td>
+<td>título de Entrar e Cadastro</td>
+</tr>
+<tr>
+<td><code>titulo</code></td>
+<td>500 18/26, −1,5%</td>
+<td>título de tela e de painel</td>
+</tr>
+<tr>
+<td><code>numero</code></td>
+<td>500 20/28, −2%, tabular</td>
+<td>horário e valor em destaque</td>
+</tr>
+<tr>
+<td><code>corpo</code></td>
+<td>400 13/20</td>
+<td>corpo do painel</td>
+</tr>
+<tr>
+<td><code>controle</code></td>
+<td>500 13/20</td>
+<td>botão, aba, rótulo, item de menu</td>
+</tr>
+<tr>
+<td><code>legenda</code></td>
+<td>400 13/18</td>
+<td>o mínimo da interface</td>
+</tr>
+<tr>
+<td><code>campo-grande</code></td>
+<td>400 15/22</td>
+<td>campo de 44 px, frase de entrada</td>
+</tr>
+<tr>
+<td><code>botao-grande</code></td>
+<td>500 15/20</td>
+<td>botão de 48 px</td>
+</tr>
+<tr>
+<td><code>corpo-grande</code></td>
+<td>400 16/24</td>
+<td>texto para o cliente final</td>
+</tr>
+</tbody>
+</table>
+<p>Nada abaixo de 13 px. Horário, valor e contagem sempre com <code>font-variant-numeric: tabular-nums</code>. A Nunito fica só dentro do SVG do wordmark.</p></div></section><section class="sec" id="espaco-forma-e-altura"><h2>Espaço, forma e altura</h2><div class="vis"><h3>Espaço</h3><div class="esp"><div><code>ds-e-1</code><b>4px</b><span class="esp-barra" style="width:var(--ds-e-1)"></span><p>Entre botões juntos, entre itens de aba.</p></div><div><code>ds-e-rotulo</code><b>6px</b><span class="esp-barra" style="width:var(--ds-e-rotulo)"></span><p>Rótulo até o campo, ícone até o texto no botão e na etiqueta.</p></div><div><code>ds-e-2</code><b>8px</b><span class="esp-barra" style="width:var(--ds-e-2)"></span><p>Ícone até o texto, entre itens do menu, entre controles da barra.</p></div><div><code>ds-e-aviso</code><b>10px</b><span class="esp-barra" style="width:var(--ds-e-aviso)"></span><p>Ícone até o texto no aviso; padding lateral de opção de menu.</p></div><div><code>ds-e-3</code><b>12px</b><span class="esp-barra" style="width:var(--ds-e-3)"></span><p>Padding lateral de botão, campo e linha.</p></div><div><code>ds-e-4</code><b>16px</b><span class="esp-barra" style="width:var(--ds-e-4)"></span><p>Entre campos de um formulário.</p></div><div><code>ds-e-6</code><b>24px</b><span class="esp-barra" style="width:var(--ds-e-6)"></span><p>Entre grupos dentro do painel.</p></div><div><code>ds-e-8</code><b>32px</b><span class="esp-barra" style="width:var(--ds-e-8)"></span><p>Padding do painel e do cartão.</p></div><div><code>ds-e-12</code><b>48px</b><span class="esp-barra" style="width:var(--ds-e-12)"></span><p>Entre seções de uma página.</p></div><div><code>ds-e-16</code><b>64px</b><span class="esp-barra" style="width:var(--ds-e-16)"></span><p>Entre colunas de página larga.</p></div></div><h3>Raio</h3><div class="cartas"><div><span class="forma" style="border-radius:var(--ds-raio-bloco)"></span><code>ds-raio-bloco</code><b>8px</b><p>Bloco da agenda, opção de menu, dica, tecla.</p></div><div><span class="forma" style="border-radius:var(--ds-raio-campo)"></span><code>ds-raio-campo</code><b>10px</b><p>Campo, select, linha selecionada, horário, item do menu, aviso.</p></div><div><span class="forma" style="border-radius:var(--ds-raio-menu)"></span><code>ds-raio-menu</code><b>12px</b><p>Menu suspenso e popover.</p></div><div><span class="forma" style="border-radius:var(--ds-raio-painel)"></span><code>ds-raio-painel</code><b>16px</b><p>Painel de conteúdo, diálogo, peça de marca. Um nível só: nada de cartão dentro de cartão.</p></div><div><span class="forma" style="border-radius:var(--ds-raio-pilula)"></span><code>ds-raio-pilula</code><b>999px</b><p>Botão, etiqueta de status, busca, segmento, avatar.</p></div></div><h3>Altura</h3><div class="esp"><div><code>ds-a-etiqueta</code><b>24px</b><span class="alt-barra" style="height:var(--ds-a-etiqueta)"></span><p>Etiqueta de status, avatar pequeno.</p></div><div><code>ds-a-controle</code><b>32px</b><span class="alt-barra" style="height:var(--ds-a-controle)"></span><p>Botão, aba, busca e segmento no painel (clique de 36).</p></div><div><code>ds-a-alvo</code><b>36px</b><span class="alt-barra" style="height:var(--ds-a-alvo)"></span><p>Área mínima de clique no painel; campo e select; horário; opção de menu.</p></div><div><code>ds-a-menu</code><b>38px</b><span class="alt-barra" style="height:var(--ds-a-menu)"></span><p>Item do menu de ícones.</p></div><div><code>ds-a-linha</code><b>40px</b><span class="alt-barra" style="height:var(--ds-a-linha)"></span><p>Linha de lista.</p></div><div><code>ds-a-campo-grande</code><b>44px</b><span class="alt-barra" style="height:var(--ds-a-campo-grande)"></span><p>Campo de entrada (Entrar, Cadastro) e alvo mínimo do cliente final.</p></div><div><code>ds-a-acao-grande</code><b>48px</b><span class="alt-barra" style="height:var(--ds-a-acao-grande)"></span><p>Ação principal fora do painel.</p></div></div></div><div class="md"><ul>
+<li><strong>Espaço:</strong> base 4, com os passos 4, 6, 8, 10, 12, 16, 24, 32, 48 e 64 (<code>ds-e-*</code>). Nenhum padding fora da escala.</li>
+<li><strong>Raio:</strong> 8 (<code>ds-raio-bloco</code>), 10 (<code>ds-raio-campo</code>), 12 (<code>ds-raio-menu</code>), 16 (<code>ds-raio-painel</code>) e a pílula.</li>
+<li><strong>Borda:</strong> 1 px sempre (<code>ds-b-fio</code>). A seleção do bloco usa um anel de 1,5 px e o foco usa 2 px.</li>
+<li><strong>Altura:</strong> no painel, os controles têm 32 px desenhados e 36 px de área de clique (a área passa 2 px da borda). Campo e horário têm 36 e a linha de lista 40. Fora do painel, campo de 44 e ação de 48.</li>
+</ul></div></section><section class="sec" id="elevacao"><h2>Elevação</h2><div class="vis"><div class="cartas"><div><span class="forma sombra" style="box-shadow:var(--ds-sombra)"></span><code>ds-sombra</code><p>Opção ativa do segmento e bloco da agenda (que se destaca da grade).</p></div><div><span class="forma sombra" style="box-shadow:var(--ds-sombra-flutuante)"></span><code>ds-sombra-flutuante</code><p>O que flutua: menu suspenso, popover, diálogo, aviso flutuante.</p></div></div></div><div class="md"><p>Duas sombras, e nenhuma no escuro. <code>ds-sombra</code> é para a opção ativa do segmento e para o bloco da agenda, que precisa se descolar da grade. <code>ds-sombra-flutuante</code> é para o que flutua: menu suspenso, popover, diálogo e aviso flutuante. Atrás de um diálogo, <code>ds-veu</code>.</p></div></section><section class="sec" id="movimento"><h2>Movimento</h2><div class="md"><p>Discreto, e zerado com <code>prefers-reduced-motion</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Nome</th>
+<th>Valor</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--ds-t-rapido</code></td>
+<td>120 ms</td>
+<td>hover, cor, contorno</td>
+</tr>
+<tr>
+<td><code>--ds-t-medio</code></td>
+<td>220 ms</td>
+<td>painel lateral e diálogo abrindo</td>
+</tr>
+<tr>
+<td><code>--ds-t-saida</code></td>
+<td>160 ms</td>
+<td>fechar, sempre mais rápido que abrir</td>
+</tr>
+<tr>
+<td><code>--ds-curva</code></td>
+<td>cubic-bezier(.2, .8, .2, 1)</td>
+<td>quase tudo</td>
+</tr>
+</tbody>
+</table>
+<p>O indicador de carregamento gira em 800 ms, linear.</p></div></section><section class="sec" id="icones"><h2>Ícones</h2><div class="vis"><div class="icg"><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg></span><code>calendar</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><code>users</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/></svg></span><code>scissors</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg></span><code>user-round</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></span><code>chart-column</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span><code>settings</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span><code>clock</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span><code>circle-check</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg></span><code>check-check</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg></span><code>circle-x</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m17 8 5 5"/><path d="m22 8-5 5"/></svg></span><code>user-x</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span><code>circle-alert</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><code>search</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></span><code>plus</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></span><code>chevron-left</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><code>chevron-right</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><code>chevron-down</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></span><code>ellipsis</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span><code>message-circle</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg></span><code>eye</code></div><div><span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg></span><code>eye-off</code></div></div></div><div class="md"><p><a href="https://lucide.dev">Lucide</a> (licença ISC), com um conjunto só e o pacote <code>lucide-angular</code> no código. Grade de 24, pontas redondas e traço 1,75 (1,5 no menu de 20 px). Tamanhos: 13 px no bloco e no aviso, 14 nos controles e 20 no menu. A cor vem de <code>ds-icone</code> parado, de <code>ds-tinta</code> quando ativo e de <code>ds-&lt;status&gt;</code> quando é status. Ícone que faltar é desenhado na mesma grade e no mesmo traço. O ponto da marca não vai nos ícones: fica na logo e nas ilustrações de estado.</p>
+<table>
+<thead>
+<tr>
+<th>Função</th>
+<th>Ícone Lucide</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Agenda, Clientes, Serviços, Equipe, Financeiro, Configurações</td>
+<td><code>calendar</code>, <code>users</code>, <code>scissors</code>, <code>user-round</code>, <code>chart-column</code>, <code>settings</code></td>
+</tr>
+<tr>
+<td>Aguardando, Confirmado, Feito, Cancelado, Faltou, Erro</td>
+<td><code>clock</code>, <code>circle-check</code>, <code>check-check</code>, <code>circle-x</code>, <code>user-x</code>, <code>circle-alert</code></td>
+</tr>
+<tr>
+<td>Buscar, novo, navegar, mais ações</td>
+<td><code>search</code>, <code>plus</code>, <code>chevron-left</code>/<code>-right</code>/<code>-down</code>, <code>ellipsis</code></td>
+</tr>
+<tr>
+<td>WhatsApp, senha</td>
+<td><code>message-circle</code>, <code>eye</code>/<code>eye-off</code></td>
+</tr>
+</tbody>
+</table></div></section><section class="sec" id="logo"><h2>Logo</h2><div class="vis"><div class="logo-demo"><svg class="simbolo" viewBox="4 0 56 64" role="img" aria-label="Dayspot"><path d="M15 6A6 6 0 0 1 21 12V52A6 6 0 0 1 9 52V12A6 6 0 0 1 15 6Z"/><path d="M15 58H30A26 26 0 0 0 54.727 23.966A5.976 5.976 0 0 0 43.361 27.659A15 15 0 0 1 29 47H15Z"/><path d="M27.25 12.75A7.25 7.25 0 1 0 41.75 12.75A7.25 7.25 0 1 0 27.25 12.75Z"/></svg><p>Símbolo D aberto, dos SVGs oficiais. Ameixa no claro e rosa #EE9DBF no escuro, como em <code>simbolo-escuro.svg</code>.</p></div></div><div class="md"><p>O símbolo D aberto e o wordmark continuam em <strong>ameixa (<code>ds-marca</code>, #86315C)</strong>, sempre pelos SVGs oficiais (<code>logo-horizontal.svg</code>, <code>simbolo*.svg</code>; abaixo de 24 px, <code>simbolo-16px.svg</code>). Nunca redigitar, redesenhar nem recolorir. Na interface, a casca usa só o símbolo. A troca da logo para o rosa fica para quem cuida da marca decidir.</p></div></section><section class="sec" id="como-escrevemos"><h2>Como escrevemos</h2><div class="md"><p>A recepcionista boa de um salão de bairro: clara, calorosa, confiável, sem pose.</p>
+<ul>
+<li>Frase curta, verbo primeiro, "você". Diz o que aconteceu e depois o que fazer: "E-mail ou senha não conferem. Confira e tente de novo."</li>
+<li>Português do Brasil, sem inglês na tela: horário, lembrete, falta; nunca slot, booking, no-show.</li>
+<li>Sem emoji, exclamação, caixa alta ou itálico.</li>
+<li>Formatos: "quarta, 10h" em frase e <code>10:00</code> em grade e lista; "18 de novembro" ou "18 nov"; <code>R$ 70,00</code>.</li>
+<li>O canal sempre nomeado: "pelo WhatsApp".</li>
+<li>Botão diz a ação: "Novo horário", "Cancelar horário", "Manter". Nunca "OK" ou "Sim".</li>
+</ul></div></section><section class="sec" id="regras-de-interacao"><h2>Regras de interação</h2><div class="md"><p>Escritas uma vez. Os componentes seguem estas regras em vez de cada um inventar as suas. O foco aparece só pelo teclado (<code>:focus-visible</code>).</p>
+<p><strong>Peças com contorno:</strong> botão secundário, campo, select, busca, horário e bloco da agenda.</p>
+<table>
+<thead>
+<tr>
+<th>Estado</th>
+<th>Como fica</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hover</td>
+<td>O contorno escurece: <code>ds-texto-3</code> no campo, select e busca, e <code>ds-contorno-hover</code> no horário e no bloco. Botão secundário e horário também ganham fundo <code>ds-hover-leve</code>, porque o fio deles (1,2:1) é fraco demais para avisar sozinho que dá para clicar.</td>
+</tr>
+<tr>
+<td>Pressionado</td>
+<td>Fundo <code>ds-hover</code>.</td>
+</tr>
+<tr>
+<td>Foco</td>
+<td>Campo, select e busca: só a borda em <code>ds-tinta</code>, sem halo. Os demais: anel <code>ds-b-foco</code> em <code>ds-foco</code>, afastado 2 px.</td>
+</tr>
+<tr>
+<td>Desabilitado</td>
+<td>Fundo transparente, fio <code>ds-divisoria-suave</code>, texto e ícone <code>ds-texto-3</code>, cursor bloqueado. Horário ocupado: fundo <code>ds-faixa</code>, texto riscado.</td>
+</tr>
+<tr>
+<td>Carregando</td>
+<td>Mesma largura; o texto fica invisível e um indicador de 14 px gira no centro. Os campos do formulário travam.</td>
+</tr>
+<tr>
+<td>Selecionado</td>
+<td>Horário: preenchido em <code>ds-acao</code>, com <code>ds-acao-texto</code>. Bloco: fundo <code>ds-acao-suave</code> e anel de 1,5 px em <code>ds-tinta</code>.</td>
+</tr>
+<tr>
+<td>Erro</td>
+<td>Campo com borda <code>ds-erro</code> e mensagem em <code>ds-erro-texto</code> com ícone, embaixo.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Peças sem contorno:</strong> botão fantasma, aba, item do menu, opção de lista e linha.</p>
+<table>
+<thead>
+<tr>
+<th>Estado</th>
+<th>Como fica</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hover</td>
+<td>Fundo <code>ds-hover-leve</code>. Na casca, <code>ds-casca-hover</code>; no menu e nas ações em tinta, <code>ds-menu-hover</code>. A linha de lista arredonda (<code>ds-raio-campo</code>) e esconde o fio.</td>
+</tr>
+<tr>
+<td>Pressionado</td>
+<td>Fundo <code>ds-hover</code>.</td>
+</tr>
+<tr>
+<td>Foco</td>
+<td>Anel de 2 px em <code>ds-foco</code>, afastado 2 px.</td>
+</tr>
+<tr>
+<td>Desabilitado</td>
+<td>Texto e ícone <code>ds-texto-3</code>, sem hover.</td>
+</tr>
+<tr>
+<td>Carregando</td>
+<td>Não se aplica: peça sem contorno não dispara envio.</td>
+</tr>
+<tr>
+<td>Selecionado</td>
+<td>Aba e item do menu: fundo <code>ds-menu-ativo</code>, texto e ícone <code>ds-tinta</code>. Linha: fundo <code>ds-acao-suave</code>, nome em <code>ds-tinta</code>. Opção de menu: check em <code>ds-tinta</code> à direita. O peso da letra não muda.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Ação principal:</strong> no máximo uma por tela.</p>
+<table>
+<thead>
+<tr>
+<th>Estado</th>
+<th>Como fica</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Normal</td>
+<td>Fundo <code>ds-acao</code>, texto e ícone <code>ds-acao-texto</code>, sem contorno.</td>
+</tr>
+<tr>
+<td>Hover</td>
+<td>Fundo <code>ds-acao-pressionada</code>.</td>
+</tr>
+<tr>
+<td>Pressionado</td>
+<td>Fundo <code>ds-acao-pressionada</code>.</td>
+</tr>
+<tr>
+<td>Foco</td>
+<td>Anel de 2 px em <code>ds-foco</code>, afastado 2 px.</td>
+</tr>
+<tr>
+<td>Desabilitado</td>
+<td>Igual ao secundário desabilitado. O rosa nunca aparece apagado.</td>
+</tr>
+<tr>
+<td>Carregando</td>
+<td>Mesma largura, indicador em <code>ds-acao-texto</code>.</td>
+</tr>
+<tr>
+<td>Selecionado</td>
+<td>Não se aplica.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Destrutivo.</strong> Na tela, é só texto em <code>ds-erro-texto</code>, com hover <code>ds-erro-chip</code>. O botão cheio (fundo <code>ds-erro-texto</code>, texto <code>ds-superficie</code>) aparece só no diálogo de confirmação, ao lado de "Manter".</p></div></section><section class="sec" id="onde-a-v3-foge-do-padrao-do-craft"><h2>Onde a v3 foge do padrão do Craft</h2><div class="md"><p>O guia vence no visual, mas estas diferenças estão registradas:</p>
+<ul>
+<li><strong>O botão secundário ganha fundo no hover.</strong> O padrão é só escurecer o contorno. A v3 mantém o fundo porque o fio do botão é decorativo (1,2:1).</li>
+<li><strong>Há sombra em peça que não flutua.</strong> <code>ds-sombra</code> vai na opção ativa do segmento e no bloco da agenda, além dos flutuantes.</li>
+<li><strong>Ajustes desta versão sobre a proposta.</strong> O peso da opção escolhida no menu deixa de mudar (agora é só o check), as durações 120 e 150 ms viram uma só (120 ms) e a terceira sombra, <code>sombra-forte</code>, sai: o bloco selecionado já tem o anel.</li>
+</ul></div></section><section class="sec" id="componentes"><h2>Componentes</h2><div class="md"><p>Cada componente tem regras de uso, exemplos e a matriz de estados (variantes × estados). As classes estão em <code>components/bundle.css</code>, que só usa <code>var(--ds-*)</code>. Para as matrizes, os estados podem ser forçados com <code>data-estado="hover|pressionado|foco"</code>. Cada página mostra o componente no claro e no escuro, um embaixo do outro: o tema vem do <code>data-theme</code> de quem envolve a peça, então um trecho escuro pode morar dentro de uma página clara.</p>
+<table>
+<thead>
+<tr>
+<th>Peça</th>
+<th>Onde estão os estados</th>
+<th>Código</th>
+<th>Situação</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Botão</td>
+<td>Ações › Botão › Estados</td>
+<td><code>.ds-botao</code></td>
+<td>desenhado</td>
+</tr>
+<tr>
+<td>Campo</td>
+<td>Formulário › Campo › Estados</td>
+<td><code>.ds-campo</code>, <code>.ds-entrada</code>, <code>.ds-prefixo</code></td>
+<td>desenhado</td>
+</tr>
+<tr>
+<td>Select</td>
+<td>Formulário › Select › Estados</td>
+<td><code>.ds-selecao</code></td>
+<td>desenhado</td>
+</tr>
+<tr>
+<td>Menu suspenso</td>
+<td>Formulário › Menu suspenso › Estados</td>
+<td><code>.ds-menu</code>, <code>.ds-opcao</code></td>
+<td>desenhado</td>
+</tr>
+<tr>
+<td>Etiqueta de status</td>
+<td>Status › Etiqueta</td>
+<td><code>.ds-etiqueta</code></td>
+<td>desenhado</td>
+</tr>
+<tr>
+<td>Segmento</td>
+<td>Navegação › Segmento › Estados</td>
+<td><code>.ds-segmento</code></td>
+<td>desenhado</td>
+</tr>
+<tr>
+<td>Abas</td>
+<td>Navegação › Abas › Estados</td>
+<td><code>.ds-abas</code>, <code>.ds-aba</code></td>
+<td>desenhado</td>
+</tr>
+<tr>
+<td>Lista</td>
+<td>Dados › Lista › Estados</td>
+<td><code>.ds-lista</code>, <code>.ds-linha</code></td>
+<td>desenhado</td>
+</tr>
+<tr>
+<td>Horário</td>
+<td>Agendamento › Horário › Estados</td>
+<td><code>.ds-horario</code></td>
+<td>desenhado</td>
+</tr>
+</tbody>
+</table>
+<p>No app Angular, nenhum deles foi levado para o código ainda.</p>
+<h3>Onde cada um é usado</h3>
+<table>
+<thead>
+<tr>
+<th>Peça</th>
+<th>Telas</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Botão</td>
+<td>todas</td>
+</tr>
+<tr>
+<td>Campo</td>
+<td>Entrar, Cadastro (com prefixo), Novo agendamento, Clientes, Serviços, Prestadores, Configurações</td>
+</tr>
+<tr>
+<td>Select</td>
+<td>Novo agendamento, Configurações, Disponibilidade</td>
+</tr>
+<tr>
+<td>Menu suspenso</td>
+<td>Agenda ("Toda a equipe"), troca de empresa no topo</td>
+</tr>
+<tr>
+<td>Etiqueta</td>
+<td>detalhe da Agenda, Clientes, Meus horários</td>
+</tr>
+<tr>
+<td>Segmento</td>
+<td>Agenda (Dia e Semana), Clientes</td>
+</tr>
+<tr>
+<td>Abas</td>
+<td>filtro de pessoa na Agenda, no Financeiro e na Disponibilidade</td>
+</tr>
+<tr>
+<td>Lista</td>
+<td>Clientes, Prestadores, Serviços</td>
+</tr>
+<tr>
+<td>Horário</td>
+<td>Novo agendamento, remarcar em Meus horários</td>
+</tr>
+</tbody>
+</table>
+<h3>Decisões desta leva</h3>
+<ul>
+<li>O hover do botão de perigo mantém a cor, porque <code>ds-erro</code> com texto branco fica em 3,97:1.</li>
+<li>Com mais de 5 pessoas, as Abas viram o Menu suspenso.</li>
+<li>Etiquetas "Entregue", "Não entregue" e "Sem WhatsApp" ficam para a tela de mensagens.</li>
+<li>A busca do topo entra com a casca.</li>
+<li>Na escolha do menu, só o check: o texto não muda de peso, para não mudar de largura.</li>
+<li>No escuro, as sombras são <code>0 0 #0000</code>, e não <code>none</code>, para poderem ser somadas a um fio.</li>
+</ul></div><section class="comp" id="c-botao"><h3 class="comp-t">Botão</h3>
+<div class="comp-demo ds"><p class="rot">Funcionando</p><div class="pv-fila">
+<button type="button" class="ds-botao ds-botao--principal" data-js="carregar"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Novo horário</button>
+<button type="button" class="ds-botao" data-js="carregar">Remarcar</button>
+<button type="button" class="ds-botao ds-botao--icone" aria-label="Mais ações"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+<button type="button" class="ds-botao ds-botao--fantasma"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Voltar</button>
+<button type="button" class="ds-botao ds-botao--texto-perigo" data-js="confirmar">Cancelar horário</button>
+<button type="button" class="ds-botao" disabled>Sem horário livre</button></div>
+<div class="confirma" hidden role="alertdialog" aria-labelledby="cf-t"><p id="cf-t"><b>Cancelar quinta, 10h30?</b> O horário fica livre e a Helena recebe o aviso pelo WhatsApp.</p><div class="pv-fila"><button type="button" class="ds-botao" data-js="manter">Manter</button><button type="button" class="ds-botao ds-botao--perigo" data-js="carregar-cancelar">Cancelar horário</button></div></div>
+<p class="saida" aria-live="polite"></p>
+<p class="dica">Clique em "Novo horário" ou "Remarcar" para ver o carregando: a largura não muda. "Cancelar horário" abre a confirmação, o único lugar do vermelho cheio.</p></div>
+<details class="comp-guia"><summary>Regras de uso</summary><div class="md"><p>Dispara uma ação: no painel, uma pílula de 32 px com área de clique de 36; fora dele, 48 px.</p>
+<h2>Quando usar</h2>
+<ul>
+<li><strong>Principal</strong> (<code>ds-botao--principal</code>): a próxima coisa que a pessoa deve fazer. <strong>No máximo um por tela.</strong> Rosa <code>ds-acao</code> com <code>ds-acao-texto</code>, com ícone à esquerda quando ajuda ("+ Novo horário").</li>
+<li><strong>Secundário</strong> (padrão): ações de apoio, ao lado do principal. Fundo <code>ds-superficie</code> e fio <code>ds-divisoria</code>.</li>
+<li><strong>Fantasma</strong> (<code>ds-botao--fantasma</code>): navegação e ações leves (Voltar, setas da semana). Não tem fundo nem fio.</li>
+<li><strong>Só ícone</strong> (<code>ds-botao--icone</code>): 32 × 32, <strong>sempre com <code>aria-label</code></strong>. Use só com ícone conhecido (setas, mais ações).</li>
+<li><strong>Texto perigo</strong> (<code>ds-botao--texto-perigo</code>): ação destrutiva na tela, sempre por último ("Cancelar horário").</li>
+<li><strong>Perigo</strong> (<code>ds-botao--perigo</code>): o vermelho cheio. <strong>Só dentro do diálogo de confirmação</strong>, ao lado de "Manter".</li>
+<li><strong>Grande</strong> (<code>ds-botao--grande</code>): 48 px, texto de 15. Ação principal fora do painel (Entrar, Cadastro, página do cliente), na largura toda do formulário.</li>
+</ul>
+<p>Não use botão para escolher entre opções: para isso existem o Segmento e as Abas.</p>
+<h2>Texto</h2>
+<p>Verbo e objeto, sem ponto: "Novo horário", "Remarcar", "Cancelar horário", "Criar conta e abrir a agenda". Nunca "OK", "Sim" ou "Enviar". O rótulo não quebra linha.</p>
+<h2>Estados</h2>
+<p>Seguem as regras de interação do README.</p>
+<ul>
+<li><strong>Hover:</strong> o secundário e o fantasma ganham <code>ds-hover-leve</code>, e o principal vai para <code>ds-acao-pressionada</code>.</li>
+<li><strong>Pressionado:</strong> <code>ds-hover</code> no secundário e no fantasma, e <code>ds-acao-pressionada</code> no principal.</li>
+<li><strong>Foco (só pelo teclado):</strong> anel de 2 px em <code>ds-foco</code>, afastado 2 px.</li>
+<li><strong>Desabilitado:</strong> sem fundo, fio <code>ds-divisoria-suave</code>, texto <code>ds-texto-3</code>. O rosa nunca aparece apagado. Prefira dizer por que a ação não está disponível a desabilitar sem explicar.</li>
+<li><strong>Carregando:</strong> <code>aria-busy="true"</code>. A largura não muda: o rótulo fica invisível e o indicador de 14 px gira no centro.</li>
+<li><strong>Selecionado:</strong> não se aplica. Botão não fica escolhido.</li>
+<li><strong>Hover do Perigo:</strong> mantém a cor. O vermelho mais claro (<code>ds-erro</code>) não passa no contraste com texto branco (3,97:1).</li>
+</ul>
+<h2>Medidas</h2>
+<p>32 px de altura (<code>ds-a-controle</code>) com <code>::before</code> de 2 px para fora, chegando a 36 de clique. Padding 0 12 (<code>ds-e-3</code>), ícone de 14 px a 6 px do texto (<code>ds-e-rotulo</code>), texto 500 13 px, raio <code>ds-raio-pilula</code>. O grande tem 48 px, padding 0 24 e texto de 15.</p>
+<h2>Acessibilidade</h2>
+<p><code>&lt;button type="button"&gt;</code> nativo. Contraste: principal 8,8:1, secundário 17,7:1, perigo 7,5:1. O só ícone sempre com <code>aria-label</code>.</p></div></details>
+<div class="comp-matriz ds" inert><section class="pv-bloco"><h4>Estados</h4><table class="pv-m"><tr><th>Variante</th><th>Normal</th><th>Hover</th><th>Pressionado</th><th>Foco</th><th>Desabilitado</th><th>Carregando</th><th>Selecionado</th></tr><tr><td>Principal</td><td><button type="button" class="ds-botao ds-botao--principal"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Novo horário</button></td><td><button type="button" class="ds-botao ds-botao--principal" data-estado="hover"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Novo horário</button></td><td><button type="button" class="ds-botao ds-botao--principal" data-estado="pressionado"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Novo horário</button></td><td><button type="button" class="ds-botao ds-botao--principal" data-estado="foco"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Novo horário</button></td><td><button type="button" class="ds-botao ds-botao--principal" disabled><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Novo horário</button></td><td><button type="button" class="ds-botao ds-botao--principal" aria-busy="true"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Novo horário</button></td><td><span class="pv-na">não se aplica</span></td></tr><tr><td>Secundário</td><td><button type="button" class="ds-botao ">Remarcar</button></td><td><button type="button" class="ds-botao " data-estado="hover">Remarcar</button></td><td><button type="button" class="ds-botao " data-estado="pressionado">Remarcar</button></td><td><button type="button" class="ds-botao " data-estado="foco">Remarcar</button></td><td><button type="button" class="ds-botao " disabled>Remarcar</button></td><td><button type="button" class="ds-botao " aria-busy="true">Remarcar</button></td><td><span class="pv-na">não se aplica</span></td></tr><tr><td>Fantasma</td><td><button type="button" class="ds-botao ds-botao--fantasma"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Voltar</button></td><td><button type="button" class="ds-botao ds-botao--fantasma" data-estado="hover"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Voltar</button></td><td><button type="button" class="ds-botao ds-botao--fantasma" data-estado="pressionado"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Voltar</button></td><td><button type="button" class="ds-botao ds-botao--fantasma" data-estado="foco"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Voltar</button></td><td><button type="button" class="ds-botao ds-botao--fantasma" disabled><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Voltar</button></td><td><button type="button" class="ds-botao ds-botao--fantasma" aria-busy="true"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Voltar</button></td><td><span class="pv-na">não se aplica</span></td></tr><tr><td>Só ícone</td><td><button type="button" class="ds-botao ds-botao--icone" aria-label="Mais ações"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td><td><button type="button" class="ds-botao ds-botao--icone" data-estado="hover" aria-label="Mais ações"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td><td><button type="button" class="ds-botao ds-botao--icone" data-estado="pressionado" aria-label="Mais ações"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td><td><button type="button" class="ds-botao ds-botao--icone" data-estado="foco" aria-label="Mais ações"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td><td><button type="button" class="ds-botao ds-botao--icone" aria-label="Mais ações" disabled><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td><td><button type="button" class="ds-botao ds-botao--icone" aria-label="Mais ações" aria-busy="true"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></td><td><span class="pv-na">não se aplica</span></td></tr><tr><td>Texto perigo</td><td><button type="button" class="ds-botao ds-botao--texto-perigo">Cancelar horário</button></td><td><button type="button" class="ds-botao ds-botao--texto-perigo" data-estado="hover">Cancelar horário</button></td><td><button type="button" class="ds-botao ds-botao--texto-perigo" data-estado="pressionado">Cancelar horário</button></td><td><button type="button" class="ds-botao ds-botao--texto-perigo" data-estado="foco">Cancelar horário</button></td><td><button type="button" class="ds-botao ds-botao--texto-perigo" disabled>Cancelar horário</button></td><td><button type="button" class="ds-botao ds-botao--texto-perigo" aria-busy="true">Cancelar horário</button></td><td><span class="pv-na">não se aplica</span></td></tr><tr><td>Perigo (diálogo)</td><td><button type="button" class="ds-botao ds-botao--perigo">Cancelar horário</button></td><td><button type="button" class="ds-botao ds-botao--perigo" data-estado="hover">Cancelar horário</button></td><td><button type="button" class="ds-botao ds-botao--perigo" data-estado="pressionado">Cancelar horário</button></td><td><button type="button" class="ds-botao ds-botao--perigo" data-estado="foco">Cancelar horário</button></td><td><button type="button" class="ds-botao ds-botao--perigo" disabled>Cancelar horário</button></td><td><button type="button" class="ds-botao ds-botao--perigo" aria-busy="true">Cancelar horário</button></td><td><span class="pv-na">não se aplica</span></td></tr><tr><td>Grande</td><td><button type="button" class="ds-botao ds-botao--principal ds-botao--grande">Entrar</button></td><td><button type="button" class="ds-botao ds-botao--principal ds-botao--grande" data-estado="hover">Entrar</button></td><td><button type="button" class="ds-botao ds-botao--principal ds-botao--grande" data-estado="pressionado">Entrar</button></td><td><button type="button" class="ds-botao ds-botao--principal ds-botao--grande" data-estado="foco">Entrar</button></td><td><button type="button" class="ds-botao ds-botao--principal ds-botao--grande" disabled>Entrar</button></td><td><button type="button" class="ds-botao ds-botao--principal ds-botao--grande" aria-busy="true">Entrar</button></td><td><span class="pv-na">não se aplica</span></td></tr></table></section></div></section><section class="comp" id="c-campo"><h3 class="comp-t">Campo</h3>
+<div class="comp-demo ds"><p class="rot">Funcionando</p><form class="pv-grade" novalidate data-js="form-campo">
+<div class="ds-campo"><label for="d-nome">Nome do cliente</label><input class="ds-entrada" id="d-nome" placeholder="Ex.: Maria Fernanda" autocomplete="off"></div>
+<div class="ds-campo"><label for="d-tel">Telefone (WhatsApp)</label><input class="ds-entrada" id="d-tel" inputmode="tel" placeholder="(11) 91234-5678" aria-describedby="d-tel-a" autocomplete="off"><span class="ds-ajuda" id="d-tel-a" data-padrao="A confirmação chega por aqui.">A confirmação chega por aqui.</span></div>
+<div class="ds-campo"><label for="d-mail">E-mail (opcional)</label><input class="ds-entrada" id="d-mail" type="email" aria-describedby="d-mail-a" autocomplete="off"><span class="ds-ajuda" id="d-mail-a" data-padrao=""></span></div>
+</form>
+<div class="pv-grade" style="margin-top:16px">
+<div class="ds-campo ds-campo--grande"><label for="d-emp">Nome da empresa</label><input class="ds-entrada" id="d-emp" value="Salão Aurora" autocomplete="off"></div>
+<div class="ds-campo ds-campo--grande"><label for="d-slug">Endereço da página</label><div class="ds-prefixo"><span aria-hidden="true">agendar/</span><input class="ds-entrada" id="d-slug" value="salao-aurora" aria-describedby="d-slug-a" autocapitalize="none" spellcheck="false" autocomplete="off"></div><span class="ds-ajuda" id="d-slug-a" data-padrao="O link que você manda para os clientes marcarem sozinhos.">O link que você manda para os clientes marcarem sozinhos.</span></div>
+</div>
+<p class="dica">O e-mail é conferido quando você sai do campo, nunca enquanto digita. O endereço nasce do nome da empresa e para de acompanhar quando você o edita. Tente "salao-centro", que já está em uso.</p></div>
+<details class="comp-guia"><summary>Regras de uso</summary><div class="md"><p>Recebe texto digitado: rótulo sempre visível em cima, ajuda ou erro embaixo, e no foco só a borda muda.</p>
+<h2>Quando usar</h2>
+<ul>
+<li><strong>Campo</strong> (<code>.ds-campo</code> + <code>.ds-entrada</code>): 36 px, para o painel.</li>
+<li><strong>Grande</strong> (<code>.ds-campo--grande</code>): 44 px e texto de 15, em Entrar, Cadastro e na página do cliente.</li>
+<li><strong>Com prefixo</strong> (<code>.ds-prefixo</code>): quando parte do valor é fixa e fica dentro da borda ("agendar/salao-aurora").</li>
+</ul>
+<p>Para escolher entre opções fixas, use o Select. Para busca, a variante vem com a casca.</p>
+<h2>Texto</h2>
+<p>O rótulo é o nome do dado ("Telefone (WhatsApp)"), e "(opcional)" vai no próprio rótulo. A ajuda diz para que serve, em uma frase. O erro diz como consertar: "Falta o domínio, como @gmail.com.", nunca "Campo inválido". O placeholder é só exemplo e nunca substitui o rótulo.</p>
+<h2>Estados</h2>
+<ul>
+<li><strong>Vazio:</strong> placeholder em <code>ds-texto-3</code> (4,8:1).</li>
+<li><strong>Hover:</strong> a borda vai de <code>ds-borda</code> para <code>ds-texto-3</code>.</li>
+<li><strong>Foco:</strong> a borda vai para <code>ds-tinta</code>, sem halo. O mesmo vale para o mouse, porque quem digita precisa saber onde está.</li>
+<li><strong>Desabilitado:</strong> sem fundo, borda <code>ds-divisoria-suave</code>, texto <code>ds-texto-3</code>.</li>
+<li><strong>Erro:</strong> borda <code>ds-erro</code>, mensagem em <code>ds-erro-texto</code> com o ícone <code>circle-alert</code>, <code>aria-invalid="true"</code> e <code>aria-describedby</code>. Aparece ao sair do campo ou ao enviar, nunca enquanto a pessoa digita.</li>
+<li><strong>Pressionado e selecionado:</strong> não se aplicam.</li>
+<li><strong>Carregando:</strong> não se aplica. Quem trava os campos é o formulário enquanto envia, e o indicador fica no botão.</li>
+</ul>
+<h2>Texto longo</h2>
+<p>O valor rola dentro do campo, que nunca cresce. A mensagem de erro quebra em linhas e empurra o que vem embaixo; reserve espaço se a tela não puder se mexer.</p>
+<h2>Medidas</h2>
+<p>Rótulo 500 13/18 a 6 px do campo (<code>ds-e-rotulo</code>). Campo de 36 px (<code>ds-a-alvo</code>), padding 0 12, borda de 1 px, raio <code>ds-raio-campo</code>, texto 400 13. O grande tem 44 px e texto de 15. A ajuda é 400 13/18 em <code>ds-texto-2</code>, com o ícone de 13 px.</p>
+<h2>Acessibilidade</h2>
+<p><code>&lt;label for&gt;</code> sempre. A borda em repouso tem 3,4:1 (claro) e 4,4:1 (escuro), acima dos 3:1 de controle. Telefone e valores com números tabulares.</p></div></details>
+<div class="comp-matriz ds" inert><section class="pv-bloco"><h4>Estados</h4><table class="pv-m"><tr><th>Variante</th><th>Vazio</th><th>Preenchido</th><th>Hover</th><th>Foco</th><th>Desabilitado</th><th>Erro</th></tr><tr><td>Campo (36 px)</td><td><div class="ds-campo "><label for="campo-m1">Nome do cliente</label><input class="ds-entrada" id="campo-m1" placeholder="Ex.: Maria Fernanda" autocomplete="off"></div></td><td><div class="ds-campo "><label for="campo-m2">Nome do cliente</label><input class="ds-entrada" id="campo-m2" value="Maria Fernanda de Albuquerque Santos" autocomplete="off"></div></td><td><div class="ds-campo "><label for="campo-m3">Nome do cliente</label><input class="ds-entrada" id="campo-m3" value="Helena Duarte" data-estado="hover" autocomplete="off"></div></td><td><div class="ds-campo "><label for="campo-m4">Nome do cliente</label><input class="ds-entrada" id="campo-m4" value="Helena Duarte" data-estado="foco" autocomplete="off"></div></td><td><div class="ds-campo "><label for="campo-m5">Nome do cliente</label><input class="ds-entrada" id="campo-m5" value="Helena Duarte" disabled autocomplete="off"></div></td><td><div class="ds-campo ds-campo--erro "><label for="campo-m6">E-mail</label><input class="ds-entrada" id="campo-m6" value="helena@" aria-invalid="true" aria-describedby="campo-m6-a" autocomplete="off"><span class="ds-ajuda" id="campo-m6-a"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>Falta o domínio, como @gmail.com.</span></div></td></tr><tr><td>Grande (44 px)</td><td><div class="ds-campo ds-campo--grande"><label for="campo-n1">Nome do cliente</label><input class="ds-entrada" id="campo-n1" placeholder="Ex.: Maria Fernanda" autocomplete="off"></div></td><td><div class="ds-campo ds-campo--grande"><label for="campo-n2">Nome do cliente</label><input class="ds-entrada" id="campo-n2" value="Maria Fernanda de Albuquerque Santos" autocomplete="off"></div></td><td><div class="ds-campo ds-campo--grande"><label for="campo-n3">Nome do cliente</label><input class="ds-entrada" id="campo-n3" value="Helena Duarte" data-estado="hover" autocomplete="off"></div></td><td><div class="ds-campo ds-campo--grande"><label for="campo-n4">Nome do cliente</label><input class="ds-entrada" id="campo-n4" value="Helena Duarte" data-estado="foco" autocomplete="off"></div></td><td><div class="ds-campo ds-campo--grande"><label for="campo-n5">Nome do cliente</label><input class="ds-entrada" id="campo-n5" value="Helena Duarte" disabled autocomplete="off"></div></td><td><div class="ds-campo ds-campo--erro ds-campo--grande"><label for="campo-n6">E-mail</label><input class="ds-entrada" id="campo-n6" value="helena@" aria-invalid="true" aria-describedby="campo-n6-a" autocomplete="off"><span class="ds-ajuda" id="campo-n6-a"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>Falta o domínio, como @gmail.com.</span></div></td></tr><tr><td>Com prefixo</td><td><div class="ds-campo ds-campo--grande"><label for="campo-mp1">Endereço da página</label><div class="ds-prefixo"><span aria-hidden="true">agendar/</span><input class="ds-entrada" id="campo-mp1" value="" aria-describedby="campo-mp1-a" autocapitalize="none" spellcheck="false" autocomplete="off"></div></div></td><td><div class="ds-campo ds-campo--grande"><label for="campo-mp2">Endereço da página</label><div class="ds-prefixo"><span aria-hidden="true">agendar/</span><input class="ds-entrada" id="campo-mp2" value="salao-aurora" aria-describedby="campo-mp2-a" autocapitalize="none" spellcheck="false" autocomplete="off"></div></div></td><td><div class="ds-campo ds-campo--grande"><label for="campo-mp3">Endereço da página</label><div class="ds-prefixo" data-estado="hover"><span aria-hidden="true">agendar/</span><input class="ds-entrada" id="campo-mp3" value="salao-aurora" aria-describedby="campo-mp3-a" autocapitalize="none" spellcheck="false" autocomplete="off"></div></div></td><td><div class="ds-campo ds-campo--grande"><label for="campo-mp4">Endereço da página</label><div class="ds-prefixo" data-estado="foco"><span aria-hidden="true">agendar/</span><input class="ds-entrada" id="campo-mp4" value="salao-aurora" aria-describedby="campo-mp4-a" autocapitalize="none" spellcheck="false" autocomplete="off"></div></div></td><td><div class="ds-campo ds-campo--grande"><label for="campo-mp5">Endereço da página</label><div class="ds-prefixo"><span aria-hidden="true">agendar/</span><input class="ds-entrada" id="campo-mp5" value="salao-aurora" disabled aria-describedby="campo-mp5-a" autocapitalize="none" spellcheck="false" autocomplete="off"></div></div></td><td><div class="ds-campo ds-campo--grande ds-campo--erro"><label for="campo-mp6">Endereço da página</label><div class="ds-prefixo"><span aria-hidden="true">agendar/</span><input class="ds-entrada" id="campo-mp6" value="salao-aurora" aria-invalid="true" aria-describedby="campo-mp6-a" autocapitalize="none" spellcheck="false" autocomplete="off"></div><span class="ds-ajuda" id="campo-mp6-a"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>Este endereço já é de outra empresa. Tente salao-aurora-centro.</span></div></td></tr></table></section></div></section><section class="comp" id="c-selecao"><h3 class="comp-t">Select</h3>
+<div class="comp-demo ds"><p class="rot">Funcionando</p><div class="pv-grade"><div class="ds-campo"><label for="d-serv">Serviço</label><div class="ds-selecao"><select id="d-serv" data-js="servico"><option value="">Escolha um serviço</option><option>Corte · 30 min</option><option selected>Corte e escova · 45 min</option><option>Coloração · 60 min</option><option>Mechas e tonalização completa · 2 h 30 min</option></select><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div></div>
+<p class="saida" aria-live="polite">Corte e escova · 45 min</p></div>
+<details class="comp-guia"><summary>Regras de uso</summary><div class="md"><p>Escolhe um valor de uma lista fixa usando o <code>&lt;select&gt;</code> nativo, com a mesma borda e as mesmas medidas do Campo.</p>
+<h2>Quando usar</h2>
+<ul>
+<li>De 5 a umas 30 opções que a pessoa conhece (serviço, fuso, duração).</li>
+<li>Com 2 a 4 opções que trocam a visão, use o Segmento. Para escolher pessoas, use as Abas ou o Menu suspenso.</li>
+</ul>
+<h2>Por que nativo</h2>
+<p>A lista aberta é a do sistema: funciona no celular, no teclado e no leitor de tela sem nada nosso. Só a caixa fechada recebe o estilo.</p>
+<h2>Estados</h2>
+<p>Os mesmos do Campo: hover com a borda em <code>ds-texto-3</code>, foco com a borda em <code>ds-tinta</code>, desabilitado sem fundo, erro com borda <code>ds-erro</code> e mensagem embaixo. Pressionado, carregando e selecionado não se aplicam.</p>
+<h2>Texto longo</h2>
+<p>A opção escolhida é cortada pelo próprio select. Mantenha o rótulo curto e coloque o detalhe depois de " · " ("Corte e escova · 45 min").</p>
+<h2>Medidas</h2>
+<p>36 px, padding 0 36 0 12, seta <code>chevron-down</code> de 14 px a 12 px da direita, em <code>ds-icone</code>.</p></div></details>
+<div class="comp-matriz ds" inert><section class="pv-bloco"><h4>Estados</h4><table class="pv-m"><tr><th>Variante</th><th>Normal</th><th>Hover</th><th>Foco</th><th>Desabilitado</th><th>Erro</th></tr><tr><td>Select</td><td><div class="ds-campo"><label for="selecao-s1">Serviço</label><div class="ds-selecao"><select id="selecao-s1"><option>Corte · 30 min</option><option selected>Corte e escova · 45 min</option><option>Coloração · 60 min</option><option>Mechas e tonalização completa · 2 h 30 min</option></select><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div></td><td><div class="ds-campo"><label for="selecao-s2">Serviço</label><div class="ds-selecao"><select id="selecao-s2" data-estado="hover"><option>Corte · 30 min</option><option selected>Corte e escova · 45 min</option><option>Coloração · 60 min</option><option>Mechas e tonalização completa · 2 h 30 min</option></select><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div></td><td><div class="ds-campo"><label for="selecao-s3">Serviço</label><div class="ds-selecao"><select id="selecao-s3" data-estado="foco"><option>Corte · 30 min</option><option selected>Corte e escova · 45 min</option><option>Coloração · 60 min</option><option>Mechas e tonalização completa · 2 h 30 min</option></select><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div></td><td><div class="ds-campo"><label for="selecao-s4">Serviço</label><div class="ds-selecao"><select id="selecao-s4" disabled><option>Corte · 30 min</option><option selected>Corte e escova · 45 min</option><option>Coloração · 60 min</option><option>Mechas e tonalização completa · 2 h 30 min</option></select><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div></td><td><div class="ds-campo ds-campo--erro"><label for="selecao-s5">Serviço</label><div class="ds-selecao"><select id="selecao-s5"><option selected>Escolha um serviço</option><option>Corte · 30 min</option><option>Corte e escova · 45 min</option><option>Coloração · 60 min</option><option>Mechas e tonalização completa · 2 h 30 min</option></select><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div><span class="ds-ajuda" id="selecao-s5-a"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>Escolha o serviço para ver os horários.</span></div></td></tr></table></section><p class="pv-na">Pressionado, carregando e selecionado não se aplicam: a lista aberta é a do sistema.</p></div></section><section class="comp" id="c-menususpenso"><h3 class="comp-t">Menu suspenso</h3>
+<div class="comp-demo ds"><p class="rot">Funcionando</p><div class="menu-ex" data-js="menu">
+<button type="button" class="ds-botao" aria-haspopup="listbox" aria-expanded="false" aria-controls="d-menu"><span data-rotulo>Ana Rocha (você)</span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="ds-menu" id="d-menu" role="listbox" aria-label="De quem é a agenda" hidden tabindex="-1">
+<div class="ds-opcao" role="option" aria-selected="false" data-valor="Toda a equipe"><span class="ds-avatar" aria-hidden="true"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span>Toda a equipe</span><svg class="ds-ic ds-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div>
+<div class="ds-menu-sep" role="separator"></div>
+<div class="ds-opcao" role="option" aria-selected="true" data-valor="Ana Rocha (você)"><span class="ds-avatar" aria-hidden="true">AR</span><span>Ana Rocha (você)</span><svg class="ds-ic ds-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div>
+<div class="ds-opcao" role="option" aria-selected="false" data-valor="João Pereira"><span class="ds-avatar" aria-hidden="true">JP</span><span>João Pereira</span><svg class="ds-ic ds-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div>
+<div class="ds-opcao" role="option" aria-selected="false" data-valor="Maria Fernanda de Albuquerque Santos" title="Maria Fernanda de Albuquerque Santos"><span class="ds-avatar" aria-hidden="true">MF</span><span>Maria Fernanda de Albuquerque Santos</span><svg class="ds-ic ds-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div>
+<div class="ds-opcao" role="option" aria-selected="false" aria-disabled="true" data-valor="Bruno Lopes (removido)"><span class="ds-avatar" aria-hidden="true">BL</span><span>Bruno Lopes (removido)</span><svg class="ds-ic ds-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div>
+</div></div>
+<p class="dica">Abra com clique ou Enter. Setas movem, Enter escolhe, Esc fecha e devolve o foco ao botão.</p></div>
+<details class="comp-guia"><summary>Regras de uso</summary><div class="md"><p>Uma lista curta que abre de um botão e fecha ao escolher: é o "Toda a equipe ▾" da Agenda e a troca de empresa no topo.</p>
+<h2>Quando usar</h2>
+<ul>
+<li>Escolher uma pessoa, uma empresa ou uma visão quando <strong>não cabe</strong> como Abas (mais de 5 pessoas) ou quando a escolha é rara.</li>
+<li>Para valores de formulário, use o Select nativo.</li>
+</ul>
+<h2>Anatomia</h2>
+<p>Botão secundário com <code>chevron-down</code> e <code>aria-haspopup="listbox"</code> / <code>aria-expanded</code>. Lista de 240 px, padding 4, raio <code>ds-raio-menu</code>, fio <code>ds-divisoria</code> e <code>ds-sombra-flutuante</code> (é o único dos componentes desta leva que flutua). Opções de 36 px com avatar de 24 opcional, separador <code>ds-divisoria-suave</code> entre grupos ("Toda a equipe" | pessoas).</p>
+<h2>Estados da opção</h2>
+<ul>
+<li><strong>Hover:</strong> <code>ds-hover-leve</code>.</li>
+<li><strong>Pressionado:</strong> <code>ds-hover</code>.</li>
+<li><strong>Foco (teclado):</strong> anel de 2 px por dentro.</li>
+<li><strong>Selecionado:</strong> check <code>ds-tinta</code> à direita. <strong>O peso não muda</strong>, para o texto não mudar de largura (diferença em relação à proposta v3, que deixava em negrito).</li>
+<li><strong>Desabilitado:</strong> <code>ds-texto-3</code>, sem hover. Use para pessoa removida, com "(removido)" no nome.</li>
+<li><strong>Carregando:</strong> não se aplica.</li>
+</ul>
+<h2>Texto longo</h2>
+<p>Uma linha com reticências. O nome completo vai no <code>title</code> da opção.</p>
+<h2>Teclado</h2>
+<p>Setas movem, Enter escolhe, Esc fecha e devolve o foco ao botão. A ordem é: Toda a equipe, você, a equipe em ordem alfabética e os removidos por último.</p></div></details>
+<div class="comp-matriz ds" inert><section class="pv-bloco"><h4>Estados da opção</h4><table class="pv-m"><tr><th>Variante</th><th>Normal</th><th>Hover</th><th>Pressionado</th><th>Foco</th><th>Desabilitado</th><th>Carregando</th><th>Selecionado</th></tr><tr><td>Opção</td><td><div class="ds-menu" style="width:200px;box-shadow:0 0 0 1px var(--ds-divisoria)"><div class="ds-opcao" role="option" aria-selected="false" tabindex="-1"><span class="ds-avatar" aria-hidden="true">JP</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">João Pereira</span><svg class="ds-ic ds-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div></div></td><td><div class="ds-menu" style="width:200px;box-shadow:0 0 0 1px var(--ds-divisoria)"><div class="ds-opcao" role="option" aria-selected="false" data-estado="hover" tabindex="-1"><span class="ds-avatar" aria-hidden="true">JP</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">João Pereira</span><svg class="ds-ic ds-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div></div></td><td><div class="ds-menu" style="width:200px;box-shadow:0 0 0 1px var(--ds-divisoria)"><div class="ds-opcao" role="option" aria-selected="false" data-estado="pressionado" tabindex="-1"><span class="ds-avatar" aria-hidden="true">JP</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">João Pereira</span><svg class="ds-ic ds-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div></div></td><td><div class="ds-menu" style="width:200px;box-shadow:0 0 0 1px var(--ds-divisoria)"><div class="ds-opcao" role="option" aria-selected="false" data-estado="foco" tabindex="-1"><span class="ds-avatar" aria-hidden="true">JP</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">João Pereira</span><svg class="ds-ic ds-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div></div></td><td><div class="ds-menu" style="width:200px;box-shadow:0 0 0 1px var(--ds-divisoria)"><div class="ds-opcao" role="option" aria-selected="false" aria-disabled="true" tabindex="-1"><span class="ds-avatar" aria-hidden="true">JP</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">João Pereira</span><svg class="ds-ic ds-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div></div></td><td><span class="pv-na">não se aplica</span></td><td><div class="ds-menu" style="width:200px;box-shadow:0 0 0 1px var(--ds-divisoria)"><div class="ds-opcao" role="option" aria-selected="true" tabindex="-1"><span class="ds-avatar" aria-hidden="true">JP</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">João Pereira</span><svg class="ds-ic ds-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div></div></td></tr></table></section></div></section><section class="comp" id="c-etiqueta"><h3 class="comp-t">Etiqueta de status</h3>
+<div class="comp-demo ds"><p class="rot">Funcionando</p><div class="pv-fila"><span class="ds-etiqueta" data-status="aguardando"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Aguardando</span><span class="ds-etiqueta" data-status="confirmado"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>Confirmado</span><span class="ds-etiqueta" data-status="feito"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg>Feito</span><span class="ds-etiqueta" data-status="cancelado"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>Cancelado</span><span class="ds-etiqueta" data-status="faltou"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m17 8 5 5"/><path d="m22 8-5 5"/></svg>Faltou</span><span class="ds-etiqueta" data-status="erro"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>Erro</span></div></div>
+<details class="comp-guia"><summary>Regras de uso</summary><div class="md"><p>Mostra em que pé está um horário: fundo cinza, palavra em <code>ds-texto</code> e a cor do status só no ícone.</p>
+<h2>Regra</h2>
+<ul>
+<li>Sempre <strong>ícone e palavra</strong>. Cor sozinha não basta, e o ícone sozinho só vale no bloco da agenda, que tem a palavra no <code>aria-label</code>.</li>
+<li>Os seis rótulos são fixos: Aguardando, Confirmado, Feito, Cancelado, Faltou e Erro. Nunca "pendente", "concluído" ou "no-show".</li>
+<li>O rosa nunca é status.</li>
+<li>Não é clicável e não tem hover.</li>
+<li>A situação normal não leva etiqueta: só o que pede atenção ganha uma.</li>
+</ul>
+<h2>Por que cinza</h2>
+<p>A v2.1 usava chip colorido, e a agenda ficava um carnaval. Com o fundo <code>ds-hover</code>, a tela continua neutra, e o ícone colorido (3,6:1 ou mais) basta para bater o olho. Quando a palavra precisa de cor (num aviso), use <code>ds-&lt;status&gt;-texto</code> sobre <code>ds-&lt;status&gt;-chip</code>.</p>
+<h2>Estados de dado</h2>
+<p>Os seis status acima. Interação não se aplica.</p>
+<h2>Medidas</h2>
+<p>24 px (<code>ds-a-etiqueta</code>), padding 0 10 0 8, ícone de 14, texto 500 13, raio pílula.</p>
+<h2>Fora desta leva</h2>
+<p>"Entregue", "Não entregue" e "Sem WhatsApp" eram etiquetas na v2.1. Entram quando a tela de mensagens for desenhada.</p></div></details>
+<div class="comp-matriz ds" inert><section class="pv-bloco"><h4>Estados de dado</h4><table class="pv-m"><tr><th>Status</th><th>Etiqueta</th><th>Quando</th></tr><tr><td>Aguardando</td><td><span class="ds-etiqueta" data-status="aguardando"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Aguardando</span></td><td class="pv-na">Lembrete entregue, cliente ainda não respondeu</td></tr><tr><td>Confirmado</td><td><span class="ds-etiqueta" data-status="confirmado"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>Confirmado</span></td><td class="pv-na">Cliente respondeu "Vou sim" pelo WhatsApp</td></tr><tr><td>Feito</td><td><span class="ds-etiqueta" data-status="feito"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg>Feito</span></td><td class="pv-na">Atendimento aconteceu</td></tr><tr><td>Cancelado</td><td><span class="ds-etiqueta" data-status="cancelado"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>Cancelado</span></td><td class="pv-na">Cancelado pelo cliente ou pelo salão</td></tr><tr><td>Faltou</td><td><span class="ds-etiqueta" data-status="faltou"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m17 8 5 5"/><path d="m22 8-5 5"/></svg>Faltou</span></td><td class="pv-na">Passou do horário e o cliente não veio</td></tr><tr><td>Erro</td><td><span class="ds-etiqueta" data-status="erro"><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>Erro</span></td><td class="pv-na">Mensagem não foi entregue ou algo falhou</td></tr></table></section></div></section><section class="comp" id="c-segmento"><h3 class="comp-t">Segmento</h3>
+<div class="comp-demo ds"><p class="rot">Funcionando</p><div class="pv-fila"><div class="ds-segmento" role="group" aria-label="Período" data-js="seg"><button type="button" aria-pressed="false">Dia</button><button type="button" aria-pressed="true">Semana</button></div>
+<div class="ds-segmento" role="group" aria-label="Filtro de clientes" data-js="seg"><button type="button" aria-pressed="true">Todos, 248</button><button type="button" aria-pressed="false">Com horário, 31</button><button type="button" aria-pressed="false">Sem WhatsApp, 12</button></div></div>
+<p class="saida" aria-live="polite">Mostrando: Semana · Todos</p></div>
+<details class="comp-guia"><summary>Regras de uso</summary><div class="md"><p>Troca a visão da mesma coisa, com duas a quatro opções num trilho cinza: Dia ou Semana, Todos ou Com horário.</p>
+<h2>Quando usar</h2>
+<ul>
+<li>Uma escolha sempre ativa, que muda o que está na tela na hora, sem salvar nada.</li>
+<li>Para escolher pessoa, use as Abas. Com mais de 4 opções, use o Select. Para ligar ou desligar uma coisa, um interruptor (ainda não desenhado).</li>
+</ul>
+<h2>Texto</h2>
+<p>Uma ou duas palavras. Uma contagem vai depois de vírgula: "Todos, 248".</p>
+<h2>Estados</h2>
+<ul>
+<li><strong>Hover:</strong> o texto vai de <code>ds-texto-2</code> para <code>ds-texto</code>.</li>
+<li><strong>Pressionado:</strong> fundo <code>ds-hover-leve</code>.</li>
+<li><strong>Foco:</strong> anel de 2 px.</li>
+<li><strong>Selecionado:</strong> fundo <code>ds-superficie</code>, texto <code>ds-texto</code> e <code>ds-sombra</code>, <code>aria-pressed="true"</code>. É uma das duas exceções à regra de sombra só no que flutua: sem ela, no tema claro, o branco quase some no trilho.</li>
+<li><strong>Desabilitado:</strong> <code>ds-texto-3</code>.</li>
+<li><strong>Carregando:</strong> não se aplica. A troca é na hora, e quem carrega é a lista embaixo.</li>
+</ul>
+<h2>Medidas</h2>
+<p>Trilho <code>ds-hover</code> com padding 3 e 2 px entre opções. Opção de 26 px, com clique estendido para 36 (<code>::before</code> de 5 px em cima e embaixo), padding 0 12 e texto 500 13. As medidas 3, 2 e 26 vêm da proposta e ficam fora da escala de espaço, de propósito: são o encaixe do trilho de 32 px.</p></div></details>
+<div class="comp-matriz ds" inert><section class="pv-bloco"><h4>Estados da opção</h4><table class="pv-m"><tr><th>Variante</th><th>Normal</th><th>Hover</th><th>Pressionado</th><th>Foco</th><th>Desabilitado</th><th>Carregando</th><th>Selecionado</th></tr><tr><td>Opção</td><td><div class="ds-segmento" role="group" aria-label="Período"><button type="button" aria-pressed="false">Semana</button></div></td><td><div class="ds-segmento" role="group" aria-label="Período"><button type="button" aria-pressed="false" data-estado="hover">Semana</button></div></td><td><div class="ds-segmento" role="group" aria-label="Período"><button type="button" aria-pressed="false" data-estado="pressionado">Semana</button></div></td><td><div class="ds-segmento" role="group" aria-label="Período"><button type="button" aria-pressed="false" data-estado="foco">Semana</button></div></td><td><div class="ds-segmento" role="group" aria-label="Período"><button type="button" aria-pressed="false" disabled>Semana</button></div></td><td><span class="pv-na">não se aplica</span></td><td><div class="ds-segmento" role="group" aria-label="Período"><button type="button" aria-pressed="true">Semana</button></div></td></tr></table></section></div></section><section class="comp" id="c-abas"><h3 class="comp-t">Abas</h3>
+<div class="comp-demo ds"><p class="rot">Funcionando</p><div class="ds-abas" role="group" aria-label="De quem é a agenda" data-js="abas"><button type="button" class="ds-aba" aria-pressed="true">Toda a equipe</button><button type="button" class="ds-aba" aria-pressed="false"><span class="ds-avatar" aria-hidden="true">AR</span>Ana (você)</button><button type="button" class="ds-aba" aria-pressed="false"><span class="ds-avatar" aria-hidden="true">JP</span>João</button><button type="button" class="ds-aba" aria-pressed="false"><span class="ds-avatar" aria-hidden="true">MF</span>Maria Fernanda</button></div>
+<p class="saida" aria-live="polite">Agenda de toda a equipe</p></div>
+<details class="comp-guia"><summary>Regras de uso</summary><div class="md"><p>Escolhe de quem é a agenda, o financeiro ou a disponibilidade, com pílulas lado a lado e a escolhida no tom claro da marca.</p>
+<h2>Quando usar</h2>
+<ul>
+<li>Filtro de pessoa do administrador, com até <strong>5 pessoas</strong>. Com mais, use o Menu suspenso ("Toda a equipe ▾").</li>
+<li>O prestador não vê as abas: só enxerga a própria agenda. Esconder na tela não é autorização.</li>
+</ul>
+<h2>Texto</h2>
+<p>Primeiro nome, com "(você)" na pessoa logada. A ordem é: Toda a equipe, você, a equipe em ordem alfabética. Pessoa removida não aparece aqui.</p>
+<h2>Estados</h2>
+<ul>
+<li><strong>Hover:</strong> <code>ds-hover-leve</code>, texto <code>ds-texto</code>.</li>
+<li><strong>Pressionado:</strong> <code>ds-hover</code>.</li>
+<li><strong>Foco:</strong> anel de 2 px.</li>
+<li><strong>Selecionado:</strong> fundo <code>ds-menu-ativo</code>, texto <code>ds-tinta</code> (5,3:1) e avatar em <code>ds-superficie</code> com iniciais em tinta. O peso não muda.</li>
+<li><strong>Desabilitado:</strong> <code>ds-texto-3</code>.</li>
+<li><strong>Carregando:</strong> não se aplica.</li>
+</ul>
+<h2>Medidas</h2>
+<p>32 px, com clique de 36, padding 0 12 e texto 500 13. O avatar tem 24 px a 6 px do nome. Há 4 px entre as abas.</p></div></details>
+<div class="comp-matriz ds" inert><section class="pv-bloco"><h4>Estados</h4><table class="pv-m"><tr><th>Variante</th><th>Normal</th><th>Hover</th><th>Pressionado</th><th>Foco</th><th>Desabilitado</th><th>Carregando</th><th>Selecionado</th></tr><tr><td>Só texto</td><td><button type="button" class="ds-aba" aria-pressed="false">Toda a equipe</button></td><td><button type="button" class="ds-aba" aria-pressed="false" data-estado="hover">Toda a equipe</button></td><td><button type="button" class="ds-aba" aria-pressed="false" data-estado="pressionado">Toda a equipe</button></td><td><button type="button" class="ds-aba" aria-pressed="false" data-estado="foco">Toda a equipe</button></td><td><button type="button" class="ds-aba" aria-pressed="false" disabled>Toda a equipe</button></td><td><span class="pv-na">não se aplica</span></td><td><button type="button" class="ds-aba" aria-pressed="true">Toda a equipe</button></td></tr><tr><td>Com avatar</td><td><button type="button" class="ds-aba" aria-pressed="false"><span class="ds-avatar" aria-hidden="true">JP</span>João</button></td><td><button type="button" class="ds-aba" aria-pressed="false" data-estado="hover"><span class="ds-avatar" aria-hidden="true">JP</span>João</button></td><td><button type="button" class="ds-aba" aria-pressed="false" data-estado="pressionado"><span class="ds-avatar" aria-hidden="true">JP</span>João</button></td><td><button type="button" class="ds-aba" aria-pressed="false" data-estado="foco"><span class="ds-avatar" aria-hidden="true">JP</span>João</button></td><td><button type="button" class="ds-aba" aria-pressed="false" disabled><span class="ds-avatar" aria-hidden="true">JP</span>João</button></td><td><span class="pv-na">não se aplica</span></td><td><button type="button" class="ds-aba" aria-pressed="true"><span class="ds-avatar" aria-hidden="true">JP</span>João</button></td></tr></table></section></div></section><section class="comp" id="c-lista"><h3 class="comp-t">Lista</h3>
+<div class="comp-demo ds"><p class="rot">Funcionando</p><div class="ds-lista" role="list" data-js="lista" style="max-width:600px"><div class="ds-linha" role="listitem" tabindex="0"><span class="ds-avatar" aria-hidden="true">MC</span><span class="ds-linha-nome">Marina Costa</span><span class="ds-linha-meta">8 visitas</span><span class="ds-linha-meta">2 nov</span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div><div class="ds-linha" role="listitem" tabindex="0"><span class="ds-avatar" aria-hidden="true">HD</span><span class="ds-linha-nome">Helena Duarte</span><span class="ds-linha-meta">3 visitas</span><span class="ds-linha-meta">hoje</span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div><div class="ds-linha" role="listitem" tabindex="0"><span class="ds-avatar" aria-hidden="true">MF</span><span class="ds-linha-nome">Maria Fernanda de Albuquerque Santos</span><span class="ds-linha-meta">12 visitas</span><span class="ds-linha-meta">18 out</span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div><div class="ds-linha" role="listitem" tabindex="0"><span class="ds-avatar" aria-hidden="true">PA</span><span class="ds-linha-nome">Pedro Alves</span><span class="ds-linha-meta">1 visita</span><span class="ds-linha-meta">16 nov</span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div><div class="ds-linha" role="listitem" tabindex="0" aria-disabled="true"><span class="ds-avatar" aria-hidden="true">BL</span><span class="ds-linha-nome">Bruno Lopes (removido)</span><span class="ds-linha-meta">4 visitas</span><span class="ds-linha-meta">6 nov</span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div></div><p class="saida" aria-live="polite">Clique numa linha para abrir o detalhe.</p></div>
+<details class="comp-guia"><summary>Regras de uso</summary><div class="md"><p>Uma coluna de registros parecidos (clientes, equipe, serviços) em linhas de 40 px que abrem o detalhe.</p>
+<h2>Quando usar</h2>
+<ul>
+<li>Registros com um nome e de dois a três dados curtos. Clicar na linha abre o painel de detalhe.</li>
+<li>Com muitas colunas de números, ou quando a pessoa precisa comparar e ordenar, use uma tabela (ainda não desenhada).</li>
+</ul>
+<h2>Anatomia</h2>
+<p>Avatar de 24 · nome 500 com reticências · até dois dados em <code>ds-texto-2</code> · <code>chevron-right</code> de 14 em <code>ds-texto-3</code>. As colunas têm largura fixa, para os dados ficarem alinhados de uma linha para outra. Fio <code>ds-divisoria-suave</code> entre as linhas.</p>
+<h2>Estados</h2>
+<ul>
+<li><strong>Hover:</strong> <code>ds-hover-leve</code>. A linha arredonda (<code>ds-raio-campo</code>) e o fio some, para não ficar uma caixa dentro de linhas.</li>
+<li><strong>Pressionado:</strong> <code>ds-hover</code>.</li>
+<li><strong>Foco:</strong> anel de 2 px por dentro.</li>
+<li><strong>Selecionado:</strong> é a linha cujo detalhe está aberto, com <code>aria-current="true"</code>, fundo <code>ds-acao-suave</code> e nome em <code>ds-tinta</code>.</li>
+<li><strong>Desabilitado:</strong> pessoa removida, em <code>ds-texto-3</code>, com "(removido)" no nome. Ainda abre o histórico.</li>
+<li><strong>Carregando:</strong> não se aplica. Quem carrega é a lista inteira.</li>
+</ul>
+<h2>Casos de conteúdo</h2>
+<ul>
+<li><strong>Nome longo:</strong> uma linha com reticências; o nome completo fica no detalhe.</li>
+<li><strong>Um item:</strong> a lista não estica para ocupar a tela.</li>
+<li><strong>Muitos:</strong> a lista rola dentro do painel e o cabeçalho da tela fica parado.</li>
+<li><strong>Lista vazia:</strong> é o estado vazio, que vem na próxima leva.</li>
+</ul>
+<h2>Medidas</h2>
+<p>40 px (<code>ds-a-linha</code>), padding 0 12 e 12 px entre colunas.</p></div></details>
+<div class="comp-matriz ds" inert><section class="pv-bloco"><h4>Estados da linha</h4><table class="pv-m"><tr><th>Estado</th><th>Linha</th></tr><tr><td>Normal</td><td><div class="ds-lista" style="max-width:600px"><div class="ds-linha" role="listitem" tabindex="0"><span class="ds-avatar" aria-hidden="true">SM</span><span class="ds-linha-nome">Sofia Martins</span><span class="ds-linha-meta">5 visitas</span><span class="ds-linha-meta">9 nov</span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div></div></td></tr><tr><td>Hover</td><td><div class="ds-lista" style="max-width:600px"><div class="ds-linha" role="listitem" tabindex="0" data-estado="hover"><span class="ds-avatar" aria-hidden="true">SM</span><span class="ds-linha-nome">Sofia Martins</span><span class="ds-linha-meta">5 visitas</span><span class="ds-linha-meta">9 nov</span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div></div></td></tr><tr><td>Pressionado</td><td><div class="ds-lista" style="max-width:600px"><div class="ds-linha" role="listitem" tabindex="0" data-estado="pressionado"><span class="ds-avatar" aria-hidden="true">SM</span><span class="ds-linha-nome">Sofia Martins</span><span class="ds-linha-meta">5 visitas</span><span class="ds-linha-meta">9 nov</span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div></div></td></tr><tr><td>Foco</td><td><div class="ds-lista" style="max-width:600px"><div class="ds-linha" role="listitem" tabindex="0" data-estado="foco"><span class="ds-avatar" aria-hidden="true">SM</span><span class="ds-linha-nome">Sofia Martins</span><span class="ds-linha-meta">5 visitas</span><span class="ds-linha-meta">9 nov</span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div></div></td></tr><tr><td>Desabilitado</td><td><div class="ds-lista" style="max-width:600px"><div class="ds-linha" role="listitem" tabindex="0" aria-disabled="true"><span class="ds-avatar" aria-hidden="true">SM</span><span class="ds-linha-nome">Sofia Martins</span><span class="ds-linha-meta">5 visitas</span><span class="ds-linha-meta">9 nov</span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div></div></td></tr><tr><td>Selecionado</td><td><div class="ds-lista" style="max-width:600px"><div class="ds-linha" role="listitem" tabindex="0" aria-current="true"><span class="ds-avatar" aria-hidden="true">SM</span><span class="ds-linha-nome">Sofia Martins</span><span class="ds-linha-meta">5 visitas</span><span class="ds-linha-meta">9 nov</span><svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div></div></td></tr><tr><td>Carregando</td><td><span class="pv-na">não se aplica: a lista inteira carrega antes (esqueleto, na próxima leva)</span></td></tr></table></section></div></section><section class="comp" id="c-horario"><h3 class="comp-t">Horário</h3>
+<div class="comp-demo ds"><p class="rot">Funcionando</p><div data-js="horarios"><section class="pv-bloco"><h4>Manhã</h4><div class="pv-fila"><button type="button" class="ds-horario" aria-pressed="false">08:30</button><button type="button" class="ds-horario" aria-pressed="false" disabled aria-label="09:00, ocupado">09:00</button><button type="button" class="ds-horario" aria-pressed="false">09:30</button><button type="button" class="ds-horario" aria-pressed="false">10:00</button><button type="button" class="ds-horario" aria-pressed="false" disabled aria-label="10:30, ocupado">10:30</button><button type="button" class="ds-horario" aria-pressed="false">11:00</button><button type="button" class="ds-horario" aria-pressed="false">11:30</button></div></section>
+<section class="pv-bloco" style="margin-top:16px"><h4>Tarde</h4><div class="pv-fila"><button type="button" class="ds-horario" aria-pressed="false">13:00</button><button type="button" class="ds-horario" aria-pressed="false">13:30</button><button type="button" class="ds-horario" aria-pressed="false" disabled aria-label="14:00, ocupado">14:00</button><button type="button" class="ds-horario" aria-pressed="false">14:30</button><button type="button" class="ds-horario" aria-pressed="false">15:00</button></div></section></div>
+<p class="saida" aria-live="polite">Nenhum horário escolhido.</p></div>
+<details class="comp-guia"><summary>Regras de uso</summary><div class="md"><p>Um horário livre para escolher, agrupado em Manhã e Tarde: o escolhido fica preenchido de rosa e o ocupado aparece riscado.</p>
+<h2>Quando usar</h2>
+<ul>
+<li>No novo agendamento e no remarcar, depois de escolhido o serviço, a pessoa e o dia.</li>
+<li>Mostre os ocupados riscados só quando ajudam a entender o dia; se forem a maioria, mostre só os livres.</li>
+</ul>
+<h2>Estados</h2>
+<ul>
+<li><strong>Livre:</strong> fio <code>ds-contorno-forte</code>.</li>
+<li><strong>Hover:</strong> fio <code>ds-contorno-hover</code> e fundo <code>ds-hover-leve</code>.</li>
+<li><strong>Pressionado:</strong> fundo <code>ds-hover</code>.</li>
+<li><strong>Foco:</strong> anel de 2 px.</li>
+<li><strong>Escolhido:</strong> <code>aria-pressed="true"</code>, preenchido em <code>ds-acao</code> com <code>ds-acao-texto</code> (8,8:1), sem marcador. O pêssego da v2.1 saiu.</li>
+<li><strong>Ocupado (desabilitado):</strong> fundo <code>ds-faixa</code>, sem fio, <code>ds-texto-3</code> riscado, <code>aria-label="10:30, ocupado"</code>.</li>
+<li><strong>Carregando:</strong> não se aplica.</li>
+</ul>
+<h2>Casos de conteúdo</h2>
+<ul>
+<li><strong>Alguém ocupou o horário enquanto você olhava:</strong> quem trata é o Aviso, na hora de salvar, com os horários livres mais próximos como botões. O Aviso vem na próxima leva.</li>
+<li><strong>Dia sem horário livre:</strong> é o estado vazio, também na próxima leva.</li>
+</ul>
+<h2>Medidas</h2>
+<p>36 px, no mínimo 72 de largura, padding 0 12, raio <code>ds-raio-campo</code>, texto 500 13 tabular e 12 px entre horários.</p></div></details>
+<div class="comp-matriz ds" inert><section class="pv-bloco"><h4>Estados</h4><table class="pv-m"><tr><th>Variante</th><th>Normal</th><th>Hover</th><th>Pressionado</th><th>Foco</th><th>Desabilitado</th><th>Carregando</th><th>Selecionado</th></tr><tr><td>Horário</td><td><button type="button" class="ds-horario" aria-pressed="false">10:00</button></td><td><button type="button" class="ds-horario" aria-pressed="false" data-estado="hover">10:00</button></td><td><button type="button" class="ds-horario" aria-pressed="false" data-estado="pressionado">10:00</button></td><td><button type="button" class="ds-horario" aria-pressed="false" data-estado="foco">10:00</button></td><td><button type="button" class="ds-horario" aria-pressed="false" disabled aria-label="10:00, ocupado">10:00</button></td><td><span class="pv-na">não se aplica</span></td><td><button type="button" class="ds-horario" aria-pressed="true">10:00</button></td></tr></table></section></div></section></section><section class="sec" id="proximos-passos"><h2>Próximos passos</h2><div class="md"><p>Próxima leva: Bloco da agenda, Aviso, Diálogo, Estado vazio, Esqueleto, Menu de ícones, Topo com busca e Avatar como peça própria.</p></div></section>
+</main></div>
+<script>
+(function(){
+  var raiz=document.documentElement, KEY='dayspot-v3-tema';
+  function salvo(){try{return localStorage.getItem(KEY)}catch(e){return null}}
+  function aplica(t){var real=t==='sistema'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):t;raiz.setAttribute('data-theme',real);
+    document.querySelectorAll('[data-tema]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.tema===t))});}
+  var atual=salvo()||'sistema'; aplica(atual);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){if(atual==='sistema')aplica('sistema')});
+  document.querySelectorAll('[data-tema]').forEach(function(b){b.addEventListener('click',function(){atual=b.dataset.tema;try{localStorage.setItem(KEY,atual)}catch(e){}aplica(atual)})});
+  function q(s,c){return (c||document).querySelector(s)} function qa(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s))}
+  function saida(el,t){var s=el.closest('.comp-demo').querySelector('.saida'); if(s)s.textContent=t}
+  // Botão
+  function carregar(b,ms,fim){b.setAttribute('aria-busy','true');setTimeout(function(){b.removeAttribute('aria-busy');fim&&fim()},ms||1200)}
+  qa('[data-js="carregar"]').forEach(function(b){b.addEventListener('click',function(){carregar(b,1200,function(){saida(b,'"'+b.textContent.trim()+'" feito.')})})});
+  var conf=q('.confirma');
+  qa('[data-js="confirmar"]').forEach(function(b){b.addEventListener('click',function(){conf.hidden=false;q('[data-js="manter"]',conf).focus()})});
+  q('[data-js="manter"]').addEventListener('click',function(){conf.hidden=true;q('[data-js="confirmar"]').focus()});
+  q('[data-js="carregar-cancelar"]').addEventListener('click',function(){var b=this;carregar(b,1000,function(){conf.hidden=true;saida(b,'Horário cancelado. A Helena recebe o aviso pelo WhatsApp.');q('[data-js="confirmar"]').focus()})});
+  conf.addEventListener('keydown',function(e){if(e.key==='Escape'){conf.hidden=true;q('[data-js="confirmar"]').focus()}});
+  // Campo
+  function erro(input,msg){var c=input.closest('.ds-campo'),a=document.getElementById(input.getAttribute('aria-describedby'));
+    if(msg){c.classList.add('ds-campo--erro');input.setAttribute('aria-invalid','true');a.innerHTML='<svg class="ds-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>'+msg}
+    else{c.classList.remove('ds-campo--erro');input.removeAttribute('aria-invalid');a.textContent=a.dataset.padrao||''}}
+  var mail=q('#d-mail'); mail.addEventListener('blur',function(){var v=mail.value.trim();
+    if(!v)return erro(mail,'');
+    if(v.indexOf('@')<0)return erro(mail,'Falta o @, como helena@gmail.com.');
+    if(!/@[^@\s]+\.[^@\s]+$/.test(v))return erro(mail,'Falta o domínio, como @gmail.com.');
+    erro(mail,'')});
+  mail.addEventListener('input',function(){if(mail.getAttribute('aria-invalid'))erro(mail,'')});
+  var tel=q('#d-tel'); tel.addEventListener('input',function(){var d=tel.value.replace(/\D/g,'').slice(0,11),o=d;
+    if(d.length>2)o='('+d.slice(0,2)+') '+d.slice(2);if(d.length>7)o='('+d.slice(0,2)+') '+d.slice(2,7)+'-'+d.slice(7);tel.value=o});
+  tel.addEventListener('blur',function(){var d=tel.value.replace(/\D/g,'');erro(tel,d&&d.length<10?'Faltam números. Use o DDD e o número, como (11) 91234-5678.':'')});
+  var emp=q('#d-emp'),slug=q('#d-slug'),editado=false;
+  function slugify(s){return s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')}
+  emp.addEventListener('input',function(){if(!editado){slug.value=slugify(emp.value);erro(slug,'')}});
+  slug.addEventListener('input',function(){editado=true;var v=slugify(slug.value.replace(/-$/,''))+(/-$/.test(slug.value)?'-':'');slug.value=v;erro(slug,'')});
+  slug.addEventListener('blur',function(){if(slug.value==='salao-centro')erro(slug,'Este endereço já é de outra empresa. Tente salao-centro-2.');else if(!slug.value)erro(slug,'Escreva o endereço, como salao-aurora.')});
+  // Select
+  q('[data-js="servico"]').addEventListener('change',function(){saida(this,this.value?this.value:'Nenhum serviço escolhido.')});
+  // Menu
+  qa('[data-js="menu"]').forEach(function(m){var b=q('button',m),l=q('[role="listbox"]',m),ops=qa('.ds-opcao',m),i=-1;
+    function vivas(){return ops.filter(function(o){return o.getAttribute('aria-disabled')!=='true'})}
+    function marca(n){ops.forEach(function(o){o.classList.remove('ativa')});var v=vivas();i=(n+v.length)%v.length;v[i].classList.add('ativa');l.setAttribute('aria-activedescendant',v[i].id||'');v[i].scrollIntoView({block:'nearest'})}
+    ops.forEach(function(o,k){o.id='d-op-'+k});
+    function abre(){l.hidden=false;b.setAttribute('aria-expanded','true');var v=vivas(),s=v.findIndex(function(o){return o.getAttribute('aria-selected')==='true'});marca(s<0?0:s);l.focus()}
+    function fecha(f){l.hidden=true;b.setAttribute('aria-expanded','false');if(f!==false)b.focus()}
+    function escolhe(o){if(o.getAttribute('aria-disabled')==='true')return;ops.forEach(function(x){x.setAttribute('aria-selected','false')});o.setAttribute('aria-selected','true');q('[data-rotulo]',b).textContent=o.dataset.valor;fecha()}
+    b.addEventListener('click',function(){l.hidden?abre():fecha()});
+    ops.forEach(function(o){o.addEventListener('click',function(){escolhe(o)});o.addEventListener('mousemove',function(){var v=vivas(),k=v.indexOf(o);if(k>=0)marca(k)})});
+    l.addEventListener('keydown',function(e){var v=vivas();if(e.key==='ArrowDown'){e.preventDefault();marca(i+1)}else if(e.key==='ArrowUp'){e.preventDefault();marca(i-1)}else if(e.key==='Home'){e.preventDefault();marca(0)}else if(e.key==='End'){e.preventDefault();marca(v.length-1)}else if(e.key==='Enter'||e.key===' '){e.preventDefault();escolhe(v[i])}else if(e.key==='Escape'||e.key==='Tab'){fecha(e.key!=='Tab')}});
+    document.addEventListener('click',function(e){if(!m.contains(e.target)&&!l.hidden)fecha(false)})});
+  // Segmento
+  function grupo(sel,cb){qa(sel).forEach(function(g){var bs=qa('button',g);bs.forEach(function(x){x.addEventListener('click',function(){bs.forEach(function(y){y.setAttribute('aria-pressed',String(y===x))});cb&&cb(g,x)})})})}
+  grupo('[data-js="seg"]',function(g){var v=qa('[data-js="seg"]').map(function(s){return q('[aria-pressed="true"]',s).textContent.split(',')[0]});saida(g,'Mostrando: '+v.join(' · '))});
+  grupo('[data-js="abas"]',function(g,x){var t=x.textContent.replace(/^[A-Z]{2}/,'').trim();saida(g,t==='Toda a equipe'?'Agenda de toda a equipe':'Agenda de '+t.replace(' (você)',', a sua'))});
+  // Lista
+  qa('[data-js="lista"]').forEach(function(L){var rs=qa('.ds-linha',L);function abre(r){rs.forEach(function(x){x.removeAttribute('aria-current')});r.setAttribute('aria-current','true');saida(L,'Detalhe aberto: '+q('.ds-linha-nome',r).textContent)}
+    rs.forEach(function(r){r.addEventListener('click',function(){abre(r)});r.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();abre(r)}if(e.key==='ArrowDown'&&r.nextElementSibling){e.preventDefault();r.nextElementSibling.focus()}if(e.key==='ArrowUp'&&r.previousElementSibling){e.preventDefault();r.previousElementSibling.focus()}})})});
+  // Horário
+  qa('[data-js="horarios"]').forEach(function(H){var hs=qa('.ds-horario:not([disabled])',H);hs.forEach(function(x){x.addEventListener('click',function(){var on=x.getAttribute('aria-pressed')!=='true';hs.forEach(function(y){y.setAttribute('aria-pressed','false')});x.setAttribute('aria-pressed',String(on));saida(H,on?'Escolhido: quinta, '+x.textContent.replace(':00','h').replace(':','h')+'.':'Nenhum horário escolhido.')})})});
+  var cw=q('.capa-wrap');function capa(){cw.style.setProperty('--e',Math.min(1,cw.clientWidth/960))}capa();addEventListener('resize',capa);
+  // nav ativo
+  var links=qa('nav.lado a'),alvos=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1))});
+  if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){var k=alvos.indexOf(e.target);links.forEach(function(a,j){a.classList.toggle('ativo',j===k)})}})},{rootMargin:'-80px 0px -70% 0px'});alvos.forEach(function(a){a&&io.observe(a)})}
+})();
+</script>
+</body></html>
