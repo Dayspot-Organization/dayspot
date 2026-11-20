@@ -178,13 +178,13 @@ O piloto é a primeira publicação, com uma empresa. As telas se dividem em dua
 | Empresa não encontrada | `/agendar` e `/agendar/:slug` com slug inexistente | §4.10 | #163 |
 | Política de privacidade | `/agendar/:slug/privacidade` | §4.13 | #175 |
 | Login | `/entrar` | §4.2 | #120 |
-| Escolha de empresa | `/empresa`; só com mais de uma membership, na prática não aparece | §4.11 | #120 |
 | Casca do painel: empresa ativa, menu e saída | todas as rotas do painel | abaixo | #121 |
 | Agenda | `/agendamentos` | §4.4 | #57 |
 | Novo agendamento | `/agendamentos/novo` | §4.12 | #58, #163 |
 | Cadastro da empresa | `/cadastro`; o endpoint entra, expor a tela é decisão pendente | §4.1 | #112, #120 |
 
-**Depois do piloto:** aceite de convite (§4.3), prestadores (§4.6), serviços e preços
+**Depois do piloto:** escolha de empresa (§4.11; no piloto, com uma empresa só, o login
+leva direto à agenda), aceite de convite (§4.3), prestadores (§4.6), serviços e preços
 (§4.7, no piloto cadastrados por SQL, #174), financeiro (§4.5), clientes (§4.8),
 disponibilidade (§4.9), remarcar e trocar serviço, `.ics`, seletor de prestador (§4.4) e
 "Meus horários" do cliente.
@@ -202,19 +202,17 @@ flowchart TD
     end
     CAD["Cadastro da empresa<br/>/cadastro · exposição pendente"]
     LOG["Login /entrar"]
-    ESC["Escolha de empresa /empresa<br/>só com mais de uma membership"]
     subgraph CAS["Casca do painel: empresa ativa, menu e saída"]
       AGE["Agenda /agendamentos"]
       NOV["Novo agendamento<br/>/agendamentos/novo"]
       AGE --> NOV
     end
-    LOG -->|"várias memberships"| ESC
-    LOG -->|"uma membership"| AGE
-    ESC --> AGE
+    LOG -->|"uma empresa"| AGE
     CAD -.-> AGE
     CAS -->|"sair"| LOG
   end
   subgraph DEP["Depois do piloto"]
+    ESC["Escolha de empresa /empresa<br/>só com mais de uma membership"]
     ACE["Aceite de convite"]
     D1["Prestadores"]
     D2["Serviços e preços"]
@@ -256,7 +254,7 @@ papel devolvido por `GET /api/me` (2.9, inferido). Todas as rotas da API ficam s
   sessão. Só membership ativo entra. Logout revoga (`revogado_em`, 2.4).
 - **Empresa:** só e-mail e senha, sem slug. Uma membership ativa entra direto; com
   várias, a sessão nasce com `tenant_id` nulo e a tela de escolha grava a empresa pelo
-  slug (decidido, req. §12; §8.2). Tela de escolha em §4.11.
+  slug (decidido, req. §12; §8.2). Tela de escolha em §4.11, depois do piloto.
 - **Telas:** login em `/entrar` (#120); sem sessão, o painel leva para cá. A saída fica
   na casca do painel (#121).
 - **Erros:** e-mail inexistente ou senha errada → 401 `credencial_invalida`, mesma
@@ -416,14 +414,15 @@ papel devolvido por `GET /api/me` (2.9, inferido). Todas as rotas da API ficam s
   `GET /api/publico/{slug}/prestadores`, `GET /api/publico/{slug}/ocupados` e
   `POST /api/publico/{slug}/agendamentos`.
 
-### 4.11 Escolha de empresa
+### 4.11 Escolha de empresa (depois do piloto)
 
 - **Objetivo:** escolher a empresa da sessão quando o usuário tem mais de uma membership
   ativa (decidido, req. §12; §8.2).
 - **Quem:** usuário logado com sessão sem `tenant_id`.
 - **Dados:** empresas devolvidas pelo login, com nome e papel.
-- **Piloto:** com uma empresa, o login entra direto e a tela não aparece na prática.
-- **Backlog:** 2.3, 2.10 (#120). Tela `/empresa`; rota `POST /api/sessao/empresa` com o slug.
+- **Piloto:** fora. Com uma empresa só, o login leva direto à agenda; a tela fica para
+  depois do piloto.
+- **Backlog:** 2.3, 2.10 (#120). Tela `/empresa`, depois do piloto; rota `POST /api/sessao/empresa` com o slug.
 
 ### 4.12 Novo agendamento
 
