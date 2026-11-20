@@ -100,7 +100,9 @@ public class CadastroTests
             _ => texto,
         };
         await using var api = await Servidor.SemBanco();
-        await Assert.ThrowsAnyAsync<NpgsqlException>(() => api.Chamar("POST", Rota, Corpo(campo, texto)));
+        // O EF embrulha a falha de conexão em InvalidOperationException; o interno é o do Npgsql.
+        var erro = await Assert.ThrowsAsync<InvalidOperationException>(() => api.Chamar("POST", Rota, Corpo(campo, texto)));
+        Assert.IsType<NpgsqlException>(erro.InnerException);
     }
 }
 
