@@ -277,3 +277,108 @@ public class CadastroGravacaoTests
         }
     }
 }
+
+public class LimiteCadastroTests
+{
+    private const string Rota = "/api/signup";
+
+    private static Task<HttpResponseMessage> Enviar(Servidor api, string ip, string? encaminhado = null)
+    {
+        var req = new HttpRequestMessage(HttpMethod.Post, Rota)
+        {
+            Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json"),
+        };
+        req.Headers.Add("CF-Connecting-IP", ip);
+        if (encaminhado is not null)
+        {
+            req.Headers.Add("X-Forwarded-For", encaminhado);
+        }
+        return api.Http.SendAsync(req);
+    }
+
+    private static RelogioAjustavel Relogio() => new(new DateTimeOffset(2026, 11, 20, 12, 0, 0, TimeSpan.Zero));
+
+    // Corpo inválido: não toca no banco, e a contagem vale para toda requisição.
+    private static async Task Esgotar(Servidor api, string ip, Func<int, string?>? encaminhado = null)
+    {
+        for (var i = 0; i < 5; i++)
+        {
+            var r = await Enviar(api, ip, encaminhado?.Invoke(i));
+            Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
+        }
+    }
+
+    private static async Task ExigirLimite(HttpResponseMessage r, int retryAfter)
+    {
+        await r.ExigirErro(HttpStatusCode.TooManyRequests, Erros.MuitasTentativas);
+        Assert.Equal(retryAfter.ToString(), Assert.Single(r.Headers.GetValues("Retry-After")));
+    }
+
+    [Fact]
+    public async Task SextoCadastroDoMesmoIpEh429()
+    {
+        await using var api = await Servidor.ComCadastro(Relogio());
+        await Esgotar(api, "203.0.113.1");
+        await ExigirLimite(await Enviar(api, "203.0.113.1"), 3600);
+    }
+
+    [Fact]
+    public async Task RetryAfterEhOQueFaltaDaHora()
+    {
+        var relogio = Relogio();
+        await using var api = await Servidor.ComCadastro(relogio);
+        await Esgotar(api, "203.0.113.1");
+        relogio.Agora += TimeSpan.FromMinutes(45);
+        await ExigirLimite(await Enviar(api, "203.0.113.1"), 900);
+    }
+
+    [Fact]
+    public async Task PassadaAHoraVoltaAAceitar()
+    {
+        var relogio = Relogio();
+        await using var api = await Servidor.ComCadastro(relogio);
+        await Esgotar(api, "203.0.113.1");
+        relogio.Agora += TimeSpan.FromHours(1);
+        Assert.NotEqual(HttpStatusCode.TooManyRequests, (await Enviar(api, "203.0.113.1")).StatusCode);
+    }
+
+    [Fact]
+    public async Task XForwardedForForjadoNaoEscapa()
+    {
+        await using var api = await Servidor.ComCadastro(Relogio());
+        await Esgotar(api, "203.0.113.1", i => $"198.51.100.{i}");
+        await ExigirLimite(await Enviar(api, "203.0.113.1", "198.51.100.200"), 3600);
+    }
+
+    [Fact]
+    public async Task OutroIpTemOProprioLimite()
+    {
+        await using var api = await Servidor.ComCadastro(Relogio());
+        await Esgotar(api, "203.0.113.1");
+        await ExigirLimite(await Enviar(api, "203.0.113.1"), 3600);
+        Assert.NotEqual(HttpStatusCode.TooManyRequests, (await Enviar(api, "203.0.113.2")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Ipv6ContaPorBloco64()
+    {
+        await using var api = await Servidor.ComCadastro(Relogio());
+        for (var i = 1; i <= 5; i++)
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, (await Enviar(api, $"2001:db8:1:1::{i:x}")).StatusCode);
+        }
+        await ExigirLimite(await Enviar(api, "2001:db8:1:1::ff"), 3600);
+        Assert.NotEqual(HttpStatusCode.TooManyRequests, (await Enviar(api, "2001:db8:1:2::1")).StatusCode);
+    }
+
+    [Fact]
+    public async Task LimiteDoCadastroNaoAfetaRotasPublicas()
+    {
+        await using var api = await Servidor.ComPublico(Banco.ConnectionString("DATABASE_URL"));
+        await Esgotar(api, "203.0.113.1");
+        await ExigirLimite(await Enviar(api, "203.0.113.1"), 3600);
+        var req = new HttpRequestMessage(HttpMethod.Get, "/api/publico/alfa");
+        req.Headers.Add("CF-Connecting-IP", "203.0.113.1");
+        Assert.NotEqual(HttpStatusCode.TooManyRequests, (await api.Http.SendAsync(req)).StatusCode);
+    }
+}

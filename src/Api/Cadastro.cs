@@ -1,6 +1,8 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Dayspot.Api.Auth;
 using Dayspot.Api.Dados;
+using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 
 namespace Dayspot.Api;
@@ -27,8 +29,16 @@ public static partial class Cadastro
     [GeneratedRegex("^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$")]
     private static partial Regex PadraoSlug();
 
-    public static async Task<IResult> Criar(HttpContext ctx, AppDb db, CancellationToken ct)
+    public static async Task<IResult> Criar(HttpContext ctx, AppDb db, [FromServices] LimiteCadastro limite, CancellationToken ct)
     {
+        // Antes de ler o corpo; conta toda requisição, inclusive a inválida.
+        if (!limite.Tentar(IpReal.Chave(ctx), out var espera))
+        {
+            ctx.Response.Headers.RetryAfter = ((int)Math.Ceiling(espera.TotalSeconds)).ToString(CultureInfo.InvariantCulture);
+            return Erros.Responder(StatusCodes.Status429TooManyRequests, Erros.MuitasTentativas,
+                "Muitas tentativas de cadastro. Aguarde e tente de novo.");
+        }
+
         var entrada = await Json.Ler<NovoCadastroJson>(ctx.Request, ct);
         if (entrada is null)
         {
