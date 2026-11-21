@@ -126,7 +126,7 @@ public static class Consultas
             .ToListAsync(ct);
 
     /// <summary>
-    /// Cliente do tenant com estes dígitos de telefone (com mais de um, o mais antigo);
+    /// Cliente do tenant com este telefone normalizado (com mais de um, o mais antigo);
     /// sem nenhum, cria. telefone não tem UNIQUE e pode ter duplicados gravados, então
     /// um índice único quebraria na migration: o advisory lock serializa por tenant e
     /// telefone até o fim da transação, sem tocar nos dados.
@@ -137,13 +137,29 @@ public static class Consultas
         await db.Database.ExecuteSqlAsync(
             $"SELECT pg_advisory_xact_lock(hashtextextended({tenantId.ToString()} || ':' || {digitos}, 0))", ct);
         // Varre os clientes do tenant; índice em expressão se a base crescer.
-        var achados = await db.Database.SqlQuery<Guid>($"""
-            SELECT id AS "Value" FROM clientes
-            WHERE tenant_id = {tenantId} AND removido_em IS NULL
-              AND regexp_replace(telefone, '[^0-9]', '', 'g') = {digitos}
-            ORDER BY criado_em, id
+        // Gravado só em dígitos e sem o 55 do país quando sobram 10 ou 11, como em
+        // Publico.NormalizarTelefone: cadastros antigos com +55 ou máscara não são reescritos.
+        var achados = await db.Database.SqlQuery<Guid>($$"""
+            SELECT c.id AS "Value" FROM clientes c
+            WHERE c.tenant_id = {{tenantId}} AND c.removido_em IS NULL
+              AND regexp_replace(regexp_replace(c.telefone, '[^0-9]', '', 'g'), '^55([0-9]{10,11})$', '\1') = {{digitos}}
+            ORDER BY c.criado_em, c.id
             LIMIT 1
             """).ToListAsync(ct);
         return achados.Count > 0 ? achados[0] : (await db.CriarCliente(tenantId, nome, telefone, ct)).Id;
     }
+
+    /// <summary>
+    /// Agendamentos confirmados depois de agora, somando os clientes ativos com este
+    /// telefone normalizado. Chamar com o lock de <see cref="ClienteDoTelefone"/> já pego.
+    /// </summary>
+    public static Task<int> FuturosDoTelefone(this AppDb db, Guid tenantId, string digitos, DateTime agora,
+        CancellationToken ct = default) =>
+        db.Database.SqlQuery<int>($$"""
+            SELECT count(*)::int AS "Value" FROM agendamentos a
+            JOIN clientes c ON c.id = a.cliente_id AND c.tenant_id = a.tenant_id
+            WHERE a.tenant_id = {{tenantId}} AND a.status = 'confirmado' AND a.inicio > {{agora}}
+              AND c.removido_em IS NULL
+              AND regexp_replace(regexp_replace(c.telefone, '[^0-9]', '', 'g'), '^55([0-9]{10,11})$', '\1') = {{digitos}}
+            """).SingleAsync(ct);
 }
