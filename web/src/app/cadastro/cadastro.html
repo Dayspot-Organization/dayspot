@@ -133,6 +133,25 @@
         }
       </div>
 
+      <div class="ds-campo ds-campo--grande" [class.ds-campo--erro]="erros().contato">
+        <label for="k-contato">Contato da empresa</label>
+        <input
+          class="ds-entrada"
+          id="k-contato"
+          type="text"
+          autocomplete="tel"
+          [value]="contato()"
+          (input)="digitarContato(valorDe($event))"
+          [attr.aria-invalid]="erros().contato ? 'true' : null"
+          aria-describedby="k-contato-a"
+        />
+        @if (erros().contato; as erro) {
+          <span class="ds-ajuda" id="k-contato-a"><svg lucideCircleAlert class="ds-ic" aria-hidden="true"></svg><span>{{ erro }}</span></span>
+        } @else {
+          <span class="ds-ajuda" id="k-contato-a">Aparece na página de agendamento, para os clientes falarem com você. Pode ser telefone, WhatsApp ou e-mail.</span>
+        }
+      </div>
+
       <button type="submit" class="ds-botao ds-botao--principal ds-botao--grande">Criar conta e abrir a agenda</button>
 
       <p class="entrada-troca">

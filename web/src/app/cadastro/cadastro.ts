@@ -3,15 +3,13 @@ import { RouterLink } from "@angular/router";
 import { LucideChevronLeft, LucideCircleExclamationPoint, LucideEye, LucideEyeOff } from "@lucide/angular";
 import { PaginaEntrada, SLUG_VALIDO, enderecoDoNome, erroDeEmail, limparEndereco, valorDe } from "../entrada/entrada";
 
-type Campo = "nome" | "email" | "senha" | "empresa" | "endereco";
+type Campo = "nome" | "email" | "senha" | "empresa" | "endereco" | "contato";
 type Erros = Partial<Record<Campo, string>>;
 
 // Cadastro (/cadastro, #120, especificacao-fluxo §4.1) em duas etapas no mesmo formulário:
-// 1. sua conta (nome, e-mail, senha) e 2. sua empresa (nome e endereço da página).
+// 1. sua conta (nome, e-mail, senha) e 2. sua empresa (nome, endereço da página e contato).
 // "Continuar" só confere os campos; nada é gravado antes de "Criar conta e abrir a agenda".
-// Por enquanto só a tela: POST /api/signup entra com o #112, e com ele os estados de envio,
-// e-mail ou endereço já usados, muitas tentativas e sem conexão. O campo de contato fica de fora
-// por decisão de 20/11/2026.
+// O contato é obrigatório (decisão de 20/11/2026) e aparece na página pública (#170).
 @Component({
   selector: "app-cadastro",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,6 +27,7 @@ export class Cadastro {
   readonly senhaVisivel = signal(false);
   readonly empresa = signal("");
   readonly endereco = signal("");
+  readonly contato = signal("");
   /** Depois que a pessoa mexe no endereço, ele para de acompanhar o nome da empresa. */
   private enderecoEditado = false;
   readonly erros = signal<Erros>({});
@@ -56,6 +55,11 @@ export class Cadastro {
     this.endereco.set(limpo);
     this.enderecoEditado = true;
     this.limparErro("endereco");
+  }
+
+  digitarContato(valor: string) {
+    this.contato.set(valor);
+    this.limparErro("contato");
   }
 
   alternarSenha() {
@@ -93,9 +97,14 @@ export class Cadastro {
     else if (!SLUG_VALIDO.test(this.endereco())) {
       erros.endereco = "Use de 3 a 50 letras sem acento, números ou hífen.";
     }
+    if (!this.contato().trim()) erros.contato = "Escreva um contato, como (11) 98765-4321.";
+    else if (this.contato().trim().length > 120) erros.contato = "Use até 120 caracteres.";
     this.erros.set(erros);
-    if (erros.empresa || erros.endereco) {
-      this.focar(erros.empresa ? "k-empresa" : "k-endereco");
+
+    const primeiro = (["empresa", "endereco", "contato"] as const).find((c) => erros[c]);
+    if (primeiro) {
+      this.focar(`k-${primeiro}`);
+      return;
     }
   }
 
