@@ -172,6 +172,10 @@ public static class Consultas
     public static Task<Usuario?> BuscarUsuarioPorEmail(this AppDb db, string email, CancellationToken ct = default) =>
         db.Usuarios.FirstOrDefaultAsync(u => u.Email.ToLower() == email, ct);
 
+    /// <summary>Usuário da sessão: a FK de sessoes.usuario_id garante que existe.</summary>
+    public static Task<Usuario> BuscarUsuario(this AppDb db, Guid id, CancellationToken ct = default) =>
+        db.Usuarios.SingleAsync(u => u.Id == id, ct);
+
     /// <summary>Empresas em que o usuário tem membership ativo, em ordem de nome.</summary>
     public static Task<List<EmpresaDoUsuario>> ListarEmpresasDoUsuario(this AppDb db, Guid usuarioId, CancellationToken ct = default) =>
         (from m in db.Memberships

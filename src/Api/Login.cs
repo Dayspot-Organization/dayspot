@@ -12,6 +12,11 @@ public sealed record EmpresaJson(string Nome, string Slug, string Papel);
 /// <summary>As empresas ativas do usuário; com mais de uma, a SPA mostra a escolha (2.10).</summary>
 public sealed record LoginJson(IEnumerable<EmpresaJson> Empresas);
 
+public sealed record UsuarioJson(Guid Id, string Nome, string Email);
+
+/// <summary>Resposta do GET /api/me. EmpresaAtiva nula: sessão ainda sem empresa escolhida.</summary>
+public sealed record EuJson(UsuarioJson Usuario, IEnumerable<EmpresaJson> Empresas, EmpresaJson? EmpresaAtiva);
+
 /// <summary>
 /// Login e escolha da empresa da sessão (2.3; requisitos §9 e §12). Rodam na transação
 /// por requisição; usuarios, memberships, tenants e sessoes ficam fora do RLS (guia
@@ -71,9 +76,27 @@ public static class Login
             Path = "/",
             MaxAge = Duracao,
         });
-        return Json.Responder(StatusCodes.Status200OK,
-            new LoginJson(empresas.Select(e => new EmpresaJson(e.Nome, e.Slug, e.Papel))));
+        return Json.Responder(StatusCodes.Status200OK, new LoginJson(empresas.Select(ParaJson)));
     }
+
+    /// <summary>
+    /// GET /api/me (2.9): o usuário da sessão, as empresas com membership ativo e o papel
+    /// em cada uma, e a empresa ativa da sessão. Nula com a empresa ainda não escolhida
+    /// (várias memberships) ou com a membership dela removida depois do login.
+    /// </summary>
+    public static async Task<IResult> Eu(HttpContext ctx, AppDb db, CancellationToken ct)
+    {
+        var sessao = ctx.Features.Get<Sessao>()!; // o UseAutenticacao (2.5) já deu 401 sem ela
+        var usuario = await db.BuscarUsuario(sessao.UsuarioId, ct);
+        var empresas = await db.ListarEmpresasDoUsuario(sessao.UsuarioId, ct);
+        var ativa = empresas.FirstOrDefault(e => e.TenantId == sessao.TenantId);
+        return Json.Responder(StatusCodes.Status200OK, new EuJson(
+            new UsuarioJson(usuario.Id, usuario.Nome, usuario.Email),
+            empresas.Select(ParaJson),
+            ativa is null ? null : ParaJson(ativa)));
+    }
+
+    private static EmpresaJson ParaJson(EmpresaDoUsuario e) => new(e.Nome, e.Slug, e.Papel);
 
     /// <summary>
     /// Grava na sessão a empresa escolhida pelo slug. Única rota que recebe a empresa no

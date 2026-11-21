@@ -25,6 +25,7 @@ public static class Rotas
 
         app.MapPost("/api/login", Login.Entrar);
         app.MapPost("/api/sessao/empresa", Login.EscolherEmpresa);
+        app.MapMethods("/api/me", Leitura, Login.Eu);
 
         app.MapPost("/api/clientes", Clientes.Criar);
         app.MapMethods("/api/clientes", Leitura, Clientes.Listar);
