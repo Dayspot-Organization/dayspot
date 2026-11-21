@@ -131,13 +131,22 @@ public sealed class Servidor : IAsyncDisposable
     /// As rotas sobre uma transação do app_user com set_config(..., true), como faz o
     /// UseTransacaoNasRotas, desfeita no fim do teste.
     /// </summary>
-    public static async Task<Servidor> ComBanco(Guid tenant)
+    public static async Task<Servidor> ComBanco(Guid tenant, bool autenticar = false)
     {
         var db = new AppDb(AppDb.Opcoes(Banco.ConnectionString("DATABASE_URL")));
         var tx = await db.IniciarComTenant(tenant);
         return await Criar(
             s => s.AddSingleton(db).AddSingleton(new Fixos(tenant, Seed.Prestador, Seed.ServicoAlfa)),
-            app => app.MapApi(), db, tx);
+            app =>
+            {
+                // Com autenticar, a sessão é lida na mesma transação do teste.
+                if (autenticar)
+                {
+                    app.UseRouting();
+                    app.UseAutenticacao();
+                }
+                app.MapApi();
+            }, db, tx);
     }
 
     /// <summary>
@@ -181,6 +190,7 @@ public sealed class Servidor : IAsyncDisposable
         {
             app.UseRouting();
             app.UsePublico();
+            app.UseAutenticacao();
             app.UseTransacaoNasRotas(ctx => Publico.TenantDaRota(ctx) ?? Seed.Alfa);
             app.MapApi();
         });

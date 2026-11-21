@@ -253,6 +253,10 @@ public class AgendamentosTests
         await using var dono = await Banco.Conectar("MIGRATIONS_DATABASE_URL");
         await using var api = await Servidor.ComPublico(Banco.ConnectionString("DATABASE_URL"));
         var inicio = new DateTime(2098, 3, 1, 9, 0, 0, DateTimeKind.Utc);
+        var sessao = Guid.NewGuid();
+        await dono.Exec("INSERT INTO sessoes (id, usuario_id, tenant_id, expira_em) VALUES ($1, $2, $3, now() + interval '1 hour')",
+            sessao, Seed.AdminAlfa, Seed.Alfa);
+        api.Http.DefaultRequestHeaders.Add("Cookie", $"{Login.Cookie}={sessao}");
         try
         {
             var respostas = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ =>
@@ -267,6 +271,7 @@ public class AgendamentosTests
         finally
         {
             await dono.Exec("DELETE FROM agendamentos WHERE tenant_id = $1 AND inicio = $2", Seed.Alfa, inicio);
+            await dono.Exec("DELETE FROM sessoes WHERE id = $1", sessao);
         }
     }
 
