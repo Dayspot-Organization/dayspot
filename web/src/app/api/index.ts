@@ -91,12 +91,55 @@ export interface NovoAgendamentoPublico {
 
 export type AgendamentoPublico = Omit<Agendamento, "cliente_id" | "cliente_nome">;
 
+/** Corpo do POST /api/signup (#112): conta, empresa e contato público numa chamada só. */
+export interface NovoCadastro {
+  nome: string;
+  email: string;
+  senha: string;
+  empresa_nome: string;
+  empresa_slug: string;
+  contato: string;
+}
+
+/** Resposta 201 do POST /api/signup. */
+export interface Cadastrado {
+  usuario_id: string;
+  tenant_id: string;
+  slug: string;
+  papel: string;
+}
+
+/** Corpo do POST /api/login (#113): só e-mail e senha, sem empresa. */
+export interface Credenciais {
+  email: string;
+  senha: string;
+}
+
+/** Rotas de sessão que o interceptor trata à parte no 401 (http.ts). */
+export const ROTA_LOGIN = "/api/login";
+export const ROTA_EU = "/api/me";
+
 const rotaPublica = (slug: string) => `/api/publico/${encodeURIComponent(slug)}`;
 
 /** Única porta de entrada para a API. Os erros chegam convertidos pelo errosApiInterceptor. */
 @Injectable({ providedIn: "root" })
 export class Api {
   private readonly http = inject(HttpClient);
+
+  /** POST /api/signup. 409 email_em_uso ou slug_em_uso; 429 muitas_tentativas com Retry-After. */
+  cadastrar(novo: NovoCadastro) {
+    return this.http.post<Cadastrado>("/api/signup", novo);
+  }
+
+  /** POST /api/login. 401 credencial_invalida; o corpo (empresas) só importa depois do piloto. */
+  entrar(credenciais: Credenciais) {
+    return this.http.post<unknown>(ROTA_LOGIN, credenciais);
+  }
+
+  /** GET /api/me. 401 sem sessão; o formato da resposta é do #119. */
+  eu() {
+    return this.http.get<unknown>(ROTA_EU);
+  }
 
   /** GET /api/agendamentos. Sem de/ate, a API usa o período padrão; sem prestador_id, todos do tenant. */
   listarAgendamentos(de?: string, ate?: string, prestador_id?: string) {
