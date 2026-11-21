@@ -1,10 +1,34 @@
 import { ChangeDetectionStrategy, Component, ElementRef, Injector, afterNextRender, inject, signal } from "@angular/core";
-import { RouterLink } from "@angular/router";
+import { Router, RouterLink } from "@angular/router";
 import { LucideChevronLeft, LucideCircleExclamationPoint, LucideEye, LucideEyeOff } from "@lucide/angular";
+import { Api, ApiError, mensagemDeErro } from "../api";
 import { PaginaEntrada, SLUG_VALIDO, enderecoDoNome, erroDeEmail, limparEndereco, valorDe } from "../entrada/entrada";
 
 type Campo = "nome" | "email" | "senha" | "empresa" | "endereco" | "contato";
 type Erros = Partial<Record<Campo, string>>;
+
+/** Envio que passa disso ganha o aviso de "está demorando". */
+const MS_LENTO = 5000;
+
+/** `detalhes.campo` do POST /api/signup → campo da tela. */
+const CAMPOS_DA_API = new Map<string, Campo>([
+  ["nome", "nome"],
+  ["email", "email"],
+  ["senha", "senha"],
+  ["empresa_nome", "empresa"],
+  ["empresa_slug", "endereco"],
+  ["contato", "contato"],
+]);
+
+export function campoDaTela(campoApi: string): Campo | undefined {
+  return CAMPOS_DA_API.get(campoApi);
+}
+
+/** Texto fixo onde ele diz mais que a mensagem da API; nos outros, vale a da API. */
+const TEXTOS_DE_CONFLITO = new Map([
+  ["email_em_uso", "Este e-mail já tem conta."],
+  ["slug_em_uso", "Esse endereço já está em uso. Tente outro."],
+]);
 
 // Cadastro (/cadastro, #120, especificacao-fluxo §4.1) em duas etapas no mesmo formulário:
 // 1. sua conta (nome, e-mail, senha) e 2. sua empresa (nome, endereço da página e contato).
@@ -19,6 +43,8 @@ type Erros = Partial<Record<Campo, string>>;
 export class Cadastro {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
+  private readonly api = inject(Api);
+  private readonly router = inject(Router);
 
   readonly etapa = signal<1 | 2>(1);
   readonly nome = signal("");
@@ -31,6 +57,12 @@ export class Cadastro {
   /** Depois que a pessoa mexe no endereço, ele para de acompanhar o nome da empresa. */
   private enderecoEditado = false;
   readonly erros = signal<Erros>({});
+  /** 409 email_em_uso: o erro do e-mail ganha o link para Entrar. */
+  readonly emailJaTemConta = signal(false);
+  /** Erro que não é de um campo: muitas tentativas, sem conexão, erro interno. */
+  readonly erroGeral = signal("");
+  readonly enviando = signal(false);
+  readonly lento = signal(false);
 
   protected readonly valorDe = valorDe;
 
@@ -106,6 +138,56 @@ export class Cadastro {
       this.focar(`k-${primeiro}`);
       return;
     }
+    if (this.enviando()) return;
+    this.enviar();
+  }
+
+  private enviar() {
+    this.enviando.set(true);
+    this.erroGeral.set("");
+    const relogio = setTimeout(() => this.lento.set(true), MS_LENTO);
+    const fim = () => {
+      clearTimeout(relogio);
+      this.enviando.set(false);
+      this.lento.set(false);
+    };
+    this.api
+      .cadastrar({
+        nome: this.nome().trim(),
+        email: this.email().trim(),
+        senha: this.senha(),
+        empresa_nome: this.empresa().trim(),
+        empresa_slug: this.endereco(),
+        contato: this.contato().trim(),
+      })
+      .subscribe({
+        next: () => {
+          fim();
+          void this.router.navigateByUrl("/agendamentos");
+        },
+        error: (e: unknown) => {
+          fim();
+          this.mostrarErro(e);
+        },
+      });
+  }
+
+  /** Erro com campo vai para o campo (voltando à etapa 1, se for dela); o resto vira aviso geral. */
+  private mostrarErro(e: unknown) {
+    const campo = e instanceof ApiError && e.campo ? campoDaTela(e.campo) : undefined;
+    if (!(e instanceof ApiError) || !campo) {
+      this.erroGeral.set(mensagemDeErro(e));
+      return;
+    }
+    this.erros.set({ [campo]: TEXTOS_DE_CONFLITO.get(e.codigo) ?? e.mensagem });
+    this.emailJaTemConta.set(e.codigo === "email_em_uso");
+    const daEtapa1 = campo === "nome" || campo === "email" || campo === "senha";
+    if (daEtapa1 && this.etapa() !== 1) {
+      this.etapa.set(1);
+      afterNextRender(() => this.focar(`k-${campo}`), { injector: this.injector });
+    } else {
+      this.focar(`k-${campo}`);
+    }
   }
 
   /** Troca de etapa sem perder nada; o foco vai para o título da nova etapa. */
@@ -115,6 +197,8 @@ export class Cadastro {
   }
 
   private limparErro(campo: Campo) {
+    this.erroGeral.set("");
+    if (campo === "email") this.emailJaTemConta.set(false);
     if (!this.erros()[campo]) return;
     this.erros.update((e) => {
       const resto = { ...e };

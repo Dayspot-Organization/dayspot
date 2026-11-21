@@ -40,7 +40,15 @@
           [attr.aria-describedby]="erros().email ? 'k-email-a' : null"
         />
         @if (erros().email; as erro) {
-          <span class="ds-ajuda" id="k-email-a"><svg lucideCircleAlert class="ds-ic" aria-hidden="true"></svg><span>{{ erro }}</span></span>
+          <span class="ds-ajuda" id="k-email-a">
+            <svg lucideCircleAlert class="ds-ic" aria-hidden="true"></svg>
+            <span>
+              {{ erro }}
+              @if (emailJaTemConta()) {
+                <a routerLink="/entrar">Entrar</a>
+              }
+            </span>
+          </span>
         }
       </div>
 
@@ -152,10 +160,27 @@
         }
       </div>
 
-      <button type="submit" class="ds-botao ds-botao--principal ds-botao--grande">Criar conta e abrir a agenda</button>
+      @if (erroGeral()) {
+        <div class="ds-aviso ds-aviso--erro" role="alert">
+          <svg lucideCircleAlert class="ds-ic" aria-hidden="true"></svg>
+          <span>{{ erroGeral() }}</span>
+        </div>
+      }
+
+      <button
+        type="submit"
+        class="ds-botao ds-botao--principal ds-botao--grande"
+        [disabled]="enviando()"
+        [attr.aria-busy]="enviando() ? 'true' : null"
+      >
+        Criar conta e abrir a agenda
+      </button>
+      @if (lento()) {
+        <p class="entrada-lento" role="status">Está demorando um pouco. Aguarde.</p>
+      }
 
       <p class="entrada-troca">
-        <button type="button" class="ds-botao ds-botao--fantasma" (click)="voltar()">
+        <button type="button" class="ds-botao ds-botao--fantasma" [disabled]="enviando()" (click)="voltar()">
           <svg lucideChevronLeft class="ds-ic" aria-hidden="true"></svg>
           Voltar
         </button>
