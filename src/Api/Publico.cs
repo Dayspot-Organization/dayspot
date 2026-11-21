@@ -9,7 +9,7 @@ using Dayspot.Api.Dados;
 
 namespace Dayspot.Api;
 
-public sealed record EmpresaPublicaJson(string Nome, string FusoHorario);
+public sealed record EmpresaPublicaJson(string Nome, string FusoHorario, string Contato);
 
 public sealed record ServicoPublicoJson(Guid Id, string Nome, int DuracaoMinutos, int PrecoCentavos);
 
@@ -115,7 +115,7 @@ public static class Publico
     public static IResult LerEmpresa(HttpContext ctx)
     {
         var empresa = Empresa(ctx);
-        return Json.Responder(StatusCodes.Status200OK, new EmpresaPublicaJson(empresa.Nome, empresa.FusoHorario));
+        return Json.Responder(StatusCodes.Status200OK, new EmpresaPublicaJson(empresa.Nome, empresa.FusoHorario, empresa.Contato));
     }
 
     /// <summary>GET /api/publico/{slug}/servicos: só os ativos.</summary>
