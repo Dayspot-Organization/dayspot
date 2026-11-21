@@ -7,6 +7,7 @@ import { Cadastro } from "./cadastro/cadastro";
 import { Entrar } from "./entrar/entrar";
 import { Painel, trilhaDe } from "./layout";
 import { NovoAgendamento } from "./novo-agendamento/novo-agendamento";
+import { sessaoGuard } from "./sessao";
 
 // data.titulo vira a trilha da top-bar (layout.ts): "Agenda › Novo agendamento".
 export const routes: Routes = [
@@ -21,13 +22,15 @@ export const routes: Routes = [
       { path: "**", component: Agendar },
     ],
   },
-  // Entrar e Cadastro (#120): fora da casca do painel. Por enquanto só as telas; o guard do
-  // painel e o 401 que leva a /entrar entram com os endpoints de sessão (#113, #119).
+  // Entrar e Cadastro (#120): fora da casca do painel e sem guarda.
   { path: "entrar", component: Entrar, data: { titulo: "Entrar" } },
   { path: "cadastro", component: Cadastro, data: { titulo: "Cadastro" } },
+  // Painel só com sessão (sessaoGuard). O "**" é filho daqui: rota inexistente sem sessão
+  // vai para /entrar; com sessão, para a agenda.
   {
     path: "",
     component: Painel,
+    canActivate: [sessaoGuard],
     children: [
       { path: "", pathMatch: "full", redirectTo: "agendamentos" },
       {
