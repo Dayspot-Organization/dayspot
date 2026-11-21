@@ -8,7 +8,7 @@ namespace Dayspot.Api.Tests;
 
 /// <summary>
 /// POST /api/login e POST /api/sessao/empresa (2.3). Usuários e empresas entram na
-/// transação do teste (<see cref="Servidor.ComBanco"/>), desfeita no fim.
+/// transação do teste (<see cref="Servidor.ComBanco"/>, com o UseAutenticacao), desfeita no fim.
 /// </summary>
 public class LoginTests
 {
@@ -73,7 +73,7 @@ public class LoginTests
     [Fact]
     public async Task CredencialCertaCriaSessaoNaUnicaEmpresa()
     {
-        await using var api = await Servidor.ComBanco(Seed.Alfa);
+        await using var api = await Servidor.ComBanco(Seed.Alfa, autenticar: true);
         var (usuario, email) = await Usuario(api.Db);
         var empresa = await NovaEmpresa(api.Db, usuario, "Salão Teste");
         await Membership(api.Db, usuario, empresa, "administrador");
@@ -98,7 +98,7 @@ public class LoginTests
     [Fact]
     public async Task SemMembershipAtivoNaoEntra()
     {
-        await using var api = await Servidor.ComBanco(Seed.Alfa);
+        await using var api = await Servidor.ComBanco(Seed.Alfa, autenticar: true);
         var (semNenhuma, email1) = await Usuario(api.Db);
         var (soRemovida, email2) = await Usuario(api.Db);
         var empresa = await NovaEmpresa(api.Db, soRemovida, "Empresa Antiga");
@@ -116,7 +116,7 @@ public class LoginTests
     [Fact]
     public async Task VariasEmpresasSessaoSemTenantAteEscolher()
     {
-        await using var api = await Servidor.ComBanco(Seed.Alfa);
+        await using var api = await Servidor.ComBanco(Seed.Alfa, autenticar: true);
         var (usuario, email) = await Usuario(api.Db);
         var beta = await NovaEmpresa(api.Db, usuario, "B Empresa");
         var alfa = await NovaEmpresa(api.Db, usuario, "A Empresa");
@@ -142,7 +142,7 @@ public class LoginTests
     [Fact]
     public async Task SlugSemMembershipAtivoEh404ESessaoNaoMuda()
     {
-        await using var api = await Servidor.ComBanco(Seed.Alfa);
+        await using var api = await Servidor.ComBanco(Seed.Alfa, autenticar: true);
         var (usuario, email) = await Usuario(api.Db);
         var (outro, _) = await Usuario(api.Db);
         var a = await NovaEmpresa(api.Db, usuario, "A");
@@ -165,7 +165,7 @@ public class LoginTests
     [Fact]
     public async Task EmailInexistenteESenhaErradaTemAMesmaResposta()
     {
-        await using var api = await Servidor.ComBanco(Seed.Alfa);
+        await using var api = await Servidor.ComBanco(Seed.Alfa, autenticar: true);
         var (usuario, email) = await Usuario(api.Db);
         await Membership(api.Db, usuario, await NovaEmpresa(api.Db, usuario, "X"), "administrador");
 
@@ -183,7 +183,7 @@ public class LoginTests
     [Fact]
     public async Task EscolherEmpresaSemSessaoValidaEh401()
     {
-        await using var api = await Servidor.ComBanco(Seed.Alfa);
+        await using var api = await Servidor.ComBanco(Seed.Alfa, autenticar: true);
         var (usuario, email) = await Usuario(api.Db);
         var a = await NovaEmpresa(api.Db, usuario, "A");
         await Membership(api.Db, usuario, a, "administrador");

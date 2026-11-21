@@ -73,6 +73,7 @@ for (var tentativa = 1; ; tentativa++)
 
 app.UseRouting();
 app.UsePublico();
+app.UseAutenticacao();
 // Toda requisição numa transação com o tenant: o do slug nas rotas públicas; nas
 // demais, na Fatia 2 ele vem da sessão.
 app.UseTransacaoNasRotas(ctx => Publico.TenantDaRota(ctx) ?? cfg.TenantFixo);

@@ -81,12 +81,7 @@ public static class Login
     /// </summary>
     public static async Task<IResult> EscolherEmpresa(HttpContext ctx, AppDb db, CancellationToken ct)
     {
-        // Lê a sessão do cookie enquanto não há o middleware de autenticação (2.5).
-        var sessao = Guid.TryParse(ctx.Request.Cookies[Cookie], out var id) ? await db.BuscarSessaoValida(id, ct) : null;
-        if (sessao is null)
-        {
-            return Erros.Responder(StatusCodes.Status401Unauthorized, Erros.NaoAutenticado, "Sessão expirada. Entre de novo.");
-        }
+        var sessao = ctx.Features.Get<Sessao>()!; // o UseAutenticacao (2.5) já deu 401 sem ela
         var entrada = await Json.Ler<EscolhaEmpresaJson>(ctx.Request, ct);
         if (entrada is null)
         {
