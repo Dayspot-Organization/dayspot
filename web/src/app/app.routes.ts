@@ -3,6 +3,8 @@ import { Title } from "@angular/platform-browser";
 import { type RouterStateSnapshot, type Routes, TitleStrategy } from "@angular/router";
 import { Agendamentos } from "./agendamentos/agendamentos";
 import { Agendar } from "./agendar/agendar";
+import { Cadastro } from "./cadastro/cadastro";
+import { Entrar } from "./entrar/entrar";
 import { Painel, trilhaDe } from "./layout";
 import { NovoAgendamento } from "./novo-agendamento/novo-agendamento";
 
@@ -19,6 +21,10 @@ export const routes: Routes = [
       { path: "**", component: Agendar },
     ],
   },
+  // Entrar e Cadastro (#120): fora da casca do painel. Por enquanto só as telas; o guard do
+  // painel e o 401 que leva a /entrar entram com os endpoints de sessão (#113, #119).
+  { path: "entrar", component: Entrar, data: { titulo: "Entrar" } },
+  { path: "cadastro", component: Cadastro, data: { titulo: "Cadastro" } },
   {
     path: "",
     component: Painel,
