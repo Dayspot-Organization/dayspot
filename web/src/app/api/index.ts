@@ -2,9 +2,9 @@
 // 00004 e 00007); os handlers das cards 1.4, 1.5 e 1.6 seguem este formato.
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Injectable, inject } from "@angular/core";
-import { ApiError, ErroRede } from "./http";
+import { ApiError, ErroRede, ROTA_EU, ROTA_LOGIN } from "./http";
 
-export { ApiError, ErroRede };
+export { ApiError, ErroRede, ROTA_EU, ROTA_LOGIN };
 
 // Só os códigos em que um texto fixo diz mais que a mensagem da API; nos outros
 // (requisicao_invalida, nao_encontrado, desconhecidos) a mensagem da API já diz o campo.
@@ -115,10 +115,6 @@ export interface Credenciais {
   email: string;
   senha: string;
 }
-
-/** Rotas de sessão que o interceptor trata à parte no 401 (http.ts). */
-export const ROTA_LOGIN = "/api/login";
-export const ROTA_EU = "/api/me";
 
 const rotaPublica = (slug: string) => `/api/publico/${encodeURIComponent(slug)}`;
 
