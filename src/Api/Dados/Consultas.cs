@@ -12,7 +12,7 @@ public sealed record NovaEmpresa(string Email, string SenhaHash, string Nome, st
 
 public sealed record EmpresaCriada(Guid UsuarioId, Guid TenantId);
 
-public sealed record EmpresaPublica(Guid Id, string Nome, string FusoHorario);
+public sealed record EmpresaPublica(Guid Id, string Nome, string FusoHorario, string Contato);
 
 public sealed record PrestadorPublico(Guid Id, string Nome);
 
@@ -121,12 +121,17 @@ public static class Consultas
 
     /// <summary>
     /// A única consulta sem tenantId: é ela que descobre o tenant, antes da transação.
-    /// tenants fica fora do RLS (guia §009), e só estas colunas saem daqui.
+    /// tenants fica fora do RLS (guia §009), e só estas colunas saem daqui. Nulo também
+    /// sem contato (vazio ou só espaços): a página pública exige contato (#170).
     /// </summary>
-    public static Task<EmpresaPublica?> BuscarEmpresaPorSlug(this AppDb db, string slug, CancellationToken ct = default) =>
-        db.Tenants.Where(t => t.Slug == slug)
-            .Select(t => new EmpresaPublica(t.Id, t.Nome, t.FusoHorario))
+    public static async Task<EmpresaPublica?> BuscarEmpresaPorSlug(this AppDb db, string slug, CancellationToken ct = default)
+    {
+        var t = await db.Tenants.Where(t => t.Slug == slug)
+            .Select(t => new { t.Id, t.Nome, t.FusoHorario, t.ContatoPublico })
             .FirstOrDefaultAsync(ct);
+        var contato = t?.ContatoPublico?.Trim();
+        return string.IsNullOrEmpty(contato) ? null : new EmpresaPublica(t!.Id, t.Nome, t.FusoHorario, contato);
+    }
 
     public static Task<List<Servico>> ListarServicosAtivos(this AppDb db, Guid tenantId, CancellationToken ct = default) =>
         db.Servicos.Where(s => s.TenantId == tenantId && s.Ativo)

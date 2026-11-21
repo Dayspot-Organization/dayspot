@@ -325,8 +325,8 @@ adote.
 
 **`contato_publico` entra depois, por `ALTER TABLE`** (migration `20261120120000_AdicionarContatoPublico`, #112): telefone,
 WhatsApp ou e-mail da empresa, dado público exibido na página de agendamento. Até 120
-caracteres (`CHECK contato_publico_tamanho`), nulo nas empresas antigas e no seed,
-obrigatório no cadastro (`POST /api/signup`).
+caracteres (`CHECK contato_publico_tamanho`), nulo nas empresas antigas, fictício no seed,
+obrigatório no cadastro (`POST /api/signup`). Sem contato, as rotas públicas respondem 404 (#170).
 
 ```sql
 -- Up
@@ -1138,7 +1138,8 @@ tenant, portanto zero linhas (RLS falha fechado) ou, pior, bug silencioso nas
 tabelas fora do RLS. Por isso toda consulta roda dentro de uma transação aberta por
 este helper, com uma exceção: `BuscarEmpresaPorSlug` roda **antes** da transação nas
 rotas públicas, porque é ela que descobre o tenant. Lê só `tenants`, que fica fora do
-RLS, filtra pelo slug da rota e devolve só `id`, `nome` e `fuso_horario`.
+RLS, filtra pelo slug da rota e devolve só `id`, `nome`, `fuso_horario` e `contato_publico`
+(empresa sem contato volta nula, como slug inexistente, #170).
 
 ```csharp
 public async Task<IDbContextTransaction> IniciarComTenant(Guid tenantId, CancellationToken ct = default)
