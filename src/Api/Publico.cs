@@ -41,6 +41,8 @@ public static class Publico
 
     private static readonly TimeSpan PeriodoMaximo = TimeSpan.FromDays(31);
     private static readonly string[] FormatosInicio = ["yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm"];
+    private const int DiasDeAntecedencia = 60;
+    private const int FuturosPorTelefone = 3;
 
     // Regra fixa até existir o cadastro de disponibilidade (6.2, 6.3).
     private static readonly TimeSpan Abre = TimeSpan.FromHours(8);
@@ -230,14 +232,18 @@ public static class Publico
             return Erros.CampoInvalido("nome", "Informe o nome (até 200 caracteres).");
         }
         var telefone = (entrada.Telefone ?? "").Trim();
-        var digitos = string.Concat(telefone.Where(char.IsAsciiDigit));
-        if (digitos == "" || Clientes.Caracteres(telefone) > Clientes.MaxTelefone)
+        var digitos = NormalizarTelefone(telefone);
+        if (Clientes.Caracteres(telefone) > Clientes.MaxTelefone || digitos.Length is not (10 or 11) || digitos.Distinct().Count() == 1)
         {
-            return Erros.CampoInvalido("telefone", "Informe o telefone (até 30 caracteres).");
+            return Erros.CampoInvalido("telefone", "Informe o telefone com DDD (10 ou 11 dígitos).");
         }
         if (!DateTime.TryParseExact(entrada.Inicio, FormatosInicio, CultureInfo.InvariantCulture, DateTimeStyles.None, out var inicio))
         {
             return Erros.CampoInvalido("inicio", "inicio deve ser data e hora locais, sem fuso, ex.: 2026-10-16T09:00:00.");
+        }
+        if (inicio.Minute % 30 != 0 || inicio.Second != 0)
+        {
+            return Erros.CampoInvalido("inicio", "Escolha um horário em ponto ou e meia.");
         }
 
         var empresa = Empresa(ctx);
@@ -247,9 +253,14 @@ public static class Publico
             return Erros.CampoInvalido("inicio", "Horário inexistente ou ambíguo no fuso da empresa.");
         }
         var inicioUtc = TimeZoneInfo.ConvertTimeToUtc(inicio, fuso);
-        if (inicioUtc <= relogio.GetUtcNow().UtcDateTime)
+        var agora = relogio.GetUtcNow().UtcDateTime;
+        if (inicioUtc <= agora)
         {
             return Erros.CampoInvalido("inicio", "Esse horário já passou.");
+        }
+        if (inicio.Date > TimeZoneInfo.ConvertTimeFromUtc(agora, fuso).Date.AddDays(DiasDeAntecedencia))
+        {
+            return Erros.CampoInvalido("inicio", $"Agendamento com até {DiasDeAntecedencia} dias de antecedência.");
         }
 
         var servico = await db.BuscarServicoAtivo(empresa.Id, servicoId, ct);
@@ -263,7 +274,12 @@ public static class Publico
             return Erros.CampoInvalido("inicio", "Atendimento de segunda a sábado, das 08:00 às 19:00.");
         }
 
+        // Conta depois do lock de telefone que ClienteDoTelefone pega; o 400 desfaz o cliente novo.
         var clienteId = await db.ClienteDoTelefone(empresa.Id, nome, telefone, digitos, ct);
+        if (await db.FuturosDoTelefone(empresa.Id, digitos, agora, ct) >= FuturosPorTelefone)
+        {
+            return Erros.CampoInvalido("telefone", $"Este telefone já tem {FuturosPorTelefone} agendamentos marcados.");
+        }
         Agendamento? a;
         try
         {
@@ -280,6 +296,13 @@ public static class Publico
         }
         return Json.Responder(StatusCodes.Status201Created, new AgendamentoPublicoJson(a.Id, a.ServicoId, a.PrestadorId,
             a.Inicio.ToUniversalTime(), a.Fim.ToUniversalTime(), a.Status, a.ValorCentavos));
+    }
+
+    /// <summary>Só dígitos; com 12 ou 13 começando em 55, sem o código do país. O SQL de Consultas.ClienteDoTelefone faz o mesmo.</summary>
+    internal static string NormalizarTelefone(string telefone)
+    {
+        var d = string.Concat(telefone.Where(char.IsAsciiDigit));
+        return d.Length is 12 or 13 && d.StartsWith("55", StringComparison.Ordinal) ? d[2..] : d;
     }
 
     private static IResult Indisponivel() =>
