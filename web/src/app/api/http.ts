@@ -65,7 +65,8 @@ export function converterErro(resp: HttpErrorResponse): Error {
 /**
  * Interceptor registrado em app.config.ts: toda chamada à API sai com erro já tipado, e um 401
  * (sessão ausente ou expirada) leva a /entrar, de forma central (#120). Ficam de fora o 401
- * credencial_invalida do próprio login e o do /api/me, que a guarda do painel (sessao.ts) já trata.
+ * credencial_invalida do próprio login, o do /api/me, que a guarda do painel (sessao.ts) já trata,
+ * e o das rotas públicas.
  */
 export const errosApiInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
@@ -77,6 +78,8 @@ export const errosApiInterceptor: HttpInterceptorFn = (req, next) => {
         erro.status === 401 &&
         req.url !== ROTA_LOGIN &&
         req.url !== ROTA_EU &&
+        // Página pública (/agendar): o cliente final não tem conta, o login da empresa não serve a ele.
+        !req.url.startsWith("/api/publico/") &&
         !router.url.startsWith("/entrar")
       ) {
         void router.navigateByUrl("/entrar");
