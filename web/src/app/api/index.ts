@@ -11,6 +11,7 @@ export { ApiError, ErroRede };
 // Map, não objeto: um codigo como "constructor" não pode cair no protótipo.
 const mensagens = new Map([
   ["conflito_horario", "Esse horário acabou de ser ocupado. Escolha outro."],
+  ["credencial_invalida", "E-mail ou senha incorretos."],
   ["erro_interno", "Algo deu errado do nosso lado. Tente de novo em instantes."],
 ]);
 

@@ -60,7 +60,24 @@
       }
     </div>
 
-    <button type="submit" class="ds-botao ds-botao--principal ds-botao--grande">Entrar</button>
+    @if (erroGeral()) {
+      <div class="ds-aviso ds-aviso--erro" role="alert">
+        <svg lucideCircleAlert class="ds-ic" aria-hidden="true"></svg>
+        <span>{{ erroGeral() }}</span>
+      </div>
+    }
+
+    <button
+      type="submit"
+      class="ds-botao ds-botao--principal ds-botao--grande"
+      [disabled]="enviando()"
+      [attr.aria-busy]="enviando() ? 'true' : null"
+    >
+      Entrar
+    </button>
+    @if (lento()) {
+      <p class="entrada-lento" role="status">Está demorando um pouco. Aguarde.</p>
+    }
 
     <p class="entrada-troca">Ainda não tem conta? <a routerLink="/cadastro">Cadastre sua empresa</a></p>
   </form>
