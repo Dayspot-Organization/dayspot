@@ -162,9 +162,13 @@ public sealed class Servidor : IAsyncDisposable
         });
 
     /// <summary>O pipeline do Program.cs com as rotas públicas, sobre a connection string dada.</summary>
-    public static Task<Servidor> ComPublico(string connectionString, TimeProvider? relogio = null) => Criar(
+    public static Task<Servidor> ComPublico(string connectionString, TimeProvider? relogio = null, ILoggerProvider? log = null) => Criar(
         s =>
         {
+            if (log is not null)
+            {
+                s.AddSingleton(log);
+            }
             s.AddSingleton(AppDb.Opcoes(connectionString)).AddScoped<AppDb>()
                 .AddSingleton(new Fixos(Seed.Alfa, Seed.Prestador, Seed.ServicoAlfa));
             if (relogio is not null)
@@ -208,6 +212,18 @@ public sealed class Servidor : IAsyncDisposable
             await _db.DisposeAsync();
         }
     }
+}
+
+/// <summary>Guarda cada linha de log formatada, de qualquer categoria.</summary>
+public sealed class LogEmMemoria : ILoggerProvider, ILogger
+{
+    public System.Collections.Concurrent.ConcurrentQueue<string> Linhas { get; } = new();
+    public ILogger CreateLogger(string categoria) => this;
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+    public bool IsEnabled(LogLevel nivel) => true;
+    public void Log<TState>(LogLevel nivel, EventId id, TState state, Exception? erro, Func<TState, Exception?, string> formatar) =>
+        Linhas.Enqueue(formatar(state, erro) + erro);
+    public void Dispose() { }
 }
 
 public static class Respostas

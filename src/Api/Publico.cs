@@ -69,6 +69,11 @@ public static class Publico
             {
                 var espera = rejeitado.Lease.TryGetMetadata(MetadataName.RetryAfter, out var t) ? t : JanelaDoLimite;
                 var ctx = rejeitado.HttpContext;
+                // Só política, método e molde da rota: nada de IP, slug, telefone, nome ou corpo.
+                var rota = ctx.GetEndpoint() as RouteEndpoint;
+                ctx.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(Publico)).LogWarning(
+                    "429 pela política {Politica} em {Metodo} {Rota}",
+                    rota?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName, ctx.Request.Method, rota?.RoutePattern.RawText);
                 ctx.Response.Headers.RetryAfter = ((int)Math.Ceiling(espera.TotalSeconds)).ToString(CultureInfo.InvariantCulture);
                 return new ValueTask(Erros.Responder(StatusCodes.Status429TooManyRequests, Erros.MuitasTentativas,
                     "Muitas tentativas. Aguarde um pouco e tente de novo.").ExecuteAsync(ctx));

@@ -536,6 +536,45 @@ public class LimitePublicoTests
     }
 
     [Fact]
+    public async Task LimiteGeraLogSemDadoPessoal()
+    {
+        var log = new LogEmMemoria();
+        await using var api = await Servidor.ComPublico(Banco.ForaDoAr, log: log);
+        const string corpo = """{"nome":"Fulana de Teste","telefone":"(11) 98765-4321"}""";
+        HttpRequestMessage Pedido()
+        {
+            var req = new HttpRequestMessage(HttpMethod.Post, "/api/publico/alfa/agendamentos")
+            {
+                Content = new StringContent(corpo, System.Text.Encoding.UTF8, "application/json"),
+            };
+            req.Headers.Add("CF-Connecting-IP", "203.0.113.1");
+            return req;
+        }
+        await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => api.Http.SendAsync(Pedido())));
+        Assert.DoesNotContain(log.Linhas, l => l.StartsWith("429 pela política"));
+        await ExigirLimite(await api.Http.SendAsync(Pedido()));
+
+        var linha = Assert.Single(log.Linhas, l => l.StartsWith("429 pela política"));
+        Assert.Contains(Publico.LimiteEnvio, linha);
+        Assert.Contains("/api/publico/{slug}/agendamentos", linha);
+        Assert.All(log.Linhas, l =>
+        {
+            Assert.DoesNotContain("203.0.113", l);
+            Assert.DoesNotContain("98765", l);
+            Assert.DoesNotContain("Fulana", l);
+        });
+    }
+
+    [Fact]
+    public async Task SaudeRespondeSemBancoEForaDoLimite()
+    {
+        await using var api = await Api();
+        var respostas = await Task.WhenAll(Enumerable.Range(0, 61).Select(_ => Enviar(api, "GET", "/api/saude", "203.0.113.1")));
+        Assert.All(respostas, r => Assert.Equal(HttpStatusCode.OK, r.StatusCode));
+        Assert.NotEqual(HttpStatusCode.TooManyRequests, (await Enviar(api, "GET", "/api/publico/alfa", "203.0.113.1")).StatusCode);
+    }
+
+    [Fact]
     public async Task RotasAutenticadasFicamForaDoLimite()
     {
         await using var api = await Api();
