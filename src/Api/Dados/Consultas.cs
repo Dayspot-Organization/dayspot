@@ -9,6 +9,8 @@ public sealed record AgendamentoComCliente(Agendamento Agendamento, string Clien
 
 public sealed record EmpresaPublica(Guid Id, string Nome, string FusoHorario);
 
+public sealed record EmpresaDoUsuario(Guid TenantId, string Nome, string Slug, string Papel);
+
 public sealed record PrestadorPublico(Guid Id, string Nome);
 
 public sealed record Ocupado(DateTime Inicio, DateTime Fim);
@@ -162,4 +164,50 @@ public static class Consultas
               AND c.removido_em IS NULL
               AND regexp_replace(regexp_replace(c.telefone, '[^0-9]', '', 'g'), '^55([0-9]{10,11})$', '\1') = {{digitos}}
             """).SingleAsync(ct);
+
+    // Login e sessão (2.3): usuarios, memberships, tenants e sessoes ficam fora do RLS
+    // (guia §009), porque são lidas antes de existir tenant. O filtro é o WHERE manual.
+
+    /// <summary>E-mail já normalizado; o lower() casa com o índice usuarios_email_unico.</summary>
+    public static Task<Usuario?> BuscarUsuarioPorEmail(this AppDb db, string email, CancellationToken ct = default) =>
+        db.Usuarios.FirstOrDefaultAsync(u => u.Email.ToLower() == email, ct);
+
+    /// <summary>Empresas em que o usuário tem membership ativo, em ordem de nome.</summary>
+    public static Task<List<EmpresaDoUsuario>> ListarEmpresasDoUsuario(this AppDb db, Guid usuarioId, CancellationToken ct = default) =>
+        (from m in db.Memberships
+         join t in db.Tenants on m.TenantId equals t.Id
+         where m.UsuarioId == usuarioId && m.RemovidoEm == null
+         orderby t.Nome
+         select new EmpresaDoUsuario(t.Id, t.Nome, t.Slug, m.Papel)).ToListAsync(ct);
+
+    /// <summary>
+    /// Grava a sessão e devolve o id, que vai no cookie. tenantId nulo = empresa ainda
+    /// não escolhida (várias memberships).
+    /// </summary>
+    public static async Task<Guid> CriarSessao(this AppDb db, Guid usuarioId, Guid? tenantId, TimeSpan duracao, string? userAgent,
+        CancellationToken ct = default)
+    {
+        var ids = await db.Database.SqlQuery<Guid>($"""
+            INSERT INTO sessoes (usuario_id, tenant_id, expira_em, user_agent)
+            VALUES ({usuarioId}, {tenantId}, now() + {duracao}, {userAgent})
+            RETURNING id AS "Value"
+            """).ToListAsync(ct);
+        return ids.Single();
+    }
+
+    /// <summary>Nulo: sessão inexistente, expirada ou revogada.</summary>
+    public static Task<Sessao?> BuscarSessaoValida(this AppDb db, Guid id, CancellationToken ct = default) =>
+        db.Sessoes.FirstOrDefaultAsync(s => s.Id == id && s.RevogadoEm == null && s.ExpiraEm > DateTime.UtcNow, ct);
+
+    /// <summary>
+    /// Grava na sessão a empresa do slug, só se o usuário da sessão tem membership ativo
+    /// nela. Zero linhas: slug inexistente ou sem membership ativo, e a sessão não muda.
+    /// </summary>
+    public static Task<int> GravarEmpresaDaSessao(this AppDb db, Guid sessaoId, string slug, CancellationToken ct = default) =>
+        db.Database.ExecuteSqlAsync($"""
+            UPDATE sessoes s SET tenant_id = t.id
+            FROM tenants t
+            JOIN memberships m ON m.tenant_id = t.id AND m.removido_em IS NULL
+            WHERE s.id = {sessaoId} AND t.slug = {slug} AND m.usuario_id = s.usuario_id
+            """, ct);
 }

@@ -1,0 +1,223 @@
+using System.Net;
+using System.Text;
+using Microsoft.EntityFrameworkCore;
+using Dayspot.Api.Auth;
+using Dayspot.Api.Dados;
+
+namespace Dayspot.Api.Tests;
+
+/// <summary>
+/// POST /api/login e POST /api/sessao/empresa (2.3). Usuários e empresas entram na
+/// transação do teste (<see cref="Servidor.ComBanco"/>), desfeita no fim.
+/// </summary>
+public class LoginTests
+{
+    private const string SenhaCerta = "senha-de-teste-123";
+
+    private sealed record Empresa(Guid Id, string Slug);
+
+    private static async Task<(Guid Id, string Email)> Usuario(AppDb db)
+    {
+        var id = Guid.NewGuid();
+        var email = $"{id:N}@teste.example";
+        await db.Database.ExecuteSqlAsync(
+            $"INSERT INTO usuarios (id, email, senha_hash, nome) VALUES ({id}, {email}, {Senha.GerarHash(SenhaCerta)}, 'Ana Teste')");
+        return (id, email);
+    }
+
+    private static async Task<Empresa> NovaEmpresa(AppDb db, Guid criador, string nome)
+    {
+        var e = new Empresa(Guid.NewGuid(), $"t-{Guid.NewGuid():N}");
+        await db.Database.ExecuteSqlAsync(
+            $"INSERT INTO tenants (id, nome, slug, criado_por) VALUES ({e.Id}, {nome}, {e.Slug}, {criador})");
+        return e;
+    }
+
+    private static Task Membership(AppDb db, Guid usuario, Empresa e, string papel, bool removido = false) =>
+        db.Database.ExecuteSqlAsync(
+            $"INSERT INTO memberships (usuario_id, tenant_id, papel, removido_em) VALUES ({usuario}, {e.Id}, {papel}, {(removido ? DateTime.UtcNow : null)})");
+
+    private static Task<HttpResponseMessage> Entrar(Servidor api, string email, string senha) =>
+        api.Chamar("POST", "/api/login", $$"""{"email":"{{email}}","senha":"{{senha}}"}""");
+
+    private static Task<HttpResponseMessage> Escolher(Servidor api, string? cookie, string slug)
+    {
+        var req = new HttpRequestMessage(HttpMethod.Post, "/api/sessao/empresa")
+        {
+            Content = new StringContent($$"""{"slug":"{{slug}}"}""", Encoding.UTF8, "application/json"),
+        };
+        if (cookie is not null)
+        {
+            req.Headers.Add("Cookie", cookie);
+        }
+        return api.Http.SendAsync(req);
+    }
+
+    /// <summary>Confere o 200 e devolve o par nome=valor do cookie e o id da sessão.</summary>
+    private static async Task<(string Cookie, Guid Sessao)> ExigirSessao(HttpResponseMessage r)
+    {
+        Assert.True(r.StatusCode == HttpStatusCode.OK, $"esperava 200, veio {(int)r.StatusCode} {await r.Content.ReadAsStringAsync()}");
+        var setCookie = Assert.Single(r.Headers.GetValues("Set-Cookie"));
+        var partes = setCookie.Split(';', StringSplitOptions.TrimEntries);
+        Assert.StartsWith($"{Login.Cookie}=", partes[0]);
+        Assert.Contains("httponly", partes);
+        Assert.Contains("secure", partes);
+        Assert.Contains("samesite=lax", partes);
+        Assert.Contains("path=/", partes);
+        Assert.Contains($"max-age={(int)Login.Duracao.TotalSeconds}", partes);
+        return (partes[0], Guid.Parse(partes[0][(Login.Cookie.Length + 1)..]));
+    }
+
+    private static Task<Sessao> LerSessao(Servidor api, Guid id) => api.Db.Sessoes.SingleAsync(s => s.Id == id);
+
+    [Fact]
+    public async Task CredencialCertaCriaSessaoNaUnicaEmpresa()
+    {
+        await using var api = await Servidor.ComBanco(Seed.Alfa);
+        var (usuario, email) = await Usuario(api.Db);
+        var empresa = await NovaEmpresa(api.Db, usuario, "Salão Teste");
+        await Membership(api.Db, usuario, empresa, "administrador");
+
+        // E-mail normalizado (2.15): maiúsculas e espaços nas pontas entram.
+        var r = await Entrar(api, $"  {email.ToUpperInvariant()} ", SenhaCerta);
+        var (_, id) = await ExigirSessao(r);
+
+        var sessao = await LerSessao(api, id);
+        Assert.Equal(usuario, sessao.UsuarioId);
+        Assert.Equal(empresa.Id, sessao.TenantId);
+        Assert.Null(sessao.RevogadoEm);
+        Assert.True(sessao.ExpiraEm > sessao.CriadoEm);
+
+        var empresas = (await r.Json()).GetProperty("empresas").EnumerateArray().ToList();
+        var unica = Assert.Single(empresas);
+        Assert.Equal("Salão Teste", unica.GetProperty("nome").GetString());
+        Assert.Equal(empresa.Slug, unica.GetProperty("slug").GetString());
+        Assert.Equal("administrador", unica.GetProperty("papel").GetString());
+    }
+
+    [Fact]
+    public async Task SemMembershipAtivoNaoEntra()
+    {
+        await using var api = await Servidor.ComBanco(Seed.Alfa);
+        var (semNenhuma, email1) = await Usuario(api.Db);
+        var (soRemovida, email2) = await Usuario(api.Db);
+        var empresa = await NovaEmpresa(api.Db, soRemovida, "Empresa Antiga");
+        await Membership(api.Db, soRemovida, empresa, "prestador", removido: true);
+
+        foreach (var email in new[] { email1, email2 })
+        {
+            var r = await Entrar(api, email, SenhaCerta);
+            await r.ExigirErro(HttpStatusCode.Unauthorized, Erros.CredencialInvalida);
+            Assert.False(r.Headers.Contains("Set-Cookie"));
+        }
+        Assert.Equal(0, await api.Db.Sessoes.CountAsync(s => s.UsuarioId == semNenhuma || s.UsuarioId == soRemovida));
+    }
+
+    [Fact]
+    public async Task VariasEmpresasSessaoSemTenantAteEscolher()
+    {
+        await using var api = await Servidor.ComBanco(Seed.Alfa);
+        var (usuario, email) = await Usuario(api.Db);
+        var beta = await NovaEmpresa(api.Db, usuario, "B Empresa");
+        var alfa = await NovaEmpresa(api.Db, usuario, "A Empresa");
+        var removida = await NovaEmpresa(api.Db, usuario, "C Removida");
+        await Membership(api.Db, usuario, beta, "prestador");
+        await Membership(api.Db, usuario, alfa, "administrador");
+        await Membership(api.Db, usuario, removida, "prestador", removido: true);
+
+        var r = await Entrar(api, email, SenhaCerta);
+        var (cookie, id) = await ExigirSessao(r);
+        Assert.Null((await LerSessao(api, id)).TenantId);
+
+        // Só as ativas, em ordem de nome, com o papel em cada uma.
+        var empresas = (await r.Json()).GetProperty("empresas").EnumerateArray()
+            .Select(e => (e.GetProperty("slug").GetString(), e.GetProperty("papel").GetString())).ToList();
+        Assert.Equal([(alfa.Slug, "administrador"), (beta.Slug, "prestador")], empresas);
+
+        var escolha = await Escolher(api, cookie, beta.Slug.ToUpperInvariant());
+        Assert.Equal(HttpStatusCode.NoContent, escolha.StatusCode);
+        Assert.Equal(beta.Id, (await LerSessao(api, id)).TenantId);
+    }
+
+    [Fact]
+    public async Task SlugSemMembershipAtivoEh404ESessaoNaoMuda()
+    {
+        await using var api = await Servidor.ComBanco(Seed.Alfa);
+        var (usuario, email) = await Usuario(api.Db);
+        var (outro, _) = await Usuario(api.Db);
+        var a = await NovaEmpresa(api.Db, usuario, "A");
+        var b = await NovaEmpresa(api.Db, usuario, "B");
+        var removida = await NovaEmpresa(api.Db, usuario, "Removida");
+        var alheia = await NovaEmpresa(api.Db, outro, "De outro");
+        await Membership(api.Db, usuario, a, "prestador");
+        await Membership(api.Db, usuario, b, "prestador");
+        await Membership(api.Db, usuario, removida, "prestador", removido: true);
+        await Membership(api.Db, outro, alheia, "administrador");
+
+        var (cookie, id) = await ExigirSessao(await Entrar(api, email, SenhaCerta));
+        foreach (var slug in new[] { removida.Slug, alheia.Slug, "nao-existe" })
+        {
+            await (await Escolher(api, cookie, slug)).ExigirErro(HttpStatusCode.NotFound, Erros.NaoEncontrado);
+            Assert.Null((await LerSessao(api, id)).TenantId);
+        }
+    }
+
+    [Fact]
+    public async Task EmailInexistenteESenhaErradaTemAMesmaResposta()
+    {
+        await using var api = await Servidor.ComBanco(Seed.Alfa);
+        var (usuario, email) = await Usuario(api.Db);
+        await Membership(api.Db, usuario, await NovaEmpresa(api.Db, usuario, "X"), "administrador");
+
+        var semConta = await Entrar(api, $"{Guid.NewGuid():N}@teste.example", SenhaCerta);
+        var senhaErrada = await Entrar(api, email, SenhaCerta + "x");
+        foreach (var r in new[] { semConta, senhaErrada })
+        {
+            await r.ExigirErro(HttpStatusCode.Unauthorized, Erros.CredencialInvalida);
+            Assert.False(r.Headers.Contains("Set-Cookie"));
+        }
+        Assert.Equal(await semConta.Content.ReadAsStringAsync(), await senhaErrada.Content.ReadAsStringAsync());
+        Assert.Equal(0, await api.Db.Sessoes.CountAsync(s => s.UsuarioId == usuario));
+    }
+
+    [Fact]
+    public async Task EscolherEmpresaSemSessaoValidaEh401()
+    {
+        await using var api = await Servidor.ComBanco(Seed.Alfa);
+        var (usuario, email) = await Usuario(api.Db);
+        var a = await NovaEmpresa(api.Db, usuario, "A");
+        await Membership(api.Db, usuario, a, "administrador");
+        await Membership(api.Db, usuario, await NovaEmpresa(api.Db, usuario, "B"), "administrador");
+        var (cookie, id) = await ExigirSessao(await Entrar(api, email, SenhaCerta));
+
+        await (await Escolher(api, null, a.Slug)).ExigirErro(HttpStatusCode.Unauthorized, Erros.NaoAutenticado);
+        await (await Escolher(api, $"{Login.Cookie}=lixo", a.Slug)).ExigirErro(HttpStatusCode.Unauthorized, Erros.NaoAutenticado);
+        await (await Escolher(api, $"{Login.Cookie}={Guid.NewGuid()}", a.Slug)).ExigirErro(HttpStatusCode.Unauthorized, Erros.NaoAutenticado);
+
+        await api.Db.Database.ExecuteSqlAsync($"UPDATE sessoes SET revogado_em = now() WHERE id = {id}");
+        await (await Escolher(api, cookie, a.Slug)).ExigirErro(HttpStatusCode.Unauthorized, Erros.NaoAutenticado);
+
+        // expira_em > criado_em pelo CHECK: o criado_em recua junto.
+        await api.Db.Database.ExecuteSqlAsync(
+            $"UPDATE sessoes SET revogado_em = NULL, criado_em = now() - interval '2 days', expira_em = now() - interval '1 day' WHERE id = {id}");
+        await (await Escolher(api, cookie, a.Slug)).ExigirErro(HttpStatusCode.Unauthorized, Erros.NaoAutenticado);
+        Assert.Null((await LerSessao(api, id)).TenantId);
+    }
+
+    [Theory]
+    [InlineData("{", "")] // JSON malformado
+    [InlineData("""{"senha":"x"}""", "email")]
+    [InlineData("""{"email":"  ","senha":"x"}""", "email")]
+    [InlineData("""{"email":"a@b.example"}""", "senha")]
+    [InlineData("""{"email":"a@b.example","senha":"x","tenant_id":"x"}""", "")] // campo desconhecido
+    public async Task CorpoInvalidoEh400(string corpo, string campo)
+    {
+        await using var api = await Servidor.SemBanco();
+        var r = await api.Chamar("POST", "/api/login", corpo);
+        await r.ExigirErro(HttpStatusCode.BadRequest, Erros.RequisicaoInvalida);
+        if (campo != "")
+        {
+            Assert.Equal(campo, (await r.Json()).GetProperty("erro").GetProperty("detalhes").GetProperty("campo").GetString());
+        }
+    }
+}
