@@ -23,6 +23,9 @@ public static class Rotas
         // não reinicia a API enquanto o Neon acorda.
         app.MapMethods("/api/saude", Leitura, () => Results.Ok()).ShortCircuit();
 
+        app.MapPost("/api/login", Login.Entrar);
+        app.MapPost("/api/sessao/empresa", Login.EscolherEmpresa);
+
         app.MapPost("/api/clientes", Clientes.Criar);
         app.MapMethods("/api/clientes", Leitura, Clientes.Listar);
         app.MapMethods("/api/agendamentos", Leitura, Agendamentos.Listar);
