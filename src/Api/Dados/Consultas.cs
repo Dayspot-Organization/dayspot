@@ -14,6 +14,8 @@ public sealed record EmpresaCriada(Guid UsuarioId, Guid TenantId);
 
 public sealed record EmpresaPublica(Guid Id, string Nome, string FusoHorario, string Contato);
 
+public sealed record EmpresaDoUsuario(Guid TenantId, string Nome, string Slug, string Papel);
+
 public sealed record PrestadorPublico(Guid Id, string Nome);
 
 public sealed record Ocupado(DateTime Inicio, DateTime Fim);
@@ -164,7 +166,7 @@ public static class Consultas
             .ToListAsync(ct);
 
     /// <summary>
-    /// Cliente do tenant com estes dígitos de telefone (com mais de um, o mais antigo);
+    /// Cliente do tenant com este telefone normalizado (com mais de um, o mais antigo);
     /// sem nenhum, cria. telefone não tem UNIQUE e pode ter duplicados gravados, então
     /// um índice único quebraria na migration: o advisory lock serializa por tenant e
     /// telefone até o fim da transação, sem tocar nos dados.
@@ -175,13 +177,79 @@ public static class Consultas
         await db.Database.ExecuteSqlAsync(
             $"SELECT pg_advisory_xact_lock(hashtextextended({tenantId.ToString()} || ':' || {digitos}, 0))", ct);
         // Varre os clientes do tenant; índice em expressão se a base crescer.
-        var achados = await db.Database.SqlQuery<Guid>($"""
-            SELECT id AS "Value" FROM clientes
-            WHERE tenant_id = {tenantId} AND removido_em IS NULL
-              AND regexp_replace(telefone, '[^0-9]', '', 'g') = {digitos}
-            ORDER BY criado_em, id
+        // Gravado só em dígitos e sem o 55 do país quando sobram 10 ou 11, como em
+        // Publico.NormalizarTelefone: cadastros antigos com +55 ou máscara não são reescritos.
+        var achados = await db.Database.SqlQuery<Guid>($$"""
+            SELECT c.id AS "Value" FROM clientes c
+            WHERE c.tenant_id = {{tenantId}} AND c.removido_em IS NULL
+              AND regexp_replace(regexp_replace(c.telefone, '[^0-9]', '', 'g'), '^55([0-9]{10,11})$', '\1') = {{digitos}}
+            ORDER BY c.criado_em, c.id
             LIMIT 1
             """).ToListAsync(ct);
         return achados.Count > 0 ? achados[0] : (await db.CriarCliente(tenantId, nome, telefone, ct)).Id;
     }
+
+    /// <summary>
+    /// Agendamentos confirmados depois de agora, somando os clientes ativos com este
+    /// telefone normalizado. Chamar com o lock de <see cref="ClienteDoTelefone"/> já pego.
+    /// </summary>
+    public static Task<int> FuturosDoTelefone(this AppDb db, Guid tenantId, string digitos, DateTime agora,
+        CancellationToken ct = default) =>
+        db.Database.SqlQuery<int>($$"""
+            SELECT count(*)::int AS "Value" FROM agendamentos a
+            JOIN clientes c ON c.id = a.cliente_id AND c.tenant_id = a.tenant_id
+            WHERE a.tenant_id = {{tenantId}} AND a.status = 'confirmado' AND a.inicio > {{agora}}
+              AND c.removido_em IS NULL
+              AND regexp_replace(regexp_replace(c.telefone, '[^0-9]', '', 'g'), '^55([0-9]{10,11})$', '\1') = {{digitos}}
+            """).SingleAsync(ct);
+
+    // Login e sessão (2.3): usuarios, memberships, tenants e sessoes ficam fora do RLS
+    // (guia §009), porque são lidas antes de existir tenant. O filtro é o WHERE manual.
+
+    /// <summary>E-mail já normalizado; o lower() casa com o índice usuarios_email_unico.</summary>
+    public static Task<Usuario?> BuscarUsuarioPorEmail(this AppDb db, string email, CancellationToken ct = default) =>
+        db.Usuarios.FirstOrDefaultAsync(u => u.Email.ToLower() == email, ct);
+
+    /// <summary>Usuário da sessão: a FK de sessoes.usuario_id garante que existe.</summary>
+    public static Task<Usuario> BuscarUsuario(this AppDb db, Guid id, CancellationToken ct = default) =>
+        db.Usuarios.SingleAsync(u => u.Id == id, ct);
+
+    /// <summary>Empresas em que o usuário tem membership ativo, em ordem de nome.</summary>
+    public static Task<List<EmpresaDoUsuario>> ListarEmpresasDoUsuario(this AppDb db, Guid usuarioId, CancellationToken ct = default) =>
+        (from m in db.Memberships
+         join t in db.Tenants on m.TenantId equals t.Id
+         where m.UsuarioId == usuarioId && m.RemovidoEm == null
+         orderby t.Nome
+         select new EmpresaDoUsuario(t.Id, t.Nome, t.Slug, m.Papel)).ToListAsync(ct);
+
+    /// <summary>
+    /// Grava a sessão e devolve o id, que vai no cookie. tenantId nulo = empresa ainda
+    /// não escolhida (várias memberships).
+    /// </summary>
+    public static async Task<Guid> CriarSessao(this AppDb db, Guid usuarioId, Guid? tenantId, TimeSpan duracao, string? userAgent,
+        CancellationToken ct = default)
+    {
+        var ids = await db.Database.SqlQuery<Guid>($"""
+            INSERT INTO sessoes (usuario_id, tenant_id, expira_em, user_agent)
+            VALUES ({usuarioId}, {tenantId}, now() + {duracao}, {userAgent})
+            RETURNING id AS "Value"
+            """).ToListAsync(ct);
+        return ids.Single();
+    }
+
+    /// <summary>Nulo: sessão inexistente, expirada ou revogada.</summary>
+    public static Task<Sessao?> BuscarSessaoValida(this AppDb db, Guid id, CancellationToken ct = default) =>
+        db.Sessoes.FirstOrDefaultAsync(s => s.Id == id && s.RevogadoEm == null && s.ExpiraEm > DateTime.UtcNow, ct);
+
+    /// <summary>
+    /// Grava na sessão a empresa do slug, só se o usuário da sessão tem membership ativo
+    /// nela. Zero linhas: slug inexistente ou sem membership ativo, e a sessão não muda.
+    /// </summary>
+    public static Task<int> GravarEmpresaDaSessao(this AppDb db, Guid sessaoId, string slug, CancellationToken ct = default) =>
+        db.Database.ExecuteSqlAsync($"""
+            UPDATE sessoes s SET tenant_id = t.id
+            FROM tenants t
+            JOIN memberships m ON m.tenant_id = t.id AND m.removido_em IS NULL
+            WHERE s.id = {sessaoId} AND t.slug = {slug} AND m.usuario_id = s.usuario_id
+            """, ct);
 }

@@ -23,6 +23,8 @@ Toda resposta de erro (status 4xx/5xx) tem `Content-Type: application/json` e es
 | Status | `codigo`              | Quando |
 |--------|-----------------------|--------|
 | 400    | `requisicao_invalida` | JSON malformado, corpo acima de 1 MiB, campo obrigatório ausente, valor inválido ou campo desconhecido no corpo. Exceção: `POST /api/publico/{slug}/agendamentos` ignora campo desconhecido, e nada além dos cinco campos da rota chega ao banco. |
+| 401    | `nao_autenticado`     | Sem sessão válida: cookie ausente, expirado ou revogado. Toda rota menos `/api/saude`, `/api/signup`, `/api/login` e `/api/publico/*`. |
+| 401    | `credencial_invalida` | Login com e-mail inexistente, senha errada ou sem membership ativo; mesma mensagem nos três casos. |
 | 404    | `nao_encontrado`      | Recurso não existe (ou não pertence ao tenant), ou rota inexistente. |
 | 405    | `metodo_nao_permitido` | Rota existe, mas não com esse método. O cabeçalho `Allow` lista os métodos aceitos. |
 | 409    | `conflito_horario`    | Agendamento sobrepõe outro (SQLSTATE `23P01`). |
@@ -41,8 +43,6 @@ que o introduz.
 
 | Status | `codigo`           | Quando | Entra em |
 |--------|--------------------|--------|----------|
-| 401    | `nao_autenticado`  | Sem sessão válida: cookie ausente, expirado ou revogado. | 2.5 |
-| 401    | `credencial_invalida` | Login com e-mail inexistente ou senha errada; mesma mensagem nos dois casos. | 2.3 |
 | 403    | `sem_permissao`    | Agendamento de outro prestador do mesmo tenant; `prestador_id` de outro pedido por um prestador; rota só de administrador; remover o criador da empresa; administrador que não é o criador removendo administrador; aceite de convite com sessão de outro e-mail. | 2.7 (aceite: 2.19; remoções: 5.8) |
 | 409    | `status_invalido`  | Transição de status inválida: concluir antes do início; cancelar, remarcar ou trocar o serviço de agendamento cancelado ou concluído. | 5.1 |
 | 409    | `convite_invalido` | Convite expirado ou já aceito, ou para e-mail que já tem membership ativo no tenant. | 2.18, 2.19, 2.22 |

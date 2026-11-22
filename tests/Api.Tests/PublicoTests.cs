@@ -67,7 +67,8 @@ public class PublicoTests
     private static readonly RelogioFixo Relogio = new(new DateTimeOffset(2026, 6, 1, 12, 0, 0, TimeSpan.Zero));
     private const string Segunda = "2026-06-08";
 
-    private static Task<Servidor> Api() => Servidor.ComPublico(Banco.ConnectionString("DATABASE_URL"), Relogio);
+    private static Task<Servidor> Api(TimeProvider? relogio = null) =>
+        Servidor.ComPublico(Banco.ConnectionString("DATABASE_URL"), relogio ?? Relogio);
 
     private static Task<HttpResponseMessage> Agendar(Servidor api, EmpresaDeTeste e, string corpo) =>
         api.Chamar("POST", $"/api/publico/{e.Slug}/agendamentos", corpo);
@@ -265,18 +266,101 @@ public class PublicoTests
     }
 
     [Fact]
-    public async Task SimultaneasComMesmoTelefoneNovoCriamUmCliente()
+    public async Task SimultaneasComMesmoTelefoneNovoCriamUmClienteETresAgendamentos()
     {
         await using var e = await EmpresaDeTeste.Criar();
         await using var api = await Api();
-        // Horários diferentes: as oito são aceitas, e só o cliente pode colidir.
+        // Horários diferentes: só o cliente e o limite de 3 por telefone podem colidir.
         var respostas = await Task.WhenAll(Enumerable.Range(8, 8).Select(h => Agendar(api, e, e.Corpo($"{Segunda}T{h:00}:00:00"))));
-        foreach (var r in respostas)
+        Assert.Equal(3, respostas.Count(r => r.StatusCode == HttpStatusCode.Created));
+        foreach (var r in respostas.Where(r => r.StatusCode != HttpStatusCode.Created))
         {
-            await ExigirCriado(r);
+            await ExigirCampo(r, "telefone");
         }
         Assert.Equal(1, await e.Clientes());
-        Assert.Equal(8, await e.Agendamentos());
+        Assert.Equal(3, await e.Agendamentos());
+    }
+
+    [Theory]
+    [InlineData("912345678")] // 9 dígitos
+    [InlineData("119123456789")] // 12 sem o 55
+    [InlineData("55119123456789")] // 14 com o 55
+    [InlineData("00000000000")]
+    [InlineData("(11) 1111-1111")]
+    [InlineData("+55 55555555555")]
+    public async Task TelefoneInvalido(string telefone)
+    {
+        await using var e = await EmpresaDeTeste.Criar();
+        await using var api = await Api();
+        await ExigirCampo(await Agendar(api, e, e.Corpo($"{Segunda}T10:00:00", telefone: telefone)), "telefone");
+        Assert.Equal(0, await e.Clientes());
+    }
+
+    [Fact]
+    public async Task FormatosDoMesmoTelefoneAchamOCadastroAntigo()
+    {
+        await using var e = await EmpresaDeTeste.Criar();
+        var antigo = Guid.NewGuid();
+        await using (var tx = await e.Dono.ComTenant(e.Tenant))
+        {
+            await e.Dono.Exec("INSERT INTO clientes (id, tenant_id, nome, telefone) VALUES ($1, $2, 'Maria', '+55 (11) 91234-5678')", antigo, e.Tenant);
+            await tx.CommitAsync();
+        }
+        await using var api = await Api();
+        string[] formatos = ["+55 11 91234-5678", "5511912345678", "11912345678"];
+        for (var i = 0; i < formatos.Length; i++)
+        {
+            var a = await ExigirCriado(await Agendar(api, e, e.Corpo($"{Segunda}T1{i}:00:00", telefone: formatos[i])));
+            Assert.Equal(antigo, await e.Dono.Escalar<Guid>("SELECT cliente_id FROM agendamentos WHERE id = $1", a.GetProperty("id").GetGuid()));
+        }
+        Assert.Equal(1, await e.Clientes());
+    }
+
+    [Fact]
+    public async Task DddCinquentaECincoNaoPerdeODdd()
+    {
+        await using var e = await EmpresaDeTeste.Criar();
+        await using (var tx = await e.Dono.ComTenant(e.Tenant))
+        {
+            // Mesmo número sem o DDD: se o 55 caísse, seria este o achado.
+            await e.Dono.Exec("INSERT INTO clientes (tenant_id, nome, telefone) VALUES ($1, 'Sem DDD', '91234-5678')", e.Tenant);
+            await tx.CommitAsync();
+        }
+        await using var api = await Api();
+        await ExigirCriado(await Agendar(api, e, e.Corpo($"{Segunda}T10:00:00", telefone: "(55) 91234-5678")));
+        await ExigirCriado(await Agendar(api, e, e.Corpo($"{Segunda}T11:00:00", telefone: "(55) 3222-1234")));
+        await ExigirCriado(await Agendar(api, e, e.Corpo($"{Segunda}T12:00:00", telefone: "+55 55 3222-1234")));
+        Assert.Equal(3, await e.Clientes()); // o antigo, 55912345678 e 5532221234
+    }
+
+    [Fact]
+    public async Task QuartoAgendamentoFuturoDoTelefoneEhRecusado()
+    {
+        await using var e = await EmpresaDeTeste.Criar();
+        var ana = Guid.NewGuid();
+        var mesma = Guid.NewGuid();
+        await using (var tx = await e.Dono.ComTenant(e.Tenant))
+        {
+            // Dois cadastros com o mesmo telefone normalizado somam no limite.
+            await e.Dono.Exec("INSERT INTO clientes (id, tenant_id, nome, telefone) VALUES ($1, $2, 'Ana', '+55 11 91234-5678')", ana, e.Tenant);
+            await e.Dono.Exec("INSERT INTO clientes (id, tenant_id, nome, telefone) VALUES ($1, $2, 'Ana B', '11912345678')", mesma, e.Tenant);
+            const string insert = """
+                INSERT INTO agendamentos (tenant_id, cliente_id, servico_id, prestador_id, inicio, fim, status, valor_centavos)
+                VALUES ($1, $2, $3, $4, $5, $5 + interval '1 hour', $6, 0)
+                """;
+            await e.Dono.Exec(insert, e.Tenant, ana, e.Servico, e.Prestador, new DateTime(2026, 6, 9, 13, 0, 0, DateTimeKind.Utc), "confirmado");
+            await e.Dono.Exec(insert, e.Tenant, mesma, e.Servico, e.Prestador, new DateTime(2026, 6, 9, 14, 0, 0, DateTimeKind.Utc), "confirmado");
+            // Não contam: cancelado e confirmado que já passou (o relógio está em 01/06 12:00Z).
+            await e.Dono.Exec(insert, e.Tenant, ana, e.Servico, e.Prestador, new DateTime(2026, 6, 9, 15, 0, 0, DateTimeKind.Utc), "cancelado");
+            await e.Dono.Exec(insert, e.Tenant, ana, e.Servico, e.Prestador, new DateTime(2026, 5, 29, 13, 0, 0, DateTimeKind.Utc), "confirmado");
+            await tx.CommitAsync();
+        }
+        await using var api = await Api();
+
+        await ExigirCriado(await Agendar(api, e, e.Corpo($"{Segunda}T10:00:00")));
+        await ExigirCampo(await Agendar(api, e, e.Corpo($"{Segunda}T11:00:00", telefone: "5511912345678", nome: "Outra")), "telefone");
+        Assert.Equal(2, await e.Clientes());
+        Assert.Equal(5, await e.Agendamentos());
     }
 
     [Fact]
@@ -349,7 +433,7 @@ public class PublicoTests
 
     [Theory]
     [InlineData("2026-06-07T10:00:00")] // domingo
-    [InlineData("2026-06-08T07:59:00")] // antes das 08:00
+    [InlineData("2026-06-08T07:30:00")] // antes das 08:00
     [InlineData("2026-06-08T18:30:00")] // termina 19:30
     [InlineData("2026-06-08T19:00:00")] // começa no fechamento
     [InlineData("2026-06-08T23:30:00")] // termina no dia seguinte
@@ -365,6 +449,7 @@ public class PublicoTests
     [InlineData("2026-06-08T08:00:00")] // abre
     [InlineData("2026-06-08T18:00:00")] // termina às 19:00 em ponto
     [InlineData("2026-06-13T10:00")] // sábado, sem segundos
+    [InlineData("2026-06-08T09:30:00")] // e meia
     public async Task DentroDaJanela(string inicio)
     {
         await using var e = await EmpresaDeTeste.Criar();
@@ -381,6 +466,27 @@ public class PublicoTests
         var a = await ExigirCriado(await Agendar(api, e, e.Corpo($"{Segunda}T10:00:00")));
         Assert.Equal($"{Segunda}T01:00:00Z", a.GetProperty("inicio").GetString());
         Assert.Equal($"{Segunda}T02:00:00Z", a.GetProperty("fim").GetString());
+    }
+
+    [Theory]
+    [InlineData("2026-06-08T09:15:00")]
+    [InlineData("2026-06-08T09:00:30")]
+    public async Task ForaDaGradeDeMeiaHora(string inicio)
+    {
+        await using var e = await EmpresaDeTeste.Criar();
+        await using var api = await Api();
+        await ExigirCampo(await Agendar(api, e, e.Corpo(inicio)), "inicio");
+        Assert.Equal(0, await e.Clientes());
+    }
+
+    [Fact]
+    public async Task AntecedenciaDeSessentaDiasNoFusoDaEmpresa()
+    {
+        await using var e = await EmpresaDeTeste.Criar("Asia/Tokyo");
+        // 03/06 20:00Z já é 04/06 em Tóquio: o 60º dia é 03/08 (pela data UTC seria 02/08).
+        await using var api = await Api(new RelogioFixo(new DateTimeOffset(2026, 6, 3, 20, 0, 0, TimeSpan.Zero)));
+        await ExigirCriado(await Agendar(api, e, e.Corpo("2026-08-03T10:00:00")));
+        await ExigirCampo(await Agendar(api, e, e.Corpo("2026-08-04T10:00:00", telefone: "11 95555-0000")), "inicio");
     }
 
     [Fact]
@@ -461,8 +567,12 @@ public class PublicoTests
         await using var e = await EmpresaDeTeste.Criar();
         await using var outra = await EmpresaDeTeste.Criar();
         await using var api = await Api();
+        // Três futuros do telefone na outra empresa não contam no limite desta.
+        for (var h = 10; h < 13; h++)
+        {
+            await ExigirCriado(await Agendar(api, outra, outra.Corpo($"{Segunda}T{h}:00:00")));
+        }
         await ExigirCriado(await Agendar(api, e, e.Corpo($"{Segunda}T10:00:00")));
-        await ExigirCriado(await Agendar(api, outra, outra.Corpo($"{Segunda}T10:00:00")));
         Assert.Equal(1, await e.Clientes());
         Assert.Equal(1, await outra.Clientes());
     }
@@ -551,6 +661,45 @@ public class LimitePublicoTests
         await Task.WhenAll(Enumerable.Range(1, 10).Select(i => Enviar(api, "POST", rota, $"2001:db8:1:1::{i:x}")));
         await ExigirLimite(await Enviar(api, "POST", rota, "2001:db8:1:1::ff"));
         Assert.NotEqual(HttpStatusCode.TooManyRequests, (await Enviar(api, "POST", rota, "2001:db8:1:2::1")).StatusCode);
+    }
+
+    [Fact]
+    public async Task LimiteGeraLogSemDadoPessoal()
+    {
+        var log = new LogEmMemoria();
+        await using var api = await Servidor.ComPublico(Banco.ForaDoAr, log: log);
+        const string corpo = """{"nome":"Fulana de Teste","telefone":"(11) 98765-4321"}""";
+        HttpRequestMessage Pedido()
+        {
+            var req = new HttpRequestMessage(HttpMethod.Post, "/api/publico/alfa/agendamentos")
+            {
+                Content = new StringContent(corpo, System.Text.Encoding.UTF8, "application/json"),
+            };
+            req.Headers.Add("CF-Connecting-IP", "203.0.113.1");
+            return req;
+        }
+        await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => api.Http.SendAsync(Pedido())));
+        Assert.DoesNotContain(log.Linhas, l => l.StartsWith("429 pela política"));
+        await ExigirLimite(await api.Http.SendAsync(Pedido()));
+
+        var linha = Assert.Single(log.Linhas, l => l.StartsWith("429 pela política"));
+        Assert.Contains(Publico.LimiteEnvio, linha);
+        Assert.Contains("/api/publico/{slug}/agendamentos", linha);
+        Assert.All(log.Linhas, l =>
+        {
+            Assert.DoesNotContain("203.0.113", l);
+            Assert.DoesNotContain("98765", l);
+            Assert.DoesNotContain("Fulana", l);
+        });
+    }
+
+    [Fact]
+    public async Task SaudeRespondeSemBancoEForaDoLimite()
+    {
+        await using var api = await Api();
+        var respostas = await Task.WhenAll(Enumerable.Range(0, 61).Select(_ => Enviar(api, "GET", "/api/saude", "203.0.113.1")));
+        Assert.All(respostas, r => Assert.Equal(HttpStatusCode.OK, r.StatusCode));
+        Assert.NotEqual(HttpStatusCode.TooManyRequests, (await Enviar(api, "GET", "/api/publico/alfa", "203.0.113.1")).StatusCode);
     }
 
     [Fact]

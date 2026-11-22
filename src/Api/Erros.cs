@@ -14,6 +14,8 @@ public static class Erros
 {
     // Códigos de erro estáveis. O frontend decide pelo código, nunca pela mensagem.
     public const string RequisicaoInvalida = "requisicao_invalida"; // 400
+    public const string NaoAutenticado = "nao_autenticado"; // 401
+    public const string CredencialInvalida = "credencial_invalida"; // 401
     public const string NaoEncontrado = "nao_encontrado"; // 404
     public const string MetodoNaoPermitido = "metodo_nao_permitido"; // 405
     public const string ConflitoHorario = "conflito_horario"; // 409
