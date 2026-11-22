@@ -13,8 +13,8 @@ public sealed record CadastroJson(Guid UsuarioId, Guid TenantId, string Slug, st
 
 /// <summary>
 /// Cadastro de empresa e do primeiro administrador (#112). Roda dentro da transação
-/// por requisição (UseTransacaoNasRotas, com TENANT_FIXO): usuarios, tenants e
-/// memberships ficam fora do RLS (guia §009), então o tenant não importa, e um 4xx
+/// por requisição (UseTransacaoNasRotas, com TENANT_FIXO): usuarios, tenants,
+/// memberships e sessoes ficam fora do RLS (guia §009), então o tenant não importa, e um 4xx
 /// desfaz a transação.
 /// </summary>
 public static partial class Cadastro
@@ -88,6 +88,8 @@ public static partial class Cadastro
         {
             var criada = await db.CriarEmpresa(
                 new NovaEmpresa(email, Senha.GerarHash(senha), nome, empresaNome, slug, contato), ct);
+            // Já entra logado, com a empresa nova ativa (mesmo cookie do login).
+            await Login.AbrirSessao(ctx, db, criada.UsuarioId, criada.TenantId, ct);
             return Json.Responder(StatusCodes.Status201Created,
                 new CadastroJson(criada.UsuarioId, criada.TenantId, slug, "administrador"));
         }

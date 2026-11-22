@@ -188,6 +188,34 @@ public class CadastroGravacaoTests
     }
 
     [Fact]
+    public async Task CadastroValidoAbreSessaoComAEmpresaNovaAtiva()
+    {
+        var email = $"{Unico()}@teste.example";
+        var slug = Unico();
+        await using var dono = await Banco.Conectar("MIGRATIONS_DATABASE_URL");
+        try
+        {
+            // O pipeline do Program.cs: o GET /api/me passa pelo UseAutenticacao.
+            await using var api = await Servidor.ComPublico(Banco.ConnectionString("DATABASE_URL"));
+            var r = await api.Chamar("POST", Rota, Corpo(email, slug));
+            await Exigir(r, HttpStatusCode.Created);
+            var partes = Assert.Single(r.Headers.GetValues("Set-Cookie")).Split(';', StringSplitOptions.TrimEntries);
+            Assert.StartsWith($"{Login.Cookie}=", partes[0]);
+            Assert.Contains("httponly", partes);
+
+            var me = new HttpRequestMessage(HttpMethod.Get, "/api/me");
+            me.Headers.Add("Cookie", partes[0]);
+            var ativa = (await Exigir(await api.Http.SendAsync(me), HttpStatusCode.OK)).GetProperty("empresa_ativa");
+            Assert.Equal(slug, ativa.GetProperty("slug").GetString());
+            Assert.Equal("administrador", ativa.GetProperty("papel").GetString());
+        }
+        finally
+        {
+            await Limpar(dono, [slug], [email]);
+        }
+    }
+
+    [Fact]
     public async Task EmailJaUsadoEh409()
     {
         var slug = Unico();
