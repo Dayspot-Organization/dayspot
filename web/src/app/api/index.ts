@@ -59,6 +59,8 @@ export interface Cliente {
 export interface EmpresaPublica {
   nome: string;
   fuso_horario: string;
+  /** Texto livre (telefone, WhatsApp ou e-mail), exibido como texto: é por ele que o cliente cancela. */
+  contato: string;
 }
 
 /** Serviço da empresa: a duração vem dele, não de quem agenda. */
@@ -157,7 +159,7 @@ export class Api {
     return this.http.get<Cliente[]>("/api/clientes");
   }
 
-  /** GET /api/publico/{slug}. 404 nao_encontrado quando o slug não existe. */
+  /** GET /api/publico/{slug}. 404 nao_encontrado quando o slug não existe ou a empresa está sem contato. */
   empresaPublica(slug: string) {
     return this.http.get<EmpresaPublica>(rotaPublica(slug));
   }
