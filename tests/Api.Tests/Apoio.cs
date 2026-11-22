@@ -26,6 +26,7 @@ public static class Seed
     public static readonly Guid AgendamentoAlfa = Guid.Parse("11111111-0007-0000-0000-000000000001");
     public static readonly Guid AgendamentoBeta = Guid.Parse("22222222-0007-0000-0000-000000000001");
     public static readonly Guid AdminAlfa = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+    public static readonly Guid AdminBeta = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
     public static readonly Guid Prestador = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"); // PRESTADOR_FIXO
 }
 
@@ -139,11 +140,20 @@ public sealed class Servidor : IAsyncDisposable
             s => s.AddSingleton(db).AddSingleton(new Fixos(tenant, Seed.Prestador, Seed.ServicoAlfa)),
             app =>
             {
-                // Com autenticar, a sessão é lida na mesma transação do teste.
+                // Com autenticar, a sessão é lida na mesma transação do teste; sem, os
+                // handlers recebem uma sessão no tenant dado.
                 if (autenticar)
                 {
                     app.UseRouting();
                     app.UseAutenticacao();
+                }
+                else
+                {
+                    app.Use((ctx, next) =>
+                    {
+                        ctx.Features.Set(new Sessao { TenantId = tenant });
+                        return next(ctx);
+                    });
                 }
                 app.MapApi();
             }, db, tx);
@@ -188,7 +198,15 @@ public sealed class Servidor : IAsyncDisposable
         {
             app.UseRouting();
             app.UseCadastro();
-            // No teste, cada requisição escolhe o seu tenant.
+            // No teste, cada requisição escolhe o seu tenant, como se viesse da sessão.
+            app.Use((ctx, next) =>
+            {
+                if (Guid.TryParse(ctx.Request.Headers["Tenant"].ToString(), out var tenant))
+                {
+                    ctx.Features.Set(new Sessao { TenantId = tenant });
+                }
+                return next(ctx);
+            });
             app.UseTransacaoNasRotas(ctx => Guid.Parse(ctx.Request.Headers["Tenant"].ToString()));
             rotas(app);
         });
@@ -215,7 +233,8 @@ public sealed class Servidor : IAsyncDisposable
             app.UsePublico();
             app.UseCadastro();
             app.UseAutenticacao();
-            app.UseTransacaoNasRotas(ctx => Publico.TenantDaRota(ctx) ?? Seed.Alfa);
+            app.UseTransacaoNasRotas(ctx => Publico.TenantDaRota(ctx) ?? TenantDaSessao.Ler(ctx));
+            app.UseTenantDaSessao();
             app.MapApi();
         });
 

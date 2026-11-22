@@ -1162,8 +1162,9 @@ public async Task<IDbContextTransaction> IniciarComTenant(Guid tenantId, Cancell
 Quem chama na API é o middleware da 1.3 (`UseTransacaoNasRotas`, em
 `src/Api/Transacao.cs`): uma transação por requisição. Nas rotas públicas
 `/api/publico/{slug}`, o tenant vem do slug da rota, resolvido pelo `UsePublico`
-(`src/Api/Publico.cs`), nunca do corpo nem da query string; nas demais, de `TENANT_FIXO`
-(e da sessão a partir da Fatia 2). Os handlers recebem o `AppDb` da
+(`src/Api/Publico.cs`), nunca do corpo nem da query string; nas demais, da sessão
+(`TenantDaSessao.Ler`), com o membership ativo conferido a cada requisição pelo `UseTenantDaSessao`
+(`src/Api/TenantDaSessao.cs`, 2.6). Os handlers recebem o `AppDb` da
 requisição, que já está nessa transação. Resposta 4xx/5xx ou exceção = `ROLLBACK`;
 o resto, `COMMIT`, e a resposta só sai depois dele.
 
