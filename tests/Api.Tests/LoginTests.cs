@@ -8,8 +8,9 @@ using Dayspot.Api.Dados;
 namespace Dayspot.Api.Tests;
 
 /// <summary>
-/// POST /api/login e POST /api/sessao/empresa (2.3). Usuários e empresas entram na
-/// transação do teste (<see cref="Servidor.ComBanco"/>, com o UseAutenticacao), desfeita no fim.
+/// POST /api/login e POST /api/sessao/empresa (2.3), GET /api/me (2.9) e POST /api/logout
+/// (2.4). Usuários e empresas entram na transação do teste (<see cref="Servidor.ComBanco"/>,
+/// com o UseAutenticacao), desfeita no fim.
 /// </summary>
 public class LoginTests
 {
@@ -72,6 +73,16 @@ public class LoginTests
     private static Task<HttpResponseMessage> Eu(Servidor api, string? cookie)
     {
         var req = new HttpRequestMessage(HttpMethod.Get, "/api/me");
+        if (cookie is not null)
+        {
+            req.Headers.Add("Cookie", cookie);
+        }
+        return api.Http.SendAsync(req);
+    }
+
+    private static Task<HttpResponseMessage> Sair(Servidor api, string? cookie)
+    {
+        var req = new HttpRequestMessage(HttpMethod.Post, "/api/logout");
         if (cookie is not null)
         {
             req.Headers.Add("Cookie", cookie);
@@ -225,6 +236,41 @@ public class LoginTests
             $"UPDATE sessoes SET revogado_em = NULL, criado_em = now() - interval '2 days', expira_em = now() - interval '1 day' WHERE id = {id}");
         await (await Escolher(api, cookie, a.Slug)).ExigirErro(HttpStatusCode.Unauthorized, Erros.NaoAutenticado);
         Assert.Null((await LerSessao(api, id)).TenantId);
+    }
+
+    [Fact]
+    public async Task LogoutRevogaASessaoEApagaOCookie()
+    {
+        await using var api = await Servidor.ComBanco(Seed.Alfa, autenticar: true);
+        var (usuario, email) = await Usuario(api.Db);
+        await Membership(api.Db, usuario, await NovaEmpresa(api.Db, usuario, "A"), "administrador");
+        var (cookie, id) = await ExigirSessao(await Entrar(api, email, SenhaCerta));
+
+        var r = await Sair(api, cookie);
+        Assert.Equal(HttpStatusCode.NoContent, r.StatusCode);
+        // Apagar exige os mesmos atributos do login; a data no passado faz o navegador descartar.
+        var partes = Assert.Single(r.Headers.GetValues("Set-Cookie")).Split(';', StringSplitOptions.TrimEntries);
+        Assert.Equal($"{Login.Cookie}=", partes[0]);
+        Assert.Contains("expires=Thu, 01 Jan 1970 00:00:00 GMT", partes);
+        Assert.Contains("httponly", partes);
+        Assert.Contains("secure", partes);
+        Assert.Contains("samesite=lax", partes);
+        Assert.Contains("path=/", partes);
+        Assert.NotNull((await LerSessao(api, id)).RevogadoEm);
+
+        // O cookie antigo, reenviado, não vale mais.
+        await (await Eu(api, cookie)).ExigirErro(HttpStatusCode.Unauthorized, Erros.NaoAutenticado);
+        await (await Sair(api, cookie)).ExigirErro(HttpStatusCode.Unauthorized, Erros.NaoAutenticado);
+    }
+
+    [Fact]
+    public async Task LogoutSemSessaoValidaEh401()
+    {
+        await using var api = await Servidor.ComBanco(Seed.Alfa, autenticar: true);
+        foreach (var cookie in new[] { null, $"{Login.Cookie}=lixo", $"{Login.Cookie}={Guid.NewGuid()}" })
+        {
+            await (await Sair(api, cookie)).ExigirErro(HttpStatusCode.Unauthorized, Erros.NaoAutenticado);
+        }
     }
 
     [Fact]
