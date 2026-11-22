@@ -64,9 +64,15 @@ public static class Login
         }
 
         // Com uma empresa, a sessão já nasce nela; com várias, nula até a escolha.
-        var tenantId = empresas.Count == 1 ? empresas[0].TenantId : (Guid?)null;
+        await AbrirSessao(ctx, db, usuario!.Id, empresas.Count == 1 ? empresas[0].TenantId : null, ct);
+        return Json.Responder(StatusCodes.Status200OK, new LoginJson(empresas.Select(ParaJson)));
+    }
+
+    /// <summary>Cria a sessão na empresa dada (nula: ainda sem escolha) e grava o cookie. Login e cadastro (#112).</summary>
+    public static async Task AbrirSessao(HttpContext ctx, AppDb db, Guid usuarioId, Guid? tenantId, CancellationToken ct)
+    {
         var userAgent = ctx.Request.Headers.UserAgent.ToString();
-        var sessao = await db.CriarSessao(usuario!.Id, tenantId, Duracao,
+        var sessao = await db.CriarSessao(usuarioId, tenantId, Duracao,
             userAgent == "" ? null : userAgent[..Math.Min(userAgent.Length, MaxUserAgent)], ct);
         ctx.Response.Cookies.Append(Cookie, sessao.ToString(), new CookieOptions
         {
@@ -76,7 +82,6 @@ public static class Login
             Path = "/",
             MaxAge = Duracao,
         });
-        return Json.Responder(StatusCodes.Status200OK, new LoginJson(empresas.Select(ParaJson)));
     }
 
     /// <summary>
