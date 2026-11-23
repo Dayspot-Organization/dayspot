@@ -241,6 +241,10 @@ public static class Consultas
     public static Task<Sessao?> BuscarSessaoValida(this AppDb db, Guid id, CancellationToken ct = default) =>
         db.Sessoes.FirstOrDefaultAsync(s => s.Id == id && s.RevogadoEm == null && s.ExpiraEm > DateTime.UtcNow, ct);
 
+    /// <summary>Logout (2.4): a sessão deixa de valer no <see cref="BuscarSessaoValida"/>.</summary>
+    public static Task<int> RevogarSessao(this AppDb db, Guid id, CancellationToken ct = default) =>
+        db.Database.ExecuteSqlAsync($"UPDATE sessoes SET revogado_em = now() WHERE id = {id}", ct);
+
     /// <summary>
     /// Grava na sessão a empresa do slug, só se o usuário da sessão tem membership ativo
     /// nela. Zero linhas: slug inexistente ou sem membership ativo, e a sessão não muda.

@@ -74,15 +74,27 @@ public static class Login
         var userAgent = ctx.Request.Headers.UserAgent.ToString();
         var sessao = await db.CriarSessao(usuarioId, tenantId, Duracao,
             userAgent == "" ? null : userAgent[..Math.Min(userAgent.Length, MaxUserAgent)], ct);
-        ctx.Response.Cookies.Append(Cookie, sessao.ToString(), new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Lax,
-            Path = "/",
-            MaxAge = Duracao,
-        });
+        var opcoes = OpcoesDoCookie();
+        opcoes.MaxAge = Duracao;
+        ctx.Response.Cookies.Append(Cookie, sessao.ToString(), opcoes);
     }
+
+    /// <summary>POST /api/logout (2.4): revoga a sessão do cookie e apaga o cookie.</summary>
+    public static async Task<IResult> Sair(HttpContext ctx, AppDb db, CancellationToken ct)
+    {
+        var sessao = ctx.Features.Get<Sessao>()!; // o UseAutenticacao (2.5) já deu 401 sem ela
+        await db.RevogarSessao(sessao.Id, ct);
+        ctx.Response.Cookies.Delete(Cookie, OpcoesDoCookie()); // mesmos atributos do login, senão o navegador não apaga
+        return Results.NoContent();
+    }
+
+    private static CookieOptions OpcoesDoCookie() => new()
+    {
+        HttpOnly = true,
+        Secure = true,
+        SameSite = SameSiteMode.Lax,
+        Path = "/",
+    };
 
     /// <summary>
     /// GET /api/me (2.9): o usuário da sessão, as empresas com membership ativo e o papel
