@@ -77,8 +77,9 @@ app.UsePublico();
 app.UseCadastro();
 app.UseAutenticacao();
 // Toda requisição numa transação com o tenant: o do slug nas rotas públicas; nas
-// demais, na Fatia 2 ele vem da sessão.
-app.UseTransacaoNasRotas(ctx => Publico.TenantDaRota(ctx) ?? cfg.TenantFixo);
+// demais, o da sessão, com o membership conferido pelo UseTenantDaSessao (2.6).
+app.UseTransacaoNasRotas(ctx => Publico.TenantDaRota(ctx) ?? TenantDaSessao.Ler(ctx));
+app.UseTenantDaSessao();
 app.MapApi();
 
 app.Logger.LogInformation("API no ar na porta {Porta}, tenant fixo {TenantFixo}", cfg.PortaHttp, cfg.TenantFixo);

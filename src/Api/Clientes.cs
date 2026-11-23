@@ -18,7 +18,7 @@ public static class Clientes
     internal const int MaxNome = 200;
     internal const int MaxTelefone = 30;
 
-    public static async Task<IResult> Criar(HttpRequest req, AppDb db, Fixos fixos, CancellationToken ct)
+    public static async Task<IResult> Criar(HttpRequest req, AppDb db, CancellationToken ct)
     {
         var entrada = await Json.Ler<NovoClienteJson>(req, ct);
         if (entrada is null)
@@ -40,13 +40,13 @@ public static class Clientes
             telefone = null; // vazio = sem telefone
         }
 
-        var c = await db.CriarCliente(fixos.TenantId, nome, telefone, ct);
+        var c = await db.CriarCliente(TenantDaSessao.Ler(req.HttpContext), nome, telefone, ct);
         return Json.Responder(StatusCodes.Status201Created, new ClienteJson(c));
     }
 
-    public static async Task<IResult> Listar(AppDb db, Fixos fixos, CancellationToken ct)
+    public static async Task<IResult> Listar(HttpContext ctx, AppDb db, CancellationToken ct)
     {
-        var clientes = await db.ListarClientes(fixos.TenantId, ct);
+        var clientes = await db.ListarClientes(TenantDaSessao.Ler(ctx), ct);
         return Json.Responder(StatusCodes.Status200OK, clientes.Select(c => new ClienteJson(c)));
     }
 

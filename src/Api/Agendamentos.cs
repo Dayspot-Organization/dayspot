@@ -29,7 +29,7 @@ public static partial class Agendamentos
     /// em RFC 3339. Sem de, hoje; sem ate, de + 7 dias (e vice-versa). Sem
     /// prestador_id, a empresa toda: restringir ao prestador da sessão é da 2.7.
     /// </summary>
-    public static async Task<IResult> Listar(HttpRequest req, AppDb db, Fixos fixos, CancellationToken ct)
+    public static async Task<IResult> Listar(HttpRequest req, AppDb db, CancellationToken ct)
     {
         if (!LerData(req.Query["de"].FirstOrDefault(), "de", out var de, out var erro)
             || !LerData(req.Query["ate"].FirstOrDefault(), "ate", out var ate, out erro))
@@ -57,7 +57,7 @@ public static partial class Agendamentos
             prestadorId = id;
         }
 
-        var agendamentos = await db.ListarAgendamentos(fixos.TenantId, inicio, fim, prestadorId, ct);
+        var agendamentos = await db.ListarAgendamentos(TenantDaSessao.Ler(req.HttpContext), inicio, fim, prestadorId, ct);
         return Json.Responder(StatusCodes.Status200OK,
             agendamentos.Select(a => new AgendamentoJson(a.Agendamento, a.ClienteNome)));
     }
@@ -93,7 +93,8 @@ public static partial class Agendamentos
         }
 
         // Cliente antes, para dizer qual campo falhou: outro tenant ou removido = 404.
-        var cliente = await db.BuscarCliente(fixos.TenantId, clienteId, ct);
+        var tenant = TenantDaSessao.Ler(req.HttpContext);
+        var cliente = await db.BuscarCliente(tenant, clienteId, ct);
         if (cliente is null)
         {
             return Erros.Responder(StatusCodes.Status404NotFound, Erros.NaoEncontrado, "Cliente não encontrado.",
@@ -102,7 +103,7 @@ public static partial class Agendamentos
         Agendamento? a;
         try
         {
-            a = await db.CriarAgendamento(fixos.TenantId,
+            a = await db.CriarAgendamento(tenant,
                 new NovoAgendamento(clienteId, fixos.ServicoId, fixos.PrestadorId, inicio!.Value, fim), ct);
         }
         catch (PostgresException e) when (e.SqlState == PostgresErrorCodes.ExclusionViolation)
