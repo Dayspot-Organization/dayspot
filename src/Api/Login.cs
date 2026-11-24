@@ -18,9 +18,11 @@ public sealed record UsuarioJson(Guid Id, string Nome, string Email);
 public sealed record EuJson(UsuarioJson Usuario, IEnumerable<EmpresaJson> Empresas, EmpresaJson? EmpresaAtiva);
 
 /// <summary>
-/// Login e escolha da empresa da sessão (2.3; requisitos §9 e §12). Rodam na transação
-/// por requisição; usuarios, memberships, tenants e sessoes ficam fora do RLS (guia
-/// §009), então o tenant dela não importa.
+/// Login e escolha da empresa da sessão (2.3; requisitos §9 e §12). usuarios,
+/// memberships, tenants e sessoes ficam fora do RLS (guia §009), então o tenant não
+/// importa. O POST /api/login fica fora da transação por requisição
+/// (Transacao.TransacaoPropria): cada consulta é um autocommit e a conexão volta ao pool
+/// antes do Argon2.
 /// </summary>
 public static class Login
 {
@@ -38,10 +40,10 @@ public static class Login
 
     public static async Task<IResult> Entrar(HttpContext ctx, AppDb db, CancellationToken ct)
     {
-        var entrada = await Json.Ler<CredenciaisJson>(ctx.Request, ct);
+        var (entrada, erroCorpo) = await Json.Ler<CredenciaisJson>(ctx.Request, ct);
         if (entrada is null)
         {
-            return Json.CorpoInvalido();
+            return erroCorpo;
         }
         var email = Email.Normalizar(entrada.Email ?? "");
         if (email == "")
@@ -122,10 +124,10 @@ public static class Login
     public static async Task<IResult> EscolherEmpresa(HttpContext ctx, AppDb db, CancellationToken ct)
     {
         var sessao = ctx.Features.Get<Sessao>()!; // o UseAutenticacao (2.5) já deu 401 sem ela
-        var entrada = await Json.Ler<EscolhaEmpresaJson>(ctx.Request, ct);
+        var (entrada, erroCorpo) = await Json.Ler<EscolhaEmpresaJson>(ctx.Request, ct);
         if (entrada is null)
         {
-            return Json.CorpoInvalido();
+            return erroCorpo;
         }
         var slug = (entrada.Slug ?? "").Trim().ToLowerInvariant();
         if (slug == "")

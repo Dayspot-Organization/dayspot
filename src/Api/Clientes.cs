@@ -20,10 +20,10 @@ public static class Clientes
 
     public static async Task<IResult> Criar(HttpRequest req, AppDb db, CancellationToken ct)
     {
-        var entrada = await Json.Ler<NovoClienteJson>(req, ct);
+        var (entrada, erroCorpo) = await Json.Ler<NovoClienteJson>(req, ct);
         if (entrada is null)
         {
-            return Json.CorpoInvalido();
+            return erroCorpo;
         }
         var nome = (entrada.Nome ?? "").Trim();
         if (nome == "" || Caracteres(nome) > MaxNome)

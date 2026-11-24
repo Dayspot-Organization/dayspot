@@ -9,6 +9,23 @@ public sealed record Fixos(Guid TenantId, Guid PrestadorId, Guid ServicoId);
 
 public static class Rotas
 {
+    /// <summary>
+    /// Em toda resposta: sem cache (a maioria leva dado da sessão) e sem o navegador
+    /// adivinhar o tipo. Antes do UseRouting, para valer também no /api/saude; pelo
+    /// OnStarting, porque o 500 do UseTransacaoNasRotas limpa os cabeçalhos.
+    /// </summary>
+    public static IApplicationBuilder UseCabecalhos(this IApplicationBuilder app) =>
+        app.Use((ctx, next) =>
+        {
+            ctx.Response.OnStarting(() =>
+            {
+                ctx.Response.Headers.CacheControl = "no-store";
+                ctx.Response.Headers.XContentTypeOptions = "nosniff";
+                return Task.CompletedTask;
+            });
+            return next(ctx);
+        });
+
     // HEAD junto com GET: o corpo não sai, mas a rota responde como no GET.
     private static readonly string[] Leitura = ["GET", "HEAD"];
 

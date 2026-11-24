@@ -2,6 +2,7 @@ using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using Dayspot.Api.Dados;
 
 namespace Dayspot.Api.Tests;
@@ -44,6 +45,17 @@ public class AutenticacaoTests
         // Banco fora do ar: o 401 sai sem consultar nada.
         await using var api = await Api(Banco.ForaDoAr);
         await (await Get(api, "/api/clientes", cookie)).ExigirErro(HttpStatusCode.Unauthorized, Erros.NaoAutenticado);
+    }
+
+    [Theory]
+    [InlineData("POST", "/api/clientes")]
+    [InlineData("GET", "/api/agendamentos")]
+    [InlineData("POST", "/api/agendamentos")]
+    [InlineData("POST", "/api/logout")]
+    public async Task RotasComSessaoSemCookie401(string metodo, string rota)
+    {
+        await using var api = await Api(Banco.ForaDoAr);
+        await (await api.Chamar(metodo, rota, metodo == "POST" ? "{}" : null)).ExigirErro(HttpStatusCode.Unauthorized, Erros.NaoAutenticado);
     }
 
     [Theory]
@@ -104,5 +116,21 @@ public class AutenticacaoTests
         {
             await dono.Exec("DELETE FROM sessoes WHERE id IN ($1, $2, $3)", valida, expirada, revogada);
         }
+    }
+
+    // Dentro da transação o now() do banco fica parado no início dela: depois do pg_sleep, a
+    // sessão vence pelo relógio de quem passou do prazo e continua valendo pelo do banco, o
+    // mesmo do CriarSessao. Não depende de diferença entre os relógios da API e do banco.
+    [Fact]
+    public async Task SessaoVenceNoRelogioDoBanco()
+    {
+        await using var api = await Servidor.ComBanco(Seed.Alfa);
+        var id = Guid.NewGuid();
+        await api.Db.Database.ExecuteSqlAsync($"""
+            INSERT INTO sessoes (id, usuario_id, tenant_id, expira_em)
+            VALUES ({id}, {Seed.AdminAlfa}, {Seed.Alfa}, now() + interval '50 milliseconds')
+            """);
+        await api.Db.Database.ExecuteSqlRawAsync("SELECT pg_sleep(0.2)");
+        Assert.NotNull(await api.Db.BuscarSessaoValida(id));
     }
 }

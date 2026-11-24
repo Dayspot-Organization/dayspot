@@ -72,6 +72,7 @@ for (var tentativa = 1; ; tentativa++)
     }
 }
 
+app.UseCabecalhos();
 app.UseRouting();
 app.UsePublico();
 app.UseCadastro();

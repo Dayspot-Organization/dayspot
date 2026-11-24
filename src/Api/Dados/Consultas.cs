@@ -237,7 +237,10 @@ public static class Consultas
         return ids.Single();
     }
 
-    /// <summary>Nulo: sessão inexistente, expirada ou revogada.</summary>
+    /// <summary>
+    /// Nulo: sessão inexistente, expirada ou revogada. Dentro da consulta, DateTime.UtcNow
+    /// vira now() no SQL (tradução do Npgsql): vale o relógio do banco, o mesmo do CriarSessao.
+    /// </summary>
     public static Task<Sessao?> BuscarSessaoValida(this AppDb db, Guid id, CancellationToken ct = default) =>
         db.Sessoes.FirstOrDefaultAsync(s => s.Id == id && s.RevogadoEm == null && s.ExpiraEm > DateTime.UtcNow, ct);
 

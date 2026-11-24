@@ -5,6 +5,11 @@ namespace Dayspot.Api;
 
 public static class Transacao
 {
+    // Login e cadastro calculam o Argon2, que leva dezenas de milissegundos: com a
+    // transação da requisição, seguram uma conexão do pool esse tempo todo. Cuidam da
+    // própria transação, depois do hash; tocam só em tabelas fora do RLS (guia §009).
+    private static readonly HashSet<string> TransacaoPropria = ["/api/login", "/api/signup"];
+
     /// <summary>
     /// Abre uma transação por requisição (1.3), com o tenant de tenant(ctx):
     /// TENANT_FIXO na Fatia 1, a sessão na Fatia 2. Resposta 4xx/5xx ou exceção =
@@ -22,10 +27,23 @@ public static class Transacao
         app.Use(async (ctx, next) =>
         {
             // O 405 do roteamento é um Endpoint sintético, não um RouteEndpoint.
-            if (ctx.GetEndpoint() is not RouteEndpoint)
+            if (ctx.GetEndpoint() is not RouteEndpoint rota)
             {
                 await next(ctx);
                 await ErroDoRoteamento(ctx);
+                return;
+            }
+            if (TransacaoPropria.Contains(rota.RoutePattern.RawText ?? ""))
+            {
+                try
+                {
+                    await next(ctx);
+                }
+                catch (Exception erro) when (!ctx.RequestAborted.IsCancellationRequested && !ctx.Response.HasStarted)
+                {
+                    ctx.Response.Clear();
+                    await Erros.Interno(ctx, erro).ExecuteAsync(ctx);
+                }
                 return;
             }
 

@@ -12,10 +12,9 @@ public sealed record NovoCadastroJson(string? Nome, string? Email, string? Senha
 public sealed record CadastroJson(Guid UsuarioId, Guid TenantId, string Slug, string Papel);
 
 /// <summary>
-/// Cadastro de empresa e do primeiro administrador (#112). Roda dentro da transação
-/// por requisição (UseTransacaoNasRotas, com TENANT_FIXO): usuarios, tenants,
-/// memberships e sessoes ficam fora do RLS (guia §009), então o tenant não importa, e um 4xx
-/// desfaz a transação.
+/// Cadastro de empresa e do primeiro administrador (#112). Fora da transação por
+/// requisição (Transacao.TransacaoPropria): abre a sua depois do hash. usuarios, tenants,
+/// memberships e sessoes ficam fora do RLS (guia §009), então não há tenant.
 /// </summary>
 public static partial class Cadastro
 {
@@ -35,15 +34,18 @@ public static partial class Cadastro
         // Antes de ler o corpo; conta toda requisição, inclusive a inválida.
         if (!limite.Tentar(IpReal.Chave(ctx), out var espera))
         {
+            // Como o 429 das rotas públicas: nada de IP nem do corpo.
+            ctx.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(Cadastro))
+                .LogWarning("429 pelo limite do cadastro em POST /api/signup");
             ctx.Response.Headers.RetryAfter = ((int)Math.Ceiling(espera.TotalSeconds)).ToString(CultureInfo.InvariantCulture);
             return Erros.Responder(StatusCodes.Status429TooManyRequests, Erros.MuitasTentativas,
                 "Muitas tentativas de cadastro. Aguarde e tente de novo.");
         }
 
-        var entrada = await Json.Ler<NovoCadastroJson>(ctx.Request, ct);
+        var (entrada, erroCorpo) = await Json.Ler<NovoCadastroJson>(ctx.Request, ct);
         if (entrada is null)
         {
-            return Json.CorpoInvalido();
+            return erroCorpo;
         }
 
         var nome = (entrada.Nome ?? "").Trim();
@@ -83,13 +85,17 @@ public static partial class Cadastro
             return Erros.CampoInvalido("contato", "Informe o contato da empresa (até 120 caracteres).");
         }
 
-        // Depois do 23505 a transação está abortada: nada mais roda SQL neste handler.
+        // Hash antes de abrir a transação, para não segurar a conexão durante o Argon2.
+        var hash = Senha.GerarHash(senha);
+        // Empresa e sessão juntas; sem COMMIT (409 ou exceção), o Dispose desfaz. Depois do
+        // 23505 a transação está abortada: nada mais roda SQL neste handler.
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
         try
         {
-            var criada = await db.CriarEmpresa(
-                new NovaEmpresa(email, Senha.GerarHash(senha), nome, empresaNome, slug, contato), ct);
+            var criada = await db.CriarEmpresa(new NovaEmpresa(email, hash, nome, empresaNome, slug, contato), ct);
             // Já entra logado, com a empresa nova ativa (mesmo cookie do login).
             await Login.AbrirSessao(ctx, db, criada.UsuarioId, criada.TenantId, ct);
+            await tx.CommitAsync(ct);
             return Json.Responder(StatusCodes.Status201Created,
                 new CadastroJson(criada.UsuarioId, criada.TenantId, slug, "administrador"));
         }

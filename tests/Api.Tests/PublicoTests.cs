@@ -118,6 +118,17 @@ public class PublicoTests
         Assert.Equal(0, await e.Agendamentos());
     }
 
+    // O slug é gravado em minúsculas (cadastro): o link com maiúsculas acha a mesma empresa.
+    [Fact]
+    public async Task SlugEmMaiusculasAchaAEmpresa()
+    {
+        await using var e = await EmpresaDeTeste.Criar();
+        await using var api = await Api();
+        var r = await api.Chamar("GET", $"/api/publico/{e.Slug.ToUpperInvariant()}");
+        Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+        Assert.Equal("Empresa Teste", (await r.Json()).GetProperty("nome").GetString());
+    }
+
     [Theory]
     [InlineData("GET", "")]
     [InlineData("GET", "/servicos")]
@@ -192,6 +203,18 @@ public class PublicoTests
         await using var e = await EmpresaDeTeste.Criar();
         await using var api = await Api();
         await ExigirCampo(await api.Chamar("GET", $"/api/publico/{e.Slug}/ocupados?{query}&prestador_id={e.Prestador}"), campo);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("&prestador_id=")]
+    [InlineData("&prestador_id=1")]
+    public async Task OcupadosSemPrestadorValido(string prestador)
+    {
+        await using var e = await EmpresaDeTeste.Criar();
+        await using var api = await Api();
+        var r = await api.Chamar("GET", $"/api/publico/{e.Slug}/ocupados?de={Segunda}T00:00:00Z&ate={Segunda}T23:00:00Z{prestador}");
+        await ExigirCampo(r, "prestador_id");
     }
 
     [Fact]
@@ -517,6 +540,8 @@ public class PublicoTests
     [InlineData("2026-06-08T10:00:00-03:00")]
     [InlineData("08/06/2026 10:00")]
     [InlineData("")]
+    [InlineData("9999-12-31T23:30:00")] // o fuso estourava o DateTime (500)
+    [InlineData("0001-01-01T00:00:00")]
     public async Task InicioComFusoOuMalformado(string inicio)
     {
         await using var e = await EmpresaDeTeste.Criar();
@@ -538,6 +563,31 @@ public class PublicoTests
         var corpo = JsonSerializer.Serialize(valido.Concat(novo).GroupBy(p => p.Key).ToDictionary(g => g.Key, g => g.Last().Value));
         await ExigirCampo(await Agendar(api, e, corpo), campo);
         Assert.Equal(0, await e.Clientes());
+    }
+
+    public static TheoryData<string, string> TextosLongos() => new()
+    {
+        { "nome", new string('a', 201) },
+        { "telefone", "11" + new string(' ', 20) + "912345678" }, // 31 caracteres, 11 dígitos
+    };
+
+    [Theory]
+    [MemberData(nameof(TextosLongos))]
+    public async Task TextoAcimaDoLimite(string campo, string valor)
+    {
+        await using var e = await EmpresaDeTeste.Criar();
+        await using var api = await Api();
+        var corpo = campo == "nome" ? e.Corpo($"{Segunda}T10:00:00", nome: valor) : e.Corpo($"{Segunda}T10:00:00", telefone: valor);
+        await ExigirCampo(await Agendar(api, e, corpo), campo);
+        Assert.Equal(0, await e.Clientes());
+    }
+
+    [Fact]
+    public async Task CorpoMalformadoEh400()
+    {
+        await using var e = await EmpresaDeTeste.Criar();
+        await using var api = await Api();
+        await (await Agendar(api, e, "{")).ExigirErro(HttpStatusCode.BadRequest, Erros.RequisicaoInvalida);
     }
 
     [Fact]
@@ -691,6 +741,31 @@ public class LimitePublicoTests
             Assert.DoesNotContain("98765", l);
             Assert.DoesNotContain("Fulana", l);
         });
+    }
+
+    [Fact]
+    public async Task Log500TemOMoldeDaRotaSemOSlug()
+    {
+        var log = new LogEmMemoria();
+        await using var api = await Servidor.ComPublico(Banco.ForaDoAr, log: log);
+        await (await Enviar(api, "GET", "/api/publico/empresa-secreta/servicos")).ExigirErro(HttpStatusCode.InternalServerError, Erros.ErroInterno);
+        var linha = Assert.Single(log.Linhas, l => l.StartsWith("erro interno"));
+        Assert.Contains("GET /api/publico/{slug}/servicos", linha);
+        Assert.DoesNotContain("empresa-secreta", linha);
+    }
+
+    // Também no /api/saude (responde no UseRouting) e no 500.
+    [Theory]
+    [InlineData("/api/saude")]
+    [InlineData("/api/publico/alfa")]
+    [InlineData("/api/clientes")]
+    [InlineData("/api/nada")]
+    public async Task CabecalhosEmTodaResposta(string rota)
+    {
+        await using var api = await Api();
+        var r = await Enviar(api, "GET", rota);
+        Assert.Equal("no-store", Assert.Single(r.Headers.GetValues("Cache-Control")));
+        Assert.Equal("nosniff", Assert.Single(r.Headers.GetValues("X-Content-Type-Options")));
     }
 
     [Fact]

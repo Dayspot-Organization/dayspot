@@ -25,33 +25,35 @@ public static class Json
         Results.Json(valor, Opcoes, ContentType, status);
 
     /// <summary>
-    /// Decodifica o corpo. Nulo = corpo inválido (JSON malformado, campo desconhecido,
-    /// lixo depois do objeto ou mais de 1 MiB): quem chama responde com
-    /// <see cref="CorpoInvalido"/>.
+    /// Decodifica o corpo. Valor nulo = corpo inválido (JSON malformado, campo desconhecido,
+    /// lixo depois do objeto, corpo truncado ou mais de 1 MiB), e Erro é a resposta 400.
     /// </summary>
-    public static async Task<T?> Ler<T>(HttpRequest req, CancellationToken ct) where T : class
+    public static async Task<(T? Valor, IResult Erro)> Ler<T>(HttpRequest req, CancellationToken ct) where T : class
     {
         using var corpo = new MemoryStream();
         var bloco = new byte[16 * 1024];
-        int lidos;
-        while ((lidos = await req.Body.ReadAsync(bloco, ct)) > 0)
-        {
-            if (corpo.Length + lidos > LimiteCorpo)
-            {
-                return null;
-            }
-            corpo.Write(bloco, 0, lidos);
-        }
         try
         {
-            return JsonSerializer.Deserialize<T>(corpo.GetBuffer().AsSpan(0, (int)corpo.Length), Opcoes);
+            int lidos;
+            while ((lidos = await req.Body.ReadAsync(bloco, ct)) > 0)
+            {
+                if (corpo.Length + lidos > LimiteCorpo)
+                {
+                    return (null, Erros.Responder(StatusCodes.Status400BadRequest, Erros.RequisicaoInvalida,
+                        "Corpo da requisição acima de 1 MiB."));
+                }
+                corpo.Write(bloco, 0, lidos);
+            }
+            return (JsonSerializer.Deserialize<T>(corpo.GetBuffer().AsSpan(0, (int)corpo.Length), Opcoes), CorpoInvalido);
         }
-        catch (JsonException)
+        // Corpo truncado ou chunked malformado: o Kestrel avisa na leitura.
+        catch (Exception e) when (e is JsonException or BadHttpRequestException)
         {
-            return null;
+            return (null, CorpoInvalido);
         }
     }
 
-    public static IResult CorpoInvalido() =>
+    // Imutável: a mesma resposta serve para toda requisição.
+    private static readonly IResult CorpoInvalido =
         Erros.Responder(StatusCodes.Status400BadRequest, Erros.RequisicaoInvalida, "Corpo da requisição não é um JSON válido.");
 }
