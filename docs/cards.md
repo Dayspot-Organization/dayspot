@@ -7,7 +7,15 @@ quando cards forem criados ou apagados (uma fatia por vez), num PR `docs`.
 
 Dependências copiadas do "Depende de" de cada issue — o corpo da issue é o contrato.
 
-Conferido em 18/11/2026.
+Conferido em 24/11/2026.
+
+## Mudanças de 24/11/2026 (review)
+
+Cards novos da Fatia P, com os achados do review do código, fora do `docs/backlog.md`:
+
+| Card | Item | O que mudou |
+|---|---|---|
+| #198 a #200 | — | Cards novos: achados do backend, achados do front e docs alinhados ao código |
 
 ## Mudanças de 18/11/2026 (piloto)
 
@@ -196,6 +204,9 @@ Sem decisão em aberto no corpo das issues das Fatias 2 e 2E: as de 2.2, 2.3, 2.
 | #180 | — | Documentação de produto e API alinhada às decisões do piloto | M | docs | #162 |
 | #181 | — | Agendamentos simultâneos no mesmo horário: deadlock responde 500 em vez de 409 | P | backend | #162 |
 | #182 | — | Alinhar backlog e cards ao planejamento do piloto | M | docs | — |
+| #198 | — | Achados do review do backend: erros 500, rate limit do cadastro, banco e testes | M | backend, banco | — |
+| #199 | — | Achados do review do front: navegação, envio e acessibilidade | M | frontend | — |
+| #200 | — | Docs alinhados ao código depois da migração e da Fatia 2 | P | docs | — |
 
 Decisão em aberto no #174: administrador que não atende aparece como profissional na página pública, e falta confirmar se o horário da empresa piloto cabe na janela fixa.
 

@@ -1,13 +1,16 @@
 # Especificação de fluxo — Dayspot
 
-Versão **1.3** · 19/11/2026 (telas do piloto separadas das que ficam para depois)
+Versão **1.4** · 24/11/2026 (conferida contra o código depois da Fatia 2, #200)
 
 Papéis, ciclo de vida do agendamento, telas e modelo de dados.
 
-**Fontes**: repositório, `main` em `59985c5`: `docs/requisitos.md` v0.15,
-`docs/guia-banco-de-dados.md` v1.12, `docs/backlog.md`, `docs/erros-api.md`.
+**Fontes**: repositório, `main` com o #200: `docs/requisitos.md` v0.16,
+`docs/guia-banco-de-dados.md` v1.14, `docs/backlog.md`, `docs/erros-api.md`.
 
-**Estado atual:** a API tem clientes, agendamentos e as rotas públicas (`src/Api/Rotas.cs`).
+**Estado atual:** a API tem cadastro, login, logout, sessão com escolha de empresa
+(`/api/me`, `/api/sessao/empresa`), clientes, agendamentos e as rotas públicas
+(`src/Api/Rotas.cs`); o front tem `/entrar`, `/cadastro`, a agenda, o novo agendamento e a
+página pública.
 O restante desta especificação descreve o produto planejado, e nenhuma integração de
 avisos existe.
 
@@ -323,8 +326,9 @@ papel devolvido por `GET /api/me` (2.9, inferido). Todas as rotas da API ficam s
   409 `conflito_horario` ao salvar; 409
   `status_invalido` em ação fora de hora; 403 se o prestador forçar outro id.
 - **Antes da T7:** a 1.10 (#57) é lista simples, consumindo a 1.6. A 7.1 a substitui.
-  Na T1 não há sessão: tenant e prestador vêm de `TENANT_FIXO` e `PRESTADOR_FIXO`
-  (1.1), removidos na 2.12 (§8.4).
+  Na T1 não havia sessão: tenant e prestador vinham de `TENANT_FIXO` e `PRESTADOR_FIXO`
+  (1.1). Desde a Fatia 2, o tenant vem da sessão; o `PRESTADOR_FIXO` segue no
+  `POST /api/agendamentos` até a 2.12 (§8.4).
 - **Corte:** se faltar tempo na T7, `.ics` → financeiro por prestador → calendário
   (fica a lista da 1.10).
 - **Backlog:** 1.6, 1.10, 1.11, 5.4, 6.3, 6.6, 7.1, 7.2, 7.6, 7.7. Rotas
@@ -401,18 +405,18 @@ papel devolvido por `GET /api/me` (2.9, inferido). Todas as rotas da API ficam s
 
 - **Objetivo:** o cliente final agenda sozinho, sem conta (RF19).
 - **Quem:** qualquer visitante com o link da empresa; sem login e sem menu do painel.
-- **Situação:** as rotas estão na `main` (#162); a tela entra pelo #163 (PR #167).
+- **Situação:** entregue, rotas (#162) e tela (#163).
 - **Dados:** nome e fuso da empresa, serviços ativos, profissionais (todos os memberships
   ativos) e intervalos ocupados do profissional escolhido.
 - **Campos:** serviço, profissional, dia e horário, nome e telefone. O `inicio` vai em
   hora local da empresa, sem fuso.
-- **Regras na `main`:** de segunda a sábado, com início a partir de 08:00 e fim até 19:00,
+- **Regras:** de segunda a sábado, com início a partir de 08:00 e fim até 19:00,
   no fuso da empresa; horário futuro; cliente e agendamento na mesma transação; telefone
   já cadastrado reaproveita o cliente, sem alterar o nome gravado e sem revelar dados dele;
-  limite por IP de 60 leituras e 10 envios por minuto.
-- **Planejado:** até 60 dias de antecedência, grade de 30 minutos, até 3 agendamentos
-  futuros por telefone e telefone brasileiro normalizado, sem SMS (#169); contato da
-  empresa na página (#170); política de privacidade (#175, §4.13). O endereço fica fora.
+  limite por IP de 60 leituras e 10 envios por minuto; até 60 dias de antecedência, grade
+  de 30 minutos, até 3 agendamentos futuros por telefone e telefone brasileiro normalizado,
+  sem SMS (#169); contato da empresa na página (#170). O endereço fica fora.
+- **Pendente:** política de privacidade (#175, §4.13).
 - **Contato da empresa (#170):** obrigatório para a página funcionar. Empresa sem contato
   responde 404 `nao_encontrado` nas rotas públicas e mostra o aviso de empresa não
   encontrada. É o canal de pedidos de exclusão da política (#175).
@@ -756,10 +760,10 @@ card indicado.
    coluna no modelo. *Recomendação:* coluna nula `presenca_confirmada_em timestamptz`
    em `agendamentos`, por migration nova na 5.6, e indicador no calendário; decidir
    antes da 5.5.
-4. **#57 (1.10) com `PRESTADOR_FIXO`.** Na T1 não há sessão; a 1.6 aceita
-   `prestador_id` opcional sem regra, e não está dito se a lista filtra pelo prestador
-   fixo. *Recomendação:* a lista não filtra (usa só `TENANT_FIXO`); `PRESTADOR_FIXO`
-   vale só no `POST` (1.5). Registrar no corpo do #57.
+4. **#57 (1.10) com `PRESTADOR_FIXO`.** Na T1 não havia sessão; a 1.6 aceita
+   `prestador_id` opcional sem regra, e não estava dito se a lista filtra pelo prestador
+   fixo. **Resolvido: a lista não filtra e usa o tenant da sessão; o `PRESTADOR_FIXO`
+   vale só no `POST` (1.5).**
 5. **Visão inicial do administrador.** O calendário abre na própria agenda; a API
    sem `prestador_id` devolve a empresa toda, e um administrador que não atende veria a
    semana vazia. *Recomendação:* abrir na própria se o administrador tem agendamentos ou

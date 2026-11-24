@@ -1,14 +1,17 @@
 # Sistema de design · Dayspot
 
 Versão 2.1 · 17/11/2026. Regras normalizadas pelo novo design (proposta v2 + boas práticas da
-identidade), com as correções da auditoria aplicadas. Leia o [`DESIGN.md`](../../DESIGN.md) antes.
+identidade), com as correções da auditoria aplicadas.
+
+> A referência visual atual é o [`Design.html`](../../Design.html) (v3, #187), na raiz: abra no
+> navegador. Ele vence este README onde os dois divergem. As telas `.dc.html`, o `tokens.css`
+> e os `assets/` da v2.1 não estão mais no repositório.
 
 | O quê | Onde |
 |---|---|
-| Brief (produto, voz, marca, decisões) | [`DESIGN.md`](../../DESIGN.md) |
-| Tokens (fonte única) | [`tokens.css`](tokens.css) (também em `web/src/tokens.css`: seção 8) |
-| Logos usados nas telas | [`assets/`](assets/) |
-| Telas de referência v2.1 | [`telas/`](telas/) (abra o `.dc.html` no navegador) |
+| Design system v3: marca, voz, tokens, componentes e estados | [`Design.html`](../../Design.html) |
+| Tokens do código | [`web/src/tokens.css`](../../web/src/tokens.css) (seção 8) |
+| Logos | [`web/public/`](../../web/public/) |
 | Auditoria e correções | [`auditoria.md`](auditoria.md) |
 
 **Como usar numa tela nova:** (1) escolha o padrão de tela da seção 5; (2) monte só com os
@@ -181,7 +184,7 @@ de trabalho além disso. `prefers-reduced-motion` zera as durações.
 | Selecionado | opção: borda 2 `ds-acao` + fundo `ds-acao-suave`; horário/dia: fundo `ds-acao` + `ds-acao-texto` (+ marcador `ds-acento` no horário) | menu: `ds-hover` + texto/ícone `ds-acao` (mesmo peso); filtro de pessoa e abas: `ds-acao` + `ds-acao-texto`; segmento: `ds-superficie` + `ds-sombra` | n/a |
 | Erro | borda `ds-erro` + texto de ajuda em `ds-erro-texto` | — | — |
 
-Desenhados em [`telas/Main.dc.html`](telas/Main.dc.html), seção "Estados de interação".
+Desenhados no [`Design.html`](../../Design.html), seção "Estados" de cada componente.
 
 - Hover é sempre mais discreto que selecionado.
 - Selecionar não muda o peso da fonte.
@@ -396,7 +399,7 @@ conserto embaixo.
 
 Centralizado no cartão: ilustração 176 × 132, título `ds-tx-h3` que diz o fato, frase de 30ch
 no máximo, uma ação principal (e no máximo uma secundária). Exemplos em
-[`telas/Estados.dc.html`](telas/Estados.dc.html).
+[`Design.html`](../../Design.html).
 
 ### 4.20 Esqueleto (`.esqueleto`)
 
@@ -432,7 +435,7 @@ sem texto.
 
 ### Índice de componentes
 
-| Peça | Onde os estados estão desenhados (`telas/`) | Código | Situação |
+| Peça | Onde os estados estavam desenhados (telas da v2.1; hoje, no `Design.html`) | Código | Situação |
 |---|---|---|---|
 | Botão | §4.1 · `Main` | `web/src/styles.css` (`.botao`, `.botao-secundario`, `.botao-terciario`, `.botao-pequeno`, `.botao-icone`) | no código |
 | Campo | §4.2 · `Main` | `web/src/styles.css` (`.campo`, `input`, `select`, `.busca`) | no código |
@@ -443,7 +446,7 @@ sem texto.
 | Interruptor | §4.7 · `Main`, `Disponibilidade` | `web/src/styles.css` (`.interruptor`) | no código |
 | Filtro de pessoa / abas | §4.8 · `Agenda-semana`, `Financeiro`, `Disponibilidade` | — | só design |
 | Chip de status | §4.9 · `Main` | `web/src/styles.css` (`.chip`, `.st-*`) | no código |
-| Bloco da agenda | §4.10 · `Main`, `Agenda-semana` | `app/agendamentos` (`.bloco`) | no código |
+| Bloco da agenda | §4.10 · `Main`, `Agenda-semana` | `web/src/app/agendamentos` (`.bloco`) | no código |
 | Aviso | §4.11 · `Main`, `Clientes` | `app-mensagem-erro` (`.aviso`) | no código (erro) |
 | Diálogo de confirmação | §4.12 · `Meus-horarios-cliente`, `Prestadores` | — | só design |
 | Cartão / painel lateral | §4.13 · todas | `web/src/styles.css` (`.cartao`, `.painel`, `.com-painel`) | no código |
@@ -503,14 +506,14 @@ Escreva para cada item: aplica (e o que mostra), não aplica (por quê) ou pergu
    contraste conferido; ícone novo segue a regra de ícones.
 3. Liste todas as telas e arquivos de código que usam a peça.
 4. Leve a mudança e a lista para aprovação do dono do produto.
-5. Aprovado: atualize as telas em `telas/`, o código, este README, o índice,
-   `tokens.css` e o Registro de decisões do `DESIGN.md`, no mesmo PR.
+5. Aprovado: atualize o `Design.html`, o código, este README, o índice e o
+   `web/src/tokens.css`, no mesmo PR.
 
 ---
 
 ## 8. Migração dos tokens do código (v1 → v2.1)
 
-**Feita na adaptação da Agenda.** [`tokens.css`](tokens.css) foi copiado para `web/src/tokens.css`
+**Feita na adaptação da Agenda.** O `tokens.css` da v2.1 foi copiado para `web/src/tokens.css`
 (carregado antes de `styles.css` pelo `angular.json`), os nomes seguem o mapa abaixo, o menu foi para
 superfície, Hanken Grotesk + Nunito 700–800 entram pelo `index.html` e o logo usa os traços de
 `logo-horizontal.svg` direto no componente, com as cores pelos tokens (`--ds-acao` no símbolo,

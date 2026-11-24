@@ -65,7 +65,7 @@ São dois papéis dentro de cada organização:
 | **Administrador** | Gerencia a empresa — convida membros, remove prestadores, define serviços e preços, vê o financeiro de todos. Também pode atender. |
 | **Prestador** | Vê e opera apenas a própria agenda. |
 
-O cliente final não tem conta. Ele agenda sozinho na página pública da empresa, em `/agendar/:slug`, de segunda a sábado, com início a partir de 08:00 e fim até 19:00, no fuso da empresa. As rotas da API já estão na `main`; a tela entra pelo card #163 (PR #167).
+O cliente final não tem conta. Ele agenda sozinho na página pública da empresa, em `/agendar/:slug`, de segunda a sábado, com início a partir de 08:00 e fim até 19:00, no fuso da empresa.
 
 Os avisos de confirmação, lembrete e cancelamento serão enviados pelo WhatsApp. Essa integração ainda não existe: fornecedor, custo e prazo são decisões pendentes ([requisitos, §8](docs/requisitos.md#8-avisos-pelo-whatsapp)).
 
@@ -123,7 +123,7 @@ cp .env.example .env
 | `APP_USER_PASSWORD` | Senha do `app_user`, criado por `db/init/app_user.sh`; a mesma da `DATABASE_URL` |
 | `MIGRATIONS_DATABASE_URL` | Conexão do **dono das tabelas** — só migrations (`dotnet ef`) e seed. Ignora o RLS. |
 | `DATABASE_URL` | Conexão do **`app_user`** — a única que a API usa. Sujeita ao RLS. |
-| `TENANT_FIXO`, `PRESTADOR_FIXO`, `SERVICO_FIXO` | Sessão e serviço da Fatia 1, sem login (UUIDs do seed, tabela abaixo). Temporárias: saem na 2.12 e na 6.6 |
+| `TENANT_FIXO`, `PRESTADOR_FIXO`, `SERVICO_FIXO` | UUIDs do seed (tabela abaixo). O `POST /api/agendamentos` do painel usa o prestador e o serviço fixos; o tenant vem da sessão, e o `TENANT_FIXO` só é lido, sem uso |
 | `PORTA_HTTP` | Porta da API; opcional, padrão `8080` (a do proxy do `ng serve`) |
 
 > São duas conexões de propósito. Se a API conectar como dono das tabelas, todas as policies de RLS viram decoração e o isolamento entre organizações deixa de existir.
@@ -169,12 +169,12 @@ Migrations e seed não rodam na imagem (8.3): aplique antes, como em [Subindo o 
 ```bash
 cd web
 npm install
-npm run dev     # ng serve em http://localhost:4200 (abre em /agendamentos)
+npm run dev     # ng serve em http://localhost:4200 (abre em /entrar; com sessão, na agenda)
 npm run lint    # o CI roda lint e build em todo PR
 npm run build   # ng build (TypeScript strict e templates strict)
 ```
 
-Componentes standalone com signals. As rotas ficam em `web/src/app/app.routes.ts` (`@angular/router`); `Painel` (`layout.ts`/`painel.html`) é a rota de layout com a navegação e o `<router-outlet />` onde cada tela do painel aparece; a página pública `/agendar/:slug` fica fora dela. Chamadas à API passam pelo serviço `Api` (`web/src/app/api/`), com o `HttpClient` e um interceptor que converte as respostas de erro (`docs/erros-api.md`).
+Componentes standalone com signals. As rotas ficam em `web/src/app/app.routes.ts` (`@angular/router`); `Painel` (`layout.ts`/`painel.html`) é a rota de layout com a navegação e o `<router-outlet />` onde cada tela do painel aparece; as rotas `/entrar`, `/cadastro` e a página pública `/agendar/:slug` ficam fora dela. Chamadas à API passam pelo serviço `Api` (`web/src/app/api/`), com o `HttpClient` e um interceptor que converte as respostas de erro (`docs/erros-api.md`).
 
 Em dev, o `ng serve` repassa (`web/proxy.conf.json`) tudo que começa com `/api` para a API em `localhost:8080`, sem reescrever o caminho: a SPA chama `/api/agendamentos` na mesma origem e não precisa de CORS.
 
@@ -249,26 +249,29 @@ Hoje:
 ```
 dayspot/
 ├── .github/
-│   ├── workflows/ci.yml        # em push e PR para a main: .NET (dotnet format, build; Postgres 16 com migrations up, down e up de novo; testes, inclusive os de banco) e web (lint, build)
+│   ├── workflows/ci.yml        # em push na main e em todo PR: .NET (dotnet format, build; Postgres 16 com migrations up, down e up de novo; testes, inclusive os de banco), web (lint, build) e docker (build da imagem)
 │   └── pull_request_template.md
 ├── src/Api/                    # a API (ASP.NET Core): Program.cs, rotas e handlers, Erros.cs (docs/erros-api.md), Transacao.cs
 ├── src/Api/Config.cs           # leitura das variáveis de ambiente e do .env — só ele lê o ambiente
 ├── src/Api/Auth/               # hash de senha (Argon2id) e normalização de e-mail
-├── src/Api/Dados/              # EF Core: AppDb (mapeia o schema das migrations), Modelos e Consultas — toda consulta recebe tenantId
+├── src/Api/Limites.cs          # limites do cadastro e do login (LimitePorJanela.cs)
+├── src/Api/Dados/              # EF Core: AppDb (mapeia o schema das migrations), Modelos e Consultas — toda consulta a tabela com RLS recebe tenantId
 ├── src/Api/Migrations/         # EF Core Migrations: SQL em migrationBuilder.Sql (Up e Down) e o snapshot do modelo
 ├── tests/Api.Tests/            # xUnit: API, config, auth e banco (isolamento por RLS, exclusão de tenant, consultas)
 ├── db/seed.sql                 # dois tenants fictícios (alfa e beta)
 ├── db/init/                    # app_user.sh: cria o app_user no primeiro up do compose
 ├── web/                        # frontend Angular
 ├── docs/
-├── compose.yml                 # PostgreSQL 16 + Adminer
+├── compose.yml                 # PostgreSQL 16 + Adminer, só em 127.0.0.1
+├── Dockerfile                  # imagem da API para o Render
+├── .dockerignore
 ├── Dayspot.slnx                # solução .NET (API + testes)
 ├── global.json                 # versão do SDK e runner de testes
 ├── .config/dotnet-tools.json   # dotnet-ef em versão fixa, a do EF Core
 ├── .env.example
 ├── CLAUDE.md                   # regras para o Claude Code
 ├── CONTRIBUTING.md
-└── DESIGN.md                   # referência visual do web/
+└── Design.html                 # referência visual do web/
 ```
 
 Estrutura-alvo — cada pasta nasce no card que a usa:
@@ -286,6 +289,12 @@ Rotas de `src/Api/Rotas.cs`. Toda rota de leitura responde também a `HEAD`.
 
 | Método | Rota | O que faz | Acesso |
 | --- | --- | --- | --- |
+| `GET` | `/api/saude` | Responde 200 se a API está no ar | Aberta |
+| `POST` | `/api/signup` | Cria a empresa e o primeiro administrador e já abre a sessão | Aberta |
+| `POST` | `/api/login` | Confere e-mail e senha e abre a sessão (cookie) | Aberta |
+| `POST` | `/api/logout` | Revoga a sessão e apaga o cookie | Sessão |
+| `GET` | `/api/me` | Usuário da sessão, empresas com membership ativo e a empresa ativa | Sessão |
+| `POST` | `/api/sessao/empresa` | Grava na sessão a empresa escolhida (pelo slug) | Sessão |
 | `GET` | `/api/clientes` | Lista os clientes da empresa | Painel |
 | `POST` | `/api/clientes` | Cria um cliente | Painel |
 | `GET` | `/api/agendamentos` | Lista os agendamentos do período (`de`, `ate`, `prestador_id`) | Painel |
@@ -296,7 +305,9 @@ Rotas de `src/Api/Rotas.cs`. Toda rota de leitura responde também a `HEAD`.
 | `GET` | `/api/publico/{slug}/ocupados` | Intervalos ocupados do profissional (`de`, `ate`, `prestador_id`) | Público |
 | `POST` | `/api/publico/{slug}/agendamentos` | Cria cliente e agendamento na mesma transação | Público |
 
-As rotas do painel ainda usam o tenant de `TENANT_FIXO`, porque o login entra na Fatia 2. Nas rotas públicas, o tenant vem do slug da rota, e o limite por IP é de 60 leituras e 10 envios por minuto.
+**Sessão** exige o cookie de sessão; **Painel** exige também a empresa escolhida, e o tenant vem dela. Nas rotas públicas, o tenant vem do slug da rota.
+
+Limites, com `429` e `Retry-After`: cadastro, 5 por hora por IP; login, 5 falhas por e-mail e 20 por IP em 15 minutos (o login certo zera o e-mail); rotas públicas, 60 leituras e 10 envios por minuto por IP.
 
 Formato de erro, códigos e exceções em [`docs/erros-api.md`](docs/erros-api.md).
 
@@ -306,9 +317,9 @@ Formato de erro, códigos e exceções em [`docs/erros-api.md`](docs/erros-api.m
 
 🗄️ **Banco.** Toda alteração de schema entra como migration versionada. Nenhum `ALTER TABLE` rodado à mão, em nenhuma circunstância.
 
-🔑 **Contexto de tenant.** Toda requisição abre transação e define `app.tenant_id` via `set_config(..., true)`. Nunca `SET` sem escopo local — com pool de conexões, a variável vaza para a requisição seguinte e vira vazamento de dados entre organizações.
+🔑 **Contexto de tenant.** Toda requisição com tenant abre transação e define `app.tenant_id` via `set_config(..., true)`. Nunca `SET` sem escopo local — com pool de conexões, a variável vaza para a requisição seguinte e vira vazamento de dados entre organizações.
 
-📦 **Acesso a dados.** EF Core com Npgsql. O schema nasce das EF Core Migrations, com SQL escrito à mão; o `AppDb` só o mapeia. As consultas ficam em `src/Api/Dados/Consultas.cs`, e toda uma recebe `tenantId` e filtra por ele. O RLS é a rede de segurança; o filtro na consulta é a primeira barreira.
+📦 **Acesso a dados.** EF Core com Npgsql. O schema nasce das EF Core Migrations, com SQL escrito à mão; o `AppDb` só o mapeia. As consultas ficam em `src/Api/Dados/Consultas.cs`, e toda consulta a tabela com RLS recebe `tenantId` e filtra por ele. A exceção são as tabelas fora do RLS (`usuarios`, `memberships`, `tenants` e `sessoes`, [guia §009](docs/guia-banco-de-dados.md)), lidas no login, no cadastro e na sessão. O RLS é a rede de segurança; o filtro na consulta é a primeira barreira.
 
 🕐 **Fuso horário.** Tudo em UTC no banco (`timestamptz`). Conversão apenas na borda, usando `tenants.fuso_horario`.
 
@@ -400,7 +411,7 @@ O fluxo completo está em [`CONTRIBUTING.md`](CONTRIBUTING.md). Em resumo:
 2. `git switch -c <tipo>/t<fatia>-<descrição>` a partir da `main`
 3. Commits no padrão `<tipo> - <descrição>`
 4. Abra o PR com `Closes #N` na descrição e mova o card para **In review**
-5. Com aprovação de outro integrante e CI verde, faça **squash merge** e mova o card para **Done**
+5. Com aprovação de outro integrante e CI verde, faça o merge (**merge commit**, não squash) e mova o card para **Done**
 
 Nenhum item entra em **Done** sem estar mergeado na `main`, com PR aprovado, CI verde e critérios de aceite verificados.
 
