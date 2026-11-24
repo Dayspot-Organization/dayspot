@@ -6,6 +6,8 @@
   </div>
 </div>
 
+<!-- Região viva fora do @if: existe antes do texto mudar, então o leitor anuncia. -->
+<p class="so-leitor" aria-live="polite">{{ clientes.isLoading() ? "Carregando" : "" }}</p>
 @if (semConexao()) {
   <section class="cartao">
     <app-vazio ilustracao="conexao" titulo="Sem conexão">
@@ -79,9 +81,10 @@
               <button type="button" class="botao botao-terciario botao-pequeno" (click)="busca.set('')">Limpar busca</button>
             </div>
           } @else {
-            <div class="opcoes opcoes-2 opcoes-rolagem" role="radiogroup" aria-labelledby="passo-cliente">
+            <!-- Botões, não rádios: escolher fecha a lista, e a seta de um rádio já escolheria. -->
+            <div class="opcoes opcoes-2 opcoes-rolagem" role="group" aria-labelledby="passo-cliente">
               @for (c of clientesFiltrados(); track c.id) {
-                <button type="button" class="opcao" role="radio" aria-checked="false" (click)="escolherCliente(c.id)">
+                <button type="button" class="opcao" (click)="escolherCliente(c.id)">
                   <span class="avatar" aria-hidden="true">{{ c.iniciais }}</span>
                   <span class="opcao-texto">
                     <span class="pessoa-nome">{{ c.nome }}</span>
@@ -107,8 +110,12 @@
               [value]="data()"
               [class.invalido]="tentou() && !data()"
               [attr.aria-invalid]="tentou() && !data()"
+              [attr.aria-describedby]="tentou() && !data() ? 'data-erro' : null"
               (input)="data.set(campoData.value)"
             />
+            @if (tentou() && !data()) {
+              <p class="ajuda ajuda-erro" id="data-erro">Escolha a data.</p>
+            }
           </div>
           <div class="campo">
             <label for="hora">Hora de início</label>
@@ -119,8 +126,12 @@
               [value]="hora()"
               [class.invalido]="tentou() && !hora()"
               [attr.aria-invalid]="tentou() && !hora()"
+              [attr.aria-describedby]="tentou() && !hora() ? 'hora-erro' : null"
               (input)="hora.set(campoHora.value)"
             />
+            @if (tentou() && !hora()) {
+              <p class="ajuda ajuda-erro" id="hora-erro">Escolha a hora de início.</p>
+            }
           </div>
           <div class="campo campo-duracao">
             <label for="duracao">Duração (min)</label>
@@ -171,9 +182,8 @@
       <button type="submit" class="botao botao-entrada" [attr.aria-busy]="enviando()" aria-describedby="falta-envio">
         {{ rotuloBotao() }}
       </button>
-      @if (falta()) {
-        <p class="ajuda centro" id="falta-envio">{{ falta() }}</p>
-      }
+      <!-- Sempre no DOM (vazio quando nada falta): aria-live só anuncia em região que já existe. -->
+      <p class="ajuda centro" id="falta-envio" aria-live="polite">{{ falta() }}</p>
       @if (erro()) {
         <app-mensagem-erro [mensagem]="erro()" />
       }

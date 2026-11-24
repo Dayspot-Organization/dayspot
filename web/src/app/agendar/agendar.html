@@ -49,6 +49,8 @@
 </div>
 
 <ng-template #conteudo>
+  <!-- Região viva fora do @if: existe antes do texto mudar, então o leitor anuncia. -->
+  <p class="so-leitor" aria-live="polite">{{ carregandoBase() && !semConexao() && !mensagemErroBase() ? "Carregando" : "" }}</p>
   @if (semConexao()) {
     <section class="cartao">
       <app-vazio ilustracao="conexao" titulo="Sem conexão">
@@ -82,20 +84,21 @@
           <h2 class="passo-titulo" id="passo-servico"><span class="passo-numero">1</span>Serviço</h2>
           <div class="opcoes opcoes-3" role="radiogroup" aria-labelledby="passo-servico">
             @for (s of listaServicos(); track s.id) {
-              <button
-                type="button"
-                class="opcao"
-                role="radio"
-                [attr.aria-checked]="servicoId() === s.id"
-                (click)="escolherServico(s.id)"
-              >
+              <label class="opcao">
+                <input
+                  type="radio"
+                  class="so-leitor"
+                  name="servico"
+                  [checked]="servicoId() === s.id"
+                  (change)="escolherServico(s.id)"
+                />
                 <span class="radio" aria-hidden="true"></span>
                 <span class="opcao-texto">
                   <span class="pessoa-nome">{{ s.nome }}</span>
                   <span class="legenda">{{ s.duracao }}</span>
                 </span>
                 <span class="opcao-preco numeros">{{ s.preco }}</span>
-              </button>
+              </label>
             } @empty {
               <p class="secundario">Nenhum serviço disponível agora.</p>
             }
@@ -107,16 +110,17 @@
           <h2 class="passo-titulo" id="passo-prestador"><span class="passo-numero">2</span>Com quem</h2>
           <div class="opcoes-linha" role="radiogroup" aria-labelledby="passo-prestador">
             @for (p of listaPrestadores(); track p.id) {
-              <button
-                type="button"
-                class="opcao opcao-pessoa"
-                role="radio"
-                [attr.aria-checked]="prestador()?.id === p.id"
-                (click)="escolherPrestador(p.id)"
-              >
+              <label class="opcao opcao-pessoa">
+                <input
+                  type="radio"
+                  class="so-leitor"
+                  name="prestador"
+                  [checked]="prestador()?.id === p.id"
+                  (change)="escolherPrestador(p.id)"
+                />
                 <span class="avatar avatar-36" aria-hidden="true">{{ p.iniciais }}</span>
                 <span class="pessoa-nome">{{ p.nome }}</span>
-              </button>
+              </label>
             } @empty {
               <p class="secundario">Nenhum profissional disponível agora.</p>
             }
@@ -199,18 +203,23 @@
             @for (grupo of [{ nome: 'Manhã', lista: manha() }, { nome: 'Tarde', lista: tarde() }]; track grupo.nome) {
               @if (grupo.lista.length) {
                 <h3 class="grupo-horarios">{{ grupo.nome }}</h3>
+                <!-- Manhã e tarde são um grupo só (mesmo name): as setas andam pelos dois. -->
                 <div class="horarios">
                   @for (h of grupo.lista; track h.hora) {
-                    <button
-                      type="button"
-                      class="horario"
-                      [disabled]="h.ocupado"
-                      [attr.aria-label]="h.ocupado ? h.hora + ', ocupado' : null"
-                      [attr.aria-pressed]="h.ocupado ? null : escolhido()?.hora === h.hora"
-                      (click)="escolherHora(h.hora)"
-                    >
+                    <label class="horario">
+                      <input
+                        type="radio"
+                        class="so-leitor"
+                        name="horario"
+                        [disabled]="h.ocupado"
+                        [checked]="!h.ocupado && escolhido()?.hora === h.hora"
+                        (change)="escolherHora(h.hora)"
+                      />
                       {{ h.hora }}
-                    </button>
+                      @if (h.ocupado) {
+                        <span class="so-leitor">, ocupado</span>
+                      }
+                    </label>
                   }
                 </div>
               }
@@ -301,9 +310,8 @@
         <button type="submit" class="botao botao-entrada" [attr.aria-busy]="enviando()" aria-describedby="falta-envio">
           {{ rotuloBotao() }}
         </button>
-        @if (falta()) {
-          <p class="ajuda centro" id="falta-envio">{{ falta() }}</p>
-        }
+        <!-- Sempre no DOM (vazio quando nada falta): aria-live só anuncia em região que já existe. -->
+        <p class="ajuda centro" id="falta-envio" aria-live="polite">{{ falta() }}</p>
         <p class="legenda centro">Seu nome e telefone ficam guardados com esta empresa para registrar o agendamento e identificar você nos próximos.</p>
         @if (servico()) {
           <p class="legenda centro">Pagamento no local.</p>

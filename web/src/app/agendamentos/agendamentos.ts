@@ -6,6 +6,7 @@ import {
   afterNextRender,
   computed,
   inject,
+  linkedSignal,
   signal,
 } from "@angular/core";
 import { rxResource } from "@angular/core/rxjs-interop";
@@ -100,7 +101,11 @@ export class Agendamentos {
   /** Dia de referência: na semana, qualquer dia dela; no dia, o próprio. */
   protected readonly referencia = signal(diaLocal(new Date()));
   protected readonly mostrarCancelados = signal(false);
-  protected readonly selecionadoId = signal<string | null>(null);
+  /** Agendamento aberto no painel de detalhe; trocar de período ou de modo fecha. */
+  protected readonly selecionadoId = linkedSignal<unknown, string | null>({
+    source: () => this.periodo(),
+    computation: () => null,
+  });
 
   constructor() {
     const relogio = setInterval(() => this.agora.set(new Date()), 60_000);
@@ -108,10 +113,15 @@ export class Agendamentos {
   }
 
   /** Período pedido à API: [de, ate). Semana de segunda a domingo. */
-  protected readonly periodo = computed(() => {
-    const de = this.modo() === "semana" ? segundaDaSemana(this.referencia()) : this.referencia();
-    return { de, dias: this.modo() === "semana" ? 7 : 1 };
-  });
+  // Mesmo de e dias = mesmo período: sem o equal, cada recálculo seria um objeto novo e
+  // fecharia o detalhe (selecionadoId) e recarregaria a lista à toa.
+  protected readonly periodo = computed(
+    () => {
+      const de = this.modo() === "semana" ? segundaDaSemana(this.referencia()) : this.referencia();
+      return { de, dias: this.modo() === "semana" ? 7 : 1 };
+    },
+    { equal: (a, b) => a.de === b.de && a.dias === b.dias },
+  );
 
   // Troca de período cancela a busca anterior: resposta velha não sobrescreve a nova.
   protected readonly agendamentos = rxResource({

@@ -70,7 +70,7 @@
     <button
       type="submit"
       class="ds-botao ds-botao--principal ds-botao--grande"
-      [disabled]="enviando()"
+      [attr.aria-disabled]="enviando() || null"
       [attr.aria-busy]="enviando() ? 'true' : null"
     >
       Entrar

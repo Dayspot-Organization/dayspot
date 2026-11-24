@@ -170,7 +170,7 @@
       <button
         type="submit"
         class="ds-botao ds-botao--principal ds-botao--grande"
-        [disabled]="enviando()"
+        [attr.aria-disabled]="enviando() || null"
         [attr.aria-busy]="enviando() ? 'true' : null"
       >
         Criar conta e abrir a agenda
@@ -180,7 +180,7 @@
       }
 
       <p class="entrada-troca">
-        <button type="button" class="ds-botao ds-botao--fantasma" [disabled]="enviando()" (click)="voltar()">
+        <button type="button" class="ds-botao ds-botao--fantasma" [attr.aria-disabled]="enviando() || null" (click)="voltar()">
           <svg lucideChevronLeft class="ds-ic" aria-hidden="true"></svg>
           Voltar
         </button>

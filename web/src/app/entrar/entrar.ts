@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject, signal } from "@angular/core";
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, signal } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { Router, RouterLink } from "@angular/router";
+import { finalize } from "rxjs";
 import { LucideCircleExclamationPoint, LucideEye, LucideEyeOff } from "@lucide/angular";
 import { Api, ApiError, mensagemDeErro } from "../api";
 import { PaginaEntrada, erroDeEmail, valorDe } from "../entrada/entrada";
@@ -19,6 +21,7 @@ export class Entrar {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly api = inject(Api);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly email = signal("");
   readonly senha = signal("");
@@ -50,6 +53,7 @@ export class Entrar {
 
   enviar(evento: Event) {
     evento.preventDefault();
+    if (this.enviando()) return; // aria-disabled não bloqueia o envio
     const erroEmail = erroDeEmail(this.email());
     const erroSenha = this.senha() ? "" : "Escreva a senha.";
     this.erroEmail.set(erroEmail);
@@ -58,32 +62,32 @@ export class Entrar {
       this.focar(erroEmail ? "e-email" : "e-senha");
       return;
     }
-    if (this.enviando()) return;
-
     this.enviando.set(true);
     this.erroGeral.set("");
     const relogio = setTimeout(() => this.lento.set(true), MS_LENTO);
-    const fim = () => {
-      clearTimeout(relogio);
-      this.enviando.set(false);
-      this.lento.set(false);
-    };
-    this.api.entrar({ email: this.email().trim(), senha: this.senha() }).subscribe({
-      next: () => {
-        fim();
-        void this.router.navigateByUrl("/agendamentos");
-      },
-      error: (e: unknown) => {
-        fim();
-        this.erroGeral.set(mensagemDeErro(e));
-        // Credencial errada: a senha some e o foco volta para ela; o e-mail fica. Nos outros
-        // erros (sem conexão, muitas tentativas) nada do que foi digitado se perde.
-        if (e instanceof ApiError && e.codigo === "credencial_invalida") {
-          this.senha.set("");
-          this.focar("e-senha");
-        }
-      },
-    });
+    // Saiu da tela no meio do envio: o takeUntilDestroyed cancela o POST e nada navega depois.
+    this.api
+      .entrar({ email: this.email().trim(), senha: this.senha() })
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => {
+          clearTimeout(relogio);
+          this.enviando.set(false);
+          this.lento.set(false);
+        }),
+      )
+      .subscribe({
+        next: () => void this.router.navigateByUrl("/agendamentos"),
+        error: (e: unknown) => {
+          this.erroGeral.set(mensagemDeErro(e));
+          // Credencial errada: a senha some e o foco volta para ela; o e-mail fica. Nos outros
+          // erros (sem conexão, muitas tentativas) nada do que foi digitado se perde.
+          if (e instanceof ApiError && e.codigo === "credencial_invalida") {
+            this.senha.set("");
+            this.focar("e-senha");
+          }
+        },
+      });
   }
 
   private focar(id: string) {

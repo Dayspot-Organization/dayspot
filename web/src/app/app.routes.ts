@@ -22,11 +22,11 @@ export const routes: Routes = [
       { path: "**", component: Agendar },
     ],
   },
-  // A primeira página do app é o login; com sessão, o semSessaoGuard leva de lá à agenda.
+  // A primeira página do app é o login; com sessão, o semSessaoGuard leva de lá (e do cadastro) à agenda.
   { path: "", pathMatch: "full", redirectTo: "entrar" },
   // Entrar e Cadastro (#120): fora da casca do painel.
   { path: "entrar", component: Entrar, canActivate: [semSessaoGuard], data: { titulo: "Entrar" } },
-  { path: "cadastro", component: Cadastro, data: { titulo: "Cadastro" } },
+  { path: "cadastro", component: Cadastro, canActivate: [semSessaoGuard], data: { titulo: "Cadastro" } },
   // Painel só com sessão (sessaoGuard). O "**" é filho daqui: rota inexistente sem sessão
   // vai para /entrar; com sessão, para a agenda.
   {

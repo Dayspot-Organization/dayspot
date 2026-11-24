@@ -1,7 +1,6 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal } from "@angular/core";
-import { rxResource } from "@angular/core/rxjs-interop";
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, inject, signal } from "@angular/core";
+import { rxResource, takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { Router } from "@angular/router";
-import { firstValueFrom } from "rxjs";
 import { Api, ErroRede, mensagemDeErro } from "../api";
 import { dataLonga, diaEmFrase, diaLocal, duracaoEmTexto, formatarHora, horaEmFrase, iniciais, juntar } from "../datas";
 import { MensagemErro, Vazio } from "../estados";
@@ -35,6 +34,7 @@ export class NovoAgendamento {
   private readonly api = inject(Api);
   private readonly router = inject(Router);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly hoje = diaLocal(new Date());
 
@@ -117,7 +117,7 @@ export class NovoAgendamento {
     this.busca.set("");
   }
 
-  protected async agendar(e: SubmitEvent) {
+  protected agendar(e: SubmitEvent) {
     e.preventDefault();
     if (this.enviando()) return;
     this.tentou.set(true);
@@ -131,15 +131,17 @@ export class NovoAgendamento {
     }
     this.erro.set("");
     this.enviando.set(true); // aria-busy no botão e sem segundo POST
-    try {
-      await firstValueFrom(
-        this.api.criarAgendamento({ cliente_id: c.id, inicio: inicio.toISOString(), fim: fim.toISOString() }),
-      );
-      await this.router.navigateByUrl("/agendamentos");
-    } catch (err) {
-      this.erro.set(mensagemDeErro(err)); // 409 inclusive: o formulário continua preenchido
-      this.enviando.set(false);
-    }
+    // Saiu da tela no meio do envio: o takeUntilDestroyed cancela o POST e nada navega depois.
+    this.api
+      .criarAgendamento({ cliente_id: c.id, inicio: inicio.toISOString(), fim: fim.toISOString() })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => void this.router.navigateByUrl("/agendamentos"),
+        error: (err: unknown) => {
+          this.erro.set(mensagemDeErro(err)); // 409 inclusive: o formulário continua preenchido
+          this.enviando.set(false);
+        },
+      });
   }
 
   /** Leva o foco ao campo ou ao primeiro controle da seção. */

@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, ElementRef, Injector, afterNextRender, inject, signal } from "@angular/core";
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, afterNextRender, inject, signal } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { Router, RouterLink } from "@angular/router";
+import { finalize } from "rxjs";
 import { LucideChevronLeft, LucideCircleExclamationPoint, LucideEye, LucideEyeOff } from "@lucide/angular";
 import { Api, ApiError, mensagemDeErro } from "../api";
 import { PaginaEntrada, SLUG_VALIDO, enderecoDoNome, erroDeEmail, limparEndereco, valorDe } from "../entrada/entrada";
@@ -45,6 +47,7 @@ export class Cadastro {
   private readonly injector = inject(Injector);
   private readonly api = inject(Api);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly etapa = signal<1 | 2>(1);
   readonly nome = signal("");
@@ -117,11 +120,13 @@ export class Cadastro {
   }
 
   voltar() {
+    if (this.enviando()) return; // aria-disabled não bloqueia o clique
     this.irPara(1);
   }
 
   criar(evento: Event) {
     evento.preventDefault();
+    if (this.enviando()) return; // aria-disabled não bloqueia o envio
     const erros: Erros = {};
     if (!this.empresa().trim()) erros.empresa = "Escreva o nome da empresa.";
     else if (this.empresa().trim().length > 120) erros.empresa = "Use até 120 caracteres.";
@@ -138,7 +143,6 @@ export class Cadastro {
       this.focar(`k-${primeiro}`);
       return;
     }
-    if (this.enviando()) return;
     this.enviar();
   }
 
@@ -146,11 +150,7 @@ export class Cadastro {
     this.enviando.set(true);
     this.erroGeral.set("");
     const relogio = setTimeout(() => this.lento.set(true), MS_LENTO);
-    const fim = () => {
-      clearTimeout(relogio);
-      this.enviando.set(false);
-      this.lento.set(false);
-    };
+    // Saiu da tela no meio do envio: o takeUntilDestroyed cancela o POST e nada navega depois.
     this.api
       .cadastrar({
         nome: this.nome().trim(),
@@ -160,15 +160,17 @@ export class Cadastro {
         empresa_slug: this.endereco(),
         contato: this.contato().trim(),
       })
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => {
+          clearTimeout(relogio);
+          this.enviando.set(false);
+          this.lento.set(false);
+        }),
+      )
       .subscribe({
-        next: () => {
-          fim();
-          void this.router.navigateByUrl("/agendamentos");
-        },
-        error: (e: unknown) => {
-          fim();
-          this.mostrarErro(e);
-        },
+        next: () => void this.router.navigateByUrl("/agendamentos"),
+        error: (e: unknown) => this.mostrarErro(e),
       });
   }
 

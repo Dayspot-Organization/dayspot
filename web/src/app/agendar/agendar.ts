@@ -6,12 +6,12 @@ import {
   ElementRef,
   computed,
   inject,
+  input,
   linkedSignal,
   signal,
 } from "@angular/core";
-import { rxResource } from "@angular/core/rxjs-interop";
-import { ActivatedRoute } from "@angular/router";
-import { firstValueFrom } from "rxjs";
+import { rxResource, takeUntilDestroyed, toObservable } from "@angular/core/rxjs-interop";
+import { finalize, skip, takeUntil } from "rxjs";
 import { Api, ApiError, ErroRede, mensagemDeErro } from "../api";
 import {
   dataLonga,
@@ -69,27 +69,34 @@ function normalizarTelefone(t: string): string {
 export class Agendar {
   private readonly api = inject(Api);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
-  private readonly slug = inject(ActivatedRoute).snapshot.paramMap.get("slug") ?? "";
+  private readonly destroyRef = inject(DestroyRef);
+  /**
+   * O :slug da rota (withComponentInputBinding). Signal, não snapshot: de /agendar/a para
+   * /agendar/b o Angular reaproveita o componente, e tudo o que depende do slug recarrega.
+   */
+  readonly slug = input("", { transform: (v: string | undefined) => v ?? "" });
+  /** Emite quando o slug muda: o envio da empresa anterior é cancelado. */
+  private readonly trocouDeEmpresa = toObservable(this.slug).pipe(skip(1));
 
   /** Relógio da tela: horário que vence com a página aberta deixa de ser oferecido. */
   private readonly agora = signal(Date.now());
 
   constructor() {
     const relogio = setInterval(() => this.agora.set(Date.now()), ATUALIZAR_RELOGIO_MS);
-    inject(DestroyRef).onDestroy(() => clearInterval(relogio));
+    this.destroyRef.onDestroy(() => clearInterval(relogio));
   }
 
   // ── Dados da empresa ────────────────────────────────────────
   protected readonly empresa = rxResource({
-    params: () => this.slug || undefined,
+    params: () => this.slug() || undefined,
     stream: ({ params }) => this.api.empresaPublica(params),
   });
   protected readonly servicos = rxResource({
-    params: () => (this.empresa.hasValue() ? this.slug : undefined),
+    params: () => (this.empresa.hasValue() ? this.slug() : undefined),
     stream: ({ params }) => this.api.servicosPublicos(params),
   });
   protected readonly prestadores = rxResource({
-    params: () => (this.empresa.hasValue() ? this.slug : undefined),
+    params: () => (this.empresa.hasValue() ? this.slug() : undefined),
     stream: ({ params }) => this.api.prestadoresPublicos(params),
   });
 
@@ -98,7 +105,7 @@ export class Agendar {
   );
   protected readonly naoEncontrada = computed(() => {
     const e = this.erroBase();
-    return !this.slug || (e instanceof ApiError && e.codigo === "nao_encontrado");
+    return !this.slug() || (e instanceof ApiError && e.codigo === "nao_encontrado");
   });
   protected readonly semConexao = computed(() => this.erroBase() instanceof ErroRede);
   protected readonly mensagemErroBase = computed(() => (this.erroBase() ? mensagemDeErro(this.erroBase()) : ""));
@@ -118,7 +125,7 @@ export class Agendar {
   protected readonly hoje = computed(() => (this.fuso() ? noFuso(this.agora(), this.fuso()).dia : ""));
 
   // ── Serviço e profissional ──────────────────────────────────
-  protected readonly servicoId = signal("");
+  protected readonly servicoId = linkedSignal({ source: this.slug, computation: () => "" });
   protected readonly servico = computed(
     () => (this.servicos.hasValue() ? this.servicos.value() : []).find((s) => s.id === this.servicoId()) ?? null,
   );
@@ -131,7 +138,7 @@ export class Agendar {
     })),
   );
 
-  protected readonly prestadorIdEscolhido = signal("");
+  protected readonly prestadorIdEscolhido = linkedSignal({ source: this.slug, computation: () => "" });
   protected readonly listaPrestadores = computed(() =>
     (this.prestadores.hasValue() ? this.prestadores.value() : []).map((p) => ({ ...p, iniciais: iniciais(p.nome) })),
   );
@@ -149,7 +156,7 @@ export class Agendar {
     const hoje = this.hoje();
     return hoje && diaDaSemana(hoje) === DOMINGO ? somarDias(hoje, 1) : hoje;
   });
-  protected readonly paginaDaFila = signal(0);
+  protected readonly paginaDaFila = linkedSignal({ source: this.slug, computation: () => 0 });
   /** O dia escolhido vale enquanto não passar; virou o dia com a página aberta, volta ao primeiro. */
   protected readonly dia = linkedSignal<string, string>({
     source: this.primeiroDia,
@@ -186,7 +193,7 @@ export class Agendar {
   // ── Horário ─────────────────────────────────────────────────
   /** Trocar o dia ou o profissional desfaz a escolha do horário. */
   protected readonly hora = linkedSignal<string, string>({
-    source: () => `${this.dia()}|${this.prestadorId()}`,
+    source: () => `${this.slug()}|${this.dia()}|${this.prestadorId()}`,
     computation: () => "",
   });
 
@@ -197,7 +204,7 @@ export class Agendar {
         : undefined,
     stream: ({ params: { dia, prestadorId, fuso } }) =>
       this.api.ocupadosPublicos(
-        this.slug,
+        this.slug(),
         new Date(instanteNoFuso(dia, "00:00", fuso)).toISOString(),
         new Date(instanteNoFuso(somarDias(dia, 1), "00:00", fuso)).toISOString(),
         prestadorId,
@@ -288,11 +295,11 @@ export class Agendar {
   });
 
   protected readonly enviando = signal(false);
-  protected readonly erro = signal("");
+  protected readonly erro = linkedSignal({ source: this.slug, computation: () => "" });
   /** Recusa do horário pelo backend (400 em `inicio`): volta para a escolha com o aviso. */
-  protected readonly recusaHorario = signal("");
+  protected readonly recusaHorario = linkedSignal({ source: this.slug, computation: () => "" });
   /** Horário que a API recusou com 409; as alternativas saem da lista recarregada. */
-  protected readonly horaRecusada = signal("");
+  protected readonly horaRecusada = linkedSignal({ source: this.slug, computation: () => "" });
   protected readonly alternativas = computed(() => {
     const recusada = this.horaRecusada();
     if (!recusada) return [];
@@ -303,7 +310,10 @@ export class Agendar {
   private bloqueadoAte = 0;
 
   /** Depois de agendar, a confirmação toma o lugar do formulário. */
-  protected readonly agendado = signal<{ frase: string; detalhe: string } | null>(null);
+  protected readonly agendado = linkedSignal<string, { frase: string; detalhe: string } | null>({
+    source: this.slug,
+    computation: () => null,
+  });
 
   protected readonly dataLonga = dataLonga;
   protected readonly dinheiro = dinheiro;
@@ -350,14 +360,16 @@ export class Agendar {
     this.recusaHorario.set("");
   }
 
-  /** Leva o foco ao campo ou à primeira opção da seção; sem opção, à própria seção. */
+  /** Leva o foco ao campo ou ao rádio da seção (o marcado, senão o primeiro livre); sem opção, à própria seção. */
   private focar(id: string) {
     const alvo = this.host.nativeElement.querySelector<HTMLElement>(`#${id}`);
-    const campo = alvo?.matches("input") ? alvo : alvo?.querySelector<HTMLElement>("button:not(:disabled)");
+    const campo = alvo?.matches("input")
+      ? alvo
+      : (alvo?.querySelector<HTMLElement>("input:checked") ?? alvo?.querySelector<HTMLElement>("input:not(:disabled)"));
     (campo ?? alvo)?.focus();
   }
 
-  protected async agendar(e: SubmitEvent) {
+  protected agendar(e: SubmitEvent) {
     e.preventDefault();
     if (this.enviando()) return;
     const restante = Math.ceil((this.bloqueadoAte - Date.now()) / 1000);
@@ -380,27 +392,32 @@ export class Agendar {
     const fuso = this.fuso();
     this.limparAvisos();
     this.enviando.set(true); // aria-busy no botão e sem segundo POST
-    try {
-      const criado = await firstValueFrom(
-        this.api.criarAgendamentoPublico(this.slug, {
-          servico_id: s.id,
-          prestador_id: p.id,
-          inicio: `${dia}T${h.hora}:00`,
-          nome: this.nome().trim(),
-          telefone: this.telefone(),
-        }),
-      );
-      // A confirmação mostra o que a API gravou, no fuso da empresa.
-      const inicio = noFuso(criado.inicio, fuso);
-      const fim = noFuso(criado.fim, fuso);
-      this.agendado.set({
-        frase: `Combinado. Até ${diaEmFrase(inicio.dia, this.hoje())}, às ${horaEmFrase(inicio.hora)}.`,
-        detalhe: `${s.nome} com ${p.nome} · ${dataLonga(inicio.dia)}, ${inicio.hora} às ${fim.hora} · ${dinheiro(criado.valor_centavos)}, pago no local`,
+    // Saiu da tela ou trocou de empresa no meio do envio: o POST é cancelado.
+    this.api
+      .criarAgendamentoPublico(this.slug(), {
+        servico_id: s.id,
+        prestador_id: p.id,
+        inicio: `${dia}T${h.hora}:00`,
+        nome: this.nome().trim(),
+        telefone: this.telefone(),
+      })
+      .pipe(
+        takeUntil(this.trocouDeEmpresa),
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.enviando.set(false)),
+      )
+      .subscribe({
+        next: (criado) => {
+          // A confirmação mostra o que a API gravou, no fuso da empresa.
+          const inicio = noFuso(criado.inicio, fuso);
+          const fim = noFuso(criado.fim, fuso);
+          this.agendado.set({
+            frase: `Combinado. Até ${diaEmFrase(inicio.dia, this.hoje())}, às ${horaEmFrase(inicio.hora)}.`,
+            detalhe: `${s.nome} com ${p.nome} · ${dataLonga(inicio.dia)}, ${inicio.hora} às ${fim.hora} · ${dinheiro(criado.valor_centavos)}, pago no local`,
+          });
+        },
+        error: (err: unknown) => this.tratarRecusa(err, h.hora),
       });
-    } catch (err) {
-      this.tratarRecusa(err, h.hora);
-    }
-    this.enviando.set(false);
   }
 
   private tratarRecusa(err: unknown, hora: string) {
