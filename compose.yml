@@ -12,7 +12,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       APP_USER_PASSWORD: ${APP_USER_PASSWORD}
     ports:
-      - "5467:5432"
+      - "127.0.0.1:5467:5432" # só nesta máquina
     volumes:
       - postgres_data:/var/lib/postgresql/data
       # Só roda com volume vazio: banco antigo precisa de `docker compose down -v` uma vez.
@@ -22,7 +22,7 @@ services:
     image: adminer
     restart: always
     ports:
-      - "8088:8080"
+      - "127.0.0.1:8088:8080"
 
 volumes:
   postgres_data:
