@@ -1,5 +1,6 @@
 using Dayspot.Api.Auth;
 using Dayspot.Api.Dados;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Dayspot.Api;
 
@@ -38,7 +39,7 @@ public static class Login
     // e não revela, pelo tempo, se o e-mail tem conta.
     private static readonly string HashFalso = Senha.GerarHash(Guid.NewGuid().ToString());
 
-    public static async Task<IResult> Entrar(HttpContext ctx, AppDb db, CancellationToken ct)
+    public static async Task<IResult> Entrar(HttpContext ctx, AppDb db, [FromServices] LimiteLogin limite, CancellationToken ct)
     {
         var (entrada, erroCorpo) = await Json.Ler<CredenciaisJson>(ctx.Request, ct);
         if (entrada is null)
@@ -56,6 +57,13 @@ public static class Login
             return Erros.CampoInvalido("senha", "Informe a senha.");
         }
 
+        // Acima do limite (2.8), recusa sem consultar o banco nem conferir a senha.
+        var ip = IpReal.Chave(ctx);
+        if (!limite.Tentar(email, ip, out var espera))
+        {
+            return Limites.Recusar(ctx, "login", espera, "Muitas tentativas de login. Aguarde e tente de novo.");
+        }
+
         var usuario = await db.BuscarUsuarioPorEmail(email, ct);
         var certa = Senha.Conferir(senha, usuario?.SenhaHash ?? HashFalso) && usuario is not null;
         var empresas = certa ? await db.ListarEmpresasDoUsuario(usuario!.Id, ct) : [];
@@ -65,6 +73,7 @@ public static class Login
             return Erros.Responder(StatusCodes.Status401Unauthorized, Erros.CredencialInvalida, "E-mail ou senha incorretos.");
         }
 
+        limite.Acertou(email, ip);
         // Com uma empresa, a sessão já nasce nela; com várias, nula até a escolha.
         await AbrirSessao(ctx, db, usuario!.Id, empresas.Count == 1 ? empresas[0].TenantId : null, ct);
         return Json.Responder(StatusCodes.Status200OK, new LoginJson(empresas.Select(ParaJson)));

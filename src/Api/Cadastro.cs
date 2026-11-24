@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.RegularExpressions;
 using Dayspot.Api.Auth;
 using Dayspot.Api.Dados;
@@ -34,12 +33,7 @@ public static partial class Cadastro
         // Antes de ler o corpo; conta toda requisição, inclusive a inválida.
         if (!limite.Tentar(IpReal.Chave(ctx), out var espera))
         {
-            // Como o 429 das rotas públicas: nada de IP nem do corpo.
-            ctx.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(Cadastro))
-                .LogWarning("429 pelo limite do cadastro em POST /api/signup");
-            ctx.Response.Headers.RetryAfter = ((int)Math.Ceiling(espera.TotalSeconds)).ToString(CultureInfo.InvariantCulture);
-            return Erros.Responder(StatusCodes.Status429TooManyRequests, Erros.MuitasTentativas,
-                "Muitas tentativas de cadastro. Aguarde e tente de novo.");
+            return Limites.Recusar(ctx, "cadastro", espera, "Muitas tentativas de cadastro. Aguarde e tente de novo.");
         }
 
         var (entrada, erroCorpo) = await Json.Ler<NovoCadastroJson>(ctx.Request, ct);

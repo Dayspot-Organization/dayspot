@@ -31,7 +31,7 @@ Toda resposta de erro (status 4xx/5xx) tem `Content-Type: application/json` e es
 | 409    | `conflito_horario`    | Agendamento sobrepõe outro (SQLSTATE `23P01`). |
 | 409    | `email_em_uso`        | Cadastro ou criar conta pelo convite (2.22) com e-mail que já tem conta. |
 | 409    | `slug_em_uso`         | Cadastro com slug de empresa já usado. |
-| 429    | `muitas_tentativas`   | Acima do limite de requisições. Rotas públicas: 60 leituras e 10 envios por minuto, por IP. Login (entra na 2.8): 5 falhas por e-mail ou 20 por IP em 15 minutos. Cadastro: 5 por hora por IP. Cabeçalho `Retry-After` em segundos. |
+| 429    | `muitas_tentativas`   | Acima do limite de requisições. Rotas públicas: 60 leituras e 10 envios por minuto, por IP. Login: 5 falhas por e-mail ou 20 por IP em 15 minutos; acima do limite, recusa sem conferir a senha, e login certo zera o contador do e-mail. Cadastro: 5 por hora por IP. Cabeçalho `Retry-After` em segundos. |
 | 500    | `erro_interno`        | Falha inesperada. Mensagem sempre genérica; o detalhe fica só no log do servidor. |
 
 Código novo entra aqui e em `src/Api/Erros.cs` no mesmo PR.
