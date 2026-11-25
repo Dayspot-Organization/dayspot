@@ -51,6 +51,11 @@ public static class Login
         {
             return Erros.CampoInvalido("email", "Informe o e-mail.");
         }
+        // O e-mail vira chave do contador do limite: sem teto, cada IP guardaria chaves de até 1 MiB.
+        if (email.Length > Cadastro.MaxEmail)
+        {
+            return Erros.CampoInvalido("email", "Informe um e-mail válido (até 254 caracteres).");
+        }
         var senha = entrada.Senha ?? ""; // sem Trim: espaço nas pontas faz parte da senha
         if (senha == "")
         {

@@ -362,6 +362,16 @@ public class LoginTests
         }
     }
 
+    [Fact]
+    public async Task EmailAcimaDe254Eh400()
+    {
+        await using var api = await Servidor.SemBanco();
+        var email = new string('a', 255 - "@b.example".Length) + "@b.example";
+        var r = await api.Chamar("POST", "/api/login", JsonSerializer.Serialize(new { email, senha = "x" }));
+        await r.ExigirErro(HttpStatusCode.BadRequest, Erros.RequisicaoInvalida);
+        Assert.Equal("email", (await r.Json()).GetProperty("erro").GetProperty("detalhes").GetProperty("campo").GetString());
+    }
+
     // A validação vem antes de qualquer consulta: a sessão do ComBanco basta.
     [Theory]
     [InlineData("{", "")] // JSON malformado
