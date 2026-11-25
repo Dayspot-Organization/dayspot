@@ -2,7 +2,17 @@
 
 Fatia 0 do backlog (itens 0.7 a 0.18) e base de acesso a dados da Fatia 1 (1.2 e
 1.3). Complementa `docs/requisitos.md`.
-Versão **1.13** · 20/11/2026
+Versão **1.14** · 25/11/2026
+
+## Mudanças desde a v1.13
+
+Uma migration nova (#198).
+
+- **Migration `20261124120000_RestringirAppUser` (#198):** tira o `DELETE` do `app_user`
+  em `tenants`, `usuarios` e `memberships` (remoção é `removido_em`, como na 009) e dá ao
+  `app_user` `lock_timeout = '5s'` e `statement_timeout = '15s'` (§Usuário de aplicação).
+- **Pré-condição no Neon:** o papel da `MIGRATIONS_DATABASE_URL` precisa poder rodar
+  `ALTER ROLE app_user` (§Usuário de aplicação).
 
 ## Mudanças desde a v1.12
 
@@ -240,9 +250,10 @@ A ordem não é estética — é imposta pelas dependências de chave estrangeir
 011 convites            ← depende de 002 e 003 (pendente: fica para depois do piloto)
 
 20261120120000 contato_publico ← depende de 002 (#112; id com data e hora, fora da sequência numerada)
+20261124120000 restringir_app_user ← depende de 002, 003 e do app_user (#198)
 ```
 
-As migrations numeradas aplicadas vão até a 010; depois delas vem a `20261120120000_AdicionarContatoPublico` (`src/Api/Migrations/`).
+As migrations numeradas aplicadas vão até a 010; depois delas vêm a `20261120120000_AdicionarContatoPublico` e a `20261124120000_RestringirAppUser` (`src/Api/Migrations/`).
 
 ## Dinheiro: centavos em `integer`
 
@@ -957,7 +968,25 @@ roda `docker compose down -v` uma vez), e no CI da 0.17, via `psql`, porque o
 script que roda igual nos dois.
 
 O `ALTER DEFAULT PRIVILEGES` evita ter que lembrar de dar `GRANT` toda vez que uma
-tabela nova for criada. A exceção é `DELETE` em `agendamentos`, que a 009 revoga.
+tabela nova for criada. As exceções são o `DELETE` em `agendamentos`, que a 009 revoga,
+e em `tenants`, `usuarios` e `memberships`, que a `RestringirAppUser` revoga (#198). A
+mesma migration dá ao `app_user` `lock_timeout` de 5 s e `statement_timeout` de 15 s:
+lock preso ou consulta travada vira erro em vez de segurar a conexão do pool.
+
+```sql
+REVOKE DELETE ON tenants, usuarios, memberships FROM app_user;
+ALTER ROLE app_user SET lock_timeout = '5s';
+ALTER ROLE app_user SET statement_timeout = '15s';
+```
+
+Os timeouts valem nas conexões abertas depois da migration. Teste que espera lock de
+propósito desliga o limite só na própria transação (`SET LOCAL lock_timeout = 0`).
+
+**Pré-condição no Neon:** `ALTER ROLE ... SET` em outro papel exige, no PostgreSQL 16+,
+`CREATEROLE` com `ADMIN OPTION` sobre ele. O `app_user` precisa ter sido criado pelo
+mesmo papel da `MIGRATIONS_DATABASE_URL` (quem cria um papel ganha o `ADMIN OPTION`),
+ou ter recebido `GRANT app_user TO <dono> WITH ADMIN OPTION`. Sem isso, a migration
+falha com `42501` (sem permissão) e o deploy não aplica nenhuma das três instruções.
 
 ## Seed e teste de isolamento
 

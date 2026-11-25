@@ -436,6 +436,8 @@ public class PublicoTests
         await using var db2 = new AppDb(AppDb.Opcoes(url));
         await using var tx1 = await db1.IniciarComTenant(e.Tenant, ct);
         await using var tx2 = await db2.IniciarComTenant(e.Tenant, ct);
+        // O app_user tem lock_timeout de 5s: num CI lento, a espera viraria 55P03.
+        await db2.Database.ExecuteSqlRawAsync("SET LOCAL lock_timeout = 0", ct);
         Assert.NotNull(await db1.CriarAgendamento(e.Tenant, novo, ct));
 
         var pid = ((NpgsqlConnection)db2.Database.GetDbConnection()).ProcessID;
