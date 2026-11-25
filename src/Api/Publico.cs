@@ -100,7 +100,8 @@ public static class Publico
         try
         {
             var db = ctx.RequestServices.GetRequiredService<AppDb>();
-            empresa = await db.BuscarEmpresaPorSlug((string)ctx.GetRouteValue("slug")!, ctx.RequestAborted);
+            // Slug sempre em minúsculas no banco (cadastro): /api/publico/ALFA é a mesma empresa.
+            empresa = await db.BuscarEmpresaPorSlug(((string)ctx.GetRouteValue("slug")!).ToLowerInvariant(), ctx.RequestAborted);
         }
         catch (Exception erro) when (!ctx.RequestAborted.IsCancellationRequested)
         {
@@ -184,10 +185,10 @@ public static class Publico
     /// </summary>
     public static async Task<IResult> CriarAgendamento(HttpContext ctx, AppDb db, [FromServices] TimeProvider relogio, CancellationToken ct)
     {
-        var entrada = await Json.Ler<NovoAgendamentoPublicoJson>(ctx.Request, ct);
+        var (entrada, erroCorpo) = await Json.Ler<NovoAgendamentoPublicoJson>(ctx.Request, ct);
         if (entrada is null)
         {
-            return Json.CorpoInvalido();
+            return erroCorpo;
         }
         if (!Guid.TryParse(entrada.ServicoId, out var servicoId))
         {
@@ -208,7 +209,8 @@ public static class Publico
         {
             return Erros.CampoInvalido("telefone", "Informe o telefone com DDD (10 ou 11 dígitos).");
         }
-        if (!DateTime.TryParseExact(entrada.Inicio, FormatosInicio, CultureInfo.InvariantCulture, DateTimeStyles.None, out var inicio))
+        if (!DateTime.TryParseExact(entrada.Inicio, FormatosInicio, CultureInfo.InvariantCulture, DateTimeStyles.None, out var inicio)
+            || inicio < Agendamentos.DataMinima || inicio >= Agendamentos.DataMaxima) // o fuso não estoura o DateTime
         {
             return Erros.CampoInvalido("inicio", "inicio deve ser data e hora locais, sem fuso, ex.: 2026-10-16T09:00:00.");
         }

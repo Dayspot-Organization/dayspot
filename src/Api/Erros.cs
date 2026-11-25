@@ -35,12 +35,14 @@ public static class Erros
 
     /// <summary>
     /// Loga o erro e responde 500 genérico: mensagem do Postgres (ou qualquer erro
-    /// interno) nunca vai para o cliente.
+    /// interno) nunca vai para o cliente. O log leva o molde da rota, não o caminho,
+    /// que tem o slug da empresa.
     /// </summary>
     public static IResult Interno(HttpContext ctx, Exception erro)
     {
-        ctx.RequestServices.GetService<ILoggerFactory>()?.CreateLogger("Dayspot.Api")
-            .LogError(erro, "erro interno: {Metodo} {Rota}", ctx.Request.Method, ctx.Request.Path);
+        ctx.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("Dayspot.Api")
+            .LogError(erro, "erro interno: {Metodo} {Rota}", ctx.Request.Method,
+                (ctx.GetEndpoint() as RouteEndpoint)?.RoutePattern.RawText);
         return Responder(StatusCodes.Status500InternalServerError, ErroInterno, "Erro interno. Tente novamente mais tarde.");
     }
 }

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using Dayspot.Api.Dados;
 
@@ -24,12 +25,17 @@ public static partial class Agendamentos
     private static readonly TimeSpan PeriodoMaximo = TimeSpan.FromDays(92); // um trimestre; o calendário (7.1) pede uma semana
     private static readonly TimeSpan DuracaoMaxima = TimeSpan.FromHours(24); // a mesma da duração do serviço (guia, §005)
 
+    // Faixa aceita em toda data da API: longe das pontas do DateTime, então somar o período,
+    // a duração ou o fuso não estoura.
+    internal static readonly DateTime DataMinima = new(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+    internal static readonly DateTime DataMaxima = new(2100, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
     /// <summary>
     /// GET /api/agendamentos?de=&amp;ate=&amp;prestador_id=, período [de, ate) pelo inicio,
     /// em RFC 3339. Sem de, hoje; sem ate, de + 7 dias (e vice-versa). Sem
     /// prestador_id, a empresa toda: restringir ao prestador da sessão é da 2.7.
     /// </summary>
-    public static async Task<IResult> Listar(HttpRequest req, AppDb db, CancellationToken ct)
+    public static async Task<IResult> Listar(HttpRequest req, AppDb db, [FromServices] TimeProvider relogio, CancellationToken ct)
     {
         if (!LerData(req.Query["de"].FirstOrDefault(), "de", out var de, out var erro)
             || !LerData(req.Query["ate"].FirstOrDefault(), "ate", out var ate, out erro))
@@ -37,7 +43,7 @@ public static partial class Agendamentos
             return erro!;
         }
         // TODO(T6): "hoje" em UTC; passa a ser no fuso do tenant na 6.4.
-        var inicio = de ?? (ate - PeriodoPadrao) ?? DateTime.UtcNow.Date;
+        var inicio = de ?? (ate - PeriodoPadrao) ?? relogio.GetUtcNow().UtcDateTime.Date;
         var fim = ate ?? inicio + PeriodoPadrao;
         if (fim < inicio)
         {
@@ -69,10 +75,10 @@ public static partial class Agendamentos
     /// </summary>
     public static async Task<IResult> Criar(HttpRequest req, AppDb db, Fixos fixos, CancellationToken ct)
     {
-        var entrada = await Json.Ler<NovoAgendamentoJson>(req, ct);
+        var (entrada, erroCorpo) = await Json.Ler<NovoAgendamentoJson>(req, ct);
         if (entrada is null)
         {
-            return Json.CorpoInvalido();
+            return erroCorpo;
         }
         if (!Guid.TryParse(entrada.ClienteId, out var clienteId))
         {
@@ -138,6 +144,11 @@ public static partial class Agendamentos
         if (m.Success && DateTimeOffset.TryParse(m.Groups[1].Value + fracao[..Math.Min(fracao.Length, 8)] + m.Groups[3].Value,
                 CultureInfo.InvariantCulture, DateTimeStyles.None, out var lida))
         {
+            if (lida.UtcDateTime < DataMinima || lida.UtcDateTime >= DataMaxima)
+            {
+                erro = Erros.CampoInvalido(campo, campo + " fora da faixa aceita (anos 2000 a 2099).");
+                return false;
+            }
             data = lida.UtcDateTime;
             return true;
         }

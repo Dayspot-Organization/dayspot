@@ -62,6 +62,14 @@ public class IsolamentoTests
     }
 
     [Fact]
+    public async Task AppUserTemTimeouts()
+    {
+        await using var app = await Banco.Conectar("DATABASE_URL");
+        Assert.Equal("5s", await app.Escalar<string>("SHOW lock_timeout"));
+        Assert.Equal("15s", await app.Escalar<string>("SHOW statement_timeout"));
+    }
+
+    [Fact]
     public async Task IsolamentoPorTenant()
     {
         await using var dono = await Banco.Conectar("MIGRATIONS_DATABASE_URL");
@@ -104,6 +112,10 @@ public class IsolamentoTests
             await ExigirSqlState(app, "42501", "UPDATE clientes SET tenant_id = $1", TenantBeta);
             // DELETE em agendamentos é negado.
             await ExigirSqlState(app, "42501", "DELETE FROM agendamentos");
+            // Fora do RLS, e o CASCADE de tenants apagaria a empresa inteira: DELETE negado.
+            await ExigirSqlState(app, "42501", "DELETE FROM tenants");
+            await ExigirSqlState(app, "42501", "DELETE FROM usuarios");
+            await ExigirSqlState(app, "42501", "DELETE FROM memberships");
 
             // O tenant da transação morre com ela, na mesma conexão.
             await using (await app.ComTenant(TenantAlfa))

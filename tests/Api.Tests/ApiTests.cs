@@ -122,7 +122,28 @@ public class ClientesTests
     {
         await using var api = await Servidor.SemBanco();
         var corpo = $$"""{"nome":"Ana","telefone":"{{new string('9', 1 << 20)}}"}""";
-        await (await api.Chamar("POST", "/api/clientes", corpo)).ExigirErro(HttpStatusCode.BadRequest, Erros.RequisicaoInvalida);
+        var r = await api.Chamar("POST", "/api/clientes", corpo);
+        await r.ExigirErro(HttpStatusCode.BadRequest, Erros.RequisicaoInvalida);
+        Assert.Contains("1 MiB", (await r.Json()).GetProperty("erro").GetProperty("mensagem").GetString());
+    }
+
+    // O Kestrel avisa corpo truncado ou chunked malformado com BadHttpRequestException.
+    private sealed class CorpoTruncado : MemoryStream
+    {
+        public override ValueTask<int> ReadAsync(Memory<byte> destino, CancellationToken ct = default) =>
+            throw new BadHttpRequestException("Unexpected end of request content.");
+    }
+
+    [Fact]
+    public async Task CorpoTruncadoEhCorpoInvalido()
+    {
+        var ctx = new DefaultHttpContext { Request = { Body = new CorpoTruncado() } };
+        var (valor, erro) = await Json.Ler<NovoClienteJson>(ctx.Request, TestContext.Current.CancellationToken);
+        Assert.Null(valor);
+        ctx.RequestServices = new ServiceCollection().AddLogging().BuildServiceProvider();
+        ctx.Response.Body = new MemoryStream();
+        await erro.ExecuteAsync(ctx);
+        Assert.Equal(StatusCodes.Status400BadRequest, ctx.Response.StatusCode);
     }
 
     // 200 caracteres, não 200 unidades UTF-16: cada emoji conta um.
@@ -183,16 +204,50 @@ public class AgendamentosTests
         Assert.Equal(2, (await Listar("ate=2099-01-11T00:00:00Z")).Count); // sem de: ate - 7 dias
     }
 
-    // Sem de nem ate: de hoje a hoje + 7 dias. O seed sempre tem agendamento futuro nessa janela.
+    // Sem de nem ate: [hoje, hoje + 7 dias), com "hoje" pelo relógio injetado. Em 2099,
+    // longe das datas relativas do seed: a lista é só o que o teste inseriu.
     [Fact]
     public async Task ListarSemPeriodo()
     {
-        await using var api = await Servidor.ComBanco(Seed.Alfa);
+        var relogio = new RelogioFixo(new DateTimeOffset(Dia.AddHours(15)));
+        await using var api = await Servidor.ComBanco(Seed.Alfa, relogio: relogio);
+        DateTime[] inicios = [Dia.AddHours(-1), Dia.AddHours(1), Dia.AddDays(7).AddHours(-1), Dia.AddDays(7)];
+        foreach (var inicio in inicios)
+        {
+            await api.Db.Database.ExecuteSqlAsync($"""
+                INSERT INTO agendamentos (tenant_id, cliente_id, servico_id, prestador_id, inicio, fim, valor_centavos)
+                VALUES ({Seed.Alfa}, {Seed.ClienteAlfa}, {Seed.ServicoAlfa}, {Seed.Prestador}, {inicio}, {inicio.AddMinutes(30)}, 0)
+                """, TestContext.Current.CancellationToken);
+        }
         var r = await api.Chamar("GET", "/api/agendamentos");
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
-        var hoje = DateTime.UtcNow.Date;
-        Assert.All((await r.Json()).EnumerateArray(),
-            a => Assert.InRange(a.GetProperty("inicio").GetDateTime().ToUniversalTime(), hoje, hoje.AddDays(7)));
+        Assert.Equal([Dia.AddHours(1), Dia.AddDays(7).AddHours(-1)],
+            (await r.Json()).EnumerateArray().Select(a => a.GetProperty("inicio").GetDateTime().ToUniversalTime()));
+    }
+
+    // Datas nas pontas do DateTime estouravam em ate - 7 dias / de + 7 dias (500).
+    [Theory]
+    [InlineData("ate=0001-01-03T00:00:00Z", "ate")]
+    [InlineData("de=9999-12-30T00:00:00Z", "de")]
+    [InlineData("de=1999-12-31T23:59:59Z", "de")]
+    [InlineData("de=2099-01-01T00:00:00Z&ate=2100-01-01T00:00:00Z", "ate")]
+    public async Task ListarForaDaFaixa(string query, string campo)
+    {
+        await using var api = await Servidor.SemBanco();
+        var r = await api.Chamar("GET", "/api/agendamentos?" + query);
+        await r.ExigirErro(HttpStatusCode.BadRequest, Erros.RequisicaoInvalida);
+        Assert.Equal(campo, (await r.Json()).GetProperty("erro").GetProperty("detalhes").GetProperty("campo").GetString());
+    }
+
+    [Theory]
+    [InlineData("""{"cliente_id":"11111111-0004-0000-0000-000000000001","inicio":"9999-12-31T23:00:00Z"}""", "inicio")]
+    [InlineData("""{"cliente_id":"11111111-0004-0000-0000-000000000001","inicio":"2099-12-31T23:00:00Z","fim":"9999-12-31T23:00:00Z"}""", "fim")]
+    public async Task CriarForaDaFaixa(string corpo, string campo)
+    {
+        await using var api = await Servidor.SemBanco();
+        var r = await api.Chamar("POST", "/api/agendamentos", corpo);
+        await r.ExigirErro(HttpStatusCode.BadRequest, Erros.RequisicaoInvalida);
+        Assert.Equal(campo, (await r.Json()).GetProperty("erro").GetProperty("detalhes").GetProperty("campo").GetString());
     }
 
     [Theory]

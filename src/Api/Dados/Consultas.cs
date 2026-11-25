@@ -97,8 +97,9 @@ public static class Consultas
     /// Cria usuário, empresa e membership de administrador numa instrução só. Exceção à
     /// regra "toda consulta recebe tenantId": é ela que cria o tenant, e as três
     /// tabelas ficam fora do RLS (guia §009). E-mail ou slug repetido sobe como
-    /// PostgresException 23505 (usuarios_email_unico, tenants_slug_key), e a transação
-    /// da requisição desfaz o que já tinha entrado.
+    /// PostgresException 23505 (usuarios_email_unico, tenants_slug_key); sendo uma
+    /// instrução só, nada fica pela metade. Roda na transação própria do cadastro
+    /// (Transacao.TransacaoPropria), que também desfaz a sessão aberta em seguida.
     /// </summary>
     public static async Task<EmpresaCriada> CriarEmpresa(this AppDb db, NovaEmpresa n, CancellationToken ct = default)
     {
@@ -237,7 +238,10 @@ public static class Consultas
         return ids.Single();
     }
 
-    /// <summary>Nulo: sessão inexistente, expirada ou revogada.</summary>
+    /// <summary>
+    /// Nulo: sessão inexistente, expirada ou revogada. Dentro da consulta, DateTime.UtcNow
+    /// vira now() no SQL (tradução do Npgsql): vale o relógio do banco, o mesmo do CriarSessao.
+    /// </summary>
     public static Task<Sessao?> BuscarSessaoValida(this AppDb db, Guid id, CancellationToken ct = default) =>
         db.Sessoes.FirstOrDefaultAsync(s => s.Id == id && s.RevogadoEm == null && s.ExpiraEm > DateTime.UtcNow, ct);
 

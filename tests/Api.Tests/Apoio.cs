@@ -132,12 +132,13 @@ public sealed class Servidor : IAsyncDisposable
     /// As rotas sobre uma transação do app_user com set_config(..., true), como faz o
     /// UseTransacaoNasRotas, desfeita no fim do teste.
     /// </summary>
-    public static async Task<Servidor> ComBanco(Guid tenant, bool autenticar = false)
+    public static async Task<Servidor> ComBanco(Guid tenant, bool autenticar = false, TimeProvider? relogio = null)
     {
         var db = new AppDb(AppDb.Opcoes(Banco.ConnectionString("DATABASE_URL")));
         var tx = await db.IniciarComTenant(tenant);
         return await Criar(
-            s => s.AddSingleton(db).AddSingleton(new Fixos(tenant, Seed.Prestador, Seed.ServicoAlfa)),
+            s => s.AddSingleton(db).AddSingleton(new Fixos(tenant, Seed.Prestador, Seed.ServicoAlfa))
+                .AddSingleton(relogio ?? TimeProvider.System),
             app =>
             {
                 // Com autenticar, a sessão é lida na mesma transação do teste; sem, os
@@ -163,17 +164,21 @@ public sealed class Servidor : IAsyncDisposable
     /// As rotas para testes de validação: o banco está fora do ar, então tocar nele é
     /// falha (a exceção sobe para o teste).
     /// </summary>
-    public static Task<Servidor> SemBanco() => SemBanco(null);
+    public static Task<Servidor> SemBanco() => SemBanco(null, null);
 
     /// <summary>
     /// <see cref="SemBanco()"/> com o relógio do teste, para o limite de cadastros por IP:
     /// IP real e limite antes das rotas.
     /// </summary>
-    public static Task<Servidor> ComCadastro(TimeProvider relogio) => SemBanco(relogio);
+    public static Task<Servidor> ComCadastro(TimeProvider relogio, ILoggerProvider? log = null) => SemBanco(relogio, log);
 
-    private static Task<Servidor> SemBanco(TimeProvider? relogio) => Criar(
+    private static Task<Servidor> SemBanco(TimeProvider? relogio, ILoggerProvider? log) => Criar(
         s =>
         {
+            if (log is not null)
+            {
+                s.AddSingleton(log);
+            }
             if (relogio is not null)
             {
                 s.AddSingleton(relogio);
@@ -229,6 +234,7 @@ public sealed class Servidor : IAsyncDisposable
         },
         app =>
         {
+            app.UseCabecalhos();
             app.UseRouting();
             app.UsePublico();
             app.UseCadastro();

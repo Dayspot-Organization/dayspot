@@ -361,4 +361,20 @@ public class LoginTests
             Assert.Equal(campo, (await r.Json()).GetProperty("erro").GetProperty("detalhes").GetProperty("campo").GetString());
         }
     }
+
+    // A validação vem antes de qualquer consulta: a sessão do ComBanco basta.
+    [Theory]
+    [InlineData("{", "")] // JSON malformado
+    [InlineData("""{"slug":"  "}""", "slug")]
+    [InlineData("""{"slug":"alfa","tenant_id":"x"}""", "")] // campo desconhecido
+    public async Task EscolherEmpresaCorpoInvalidoEh400(string corpo, string campo)
+    {
+        await using var api = await Servidor.ComBanco(Seed.Alfa);
+        var r = await api.Chamar("POST", "/api/sessao/empresa", corpo);
+        await r.ExigirErro(HttpStatusCode.BadRequest, Erros.RequisicaoInvalida);
+        if (campo != "")
+        {
+            Assert.Equal(campo, (await r.Json()).GetProperty("erro").GetProperty("detalhes").GetProperty("campo").GetString());
+        }
+    }
 }

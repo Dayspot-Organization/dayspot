@@ -100,9 +100,8 @@ public class CadastroTests
             _ => texto,
         };
         await using var api = await Servidor.SemBanco();
-        // O EF embrulha a falha de conexão em InvalidOperationException; o interno é o do Npgsql.
-        var erro = await Assert.ThrowsAsync<InvalidOperationException>(() => api.Chamar("POST", Rota, Corpo(campo, texto)));
-        Assert.IsType<NpgsqlException>(erro.InnerException);
+        // A transação do cadastro (depois do hash) é o primeiro acesso ao banco.
+        await Assert.ThrowsAsync<NpgsqlException>(() => api.Chamar("POST", Rota, Corpo(campo, texto)));
     }
 }
 
@@ -355,6 +354,18 @@ public class LimiteCadastroTests
     }
 
     [Fact]
+    public async Task LimiteGeraLogSemDadoPessoal()
+    {
+        var log = new LogEmMemoria();
+        await using var api = await Servidor.ComCadastro(Relogio(), log);
+        await Esgotar(api, "203.0.113.1");
+        Assert.DoesNotContain(log.Linhas, l => l.StartsWith("429"));
+        await ExigirLimite(await Enviar(api, "203.0.113.1"), 3600);
+        Assert.Single(log.Linhas, l => l.StartsWith("429 pelo limite do cadastro"));
+        Assert.All(log.Linhas, l => Assert.DoesNotContain("203.0.113", l));
+    }
+
+    [Fact]
     public async Task RetryAfterEhOQueFaltaDaHora()
     {
         var relogio = Relogio();
@@ -420,11 +431,12 @@ public class LimiteCadastroTests
     [Fact]
     public async Task LimiteDoCadastroNaoAfetaRotasPublicas()
     {
+        await using var e = await EmpresaDeTeste.Criar();
         await using var api = await Servidor.ComPublico(Banco.ConnectionString("DATABASE_URL"));
         await Esgotar(api, "203.0.113.1");
         await ExigirLimite(await Enviar(api, "203.0.113.1"), 3600);
-        var req = new HttpRequestMessage(HttpMethod.Get, "/api/publico/alfa");
+        var req = new HttpRequestMessage(HttpMethod.Get, $"/api/publico/{e.Slug}");
         req.Headers.Add("CF-Connecting-IP", "203.0.113.1");
-        Assert.NotEqual(HttpStatusCode.TooManyRequests, (await api.Http.SendAsync(req)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await api.Http.SendAsync(req)).StatusCode);
     }
 }
