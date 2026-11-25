@@ -45,7 +45,7 @@
             <span>
               {{ erro }}
               @if (emailJaTemConta()) {
-                <a routerLink="/entrar">Entrar</a>
+                <a routerLink="/entrar" [state]="{ email: email().trim() }">Entrar com este e-mail</a>
               }
             </span>
           </span>
@@ -109,6 +109,7 @@
           type="text"
           autocomplete="organization"
           [value]="empresa()"
+          [readOnly]="enviando()"
           (input)="digitarEmpresa(valorDe($event))"
           [attr.aria-invalid]="erros().empresa ? 'true' : null"
           [attr.aria-describedby]="erros().empresa ? 'k-empresa-a' : null"
@@ -126,6 +127,7 @@
             class="ds-entrada"
             id="k-endereco"
             [value]="endereco()"
+            [readOnly]="enviando()"
             (input)="digitarEndereco($event)"
             autocapitalize="none"
             spellcheck="false"
@@ -149,6 +151,7 @@
           type="text"
           autocomplete="tel"
           [value]="contato()"
+          [readOnly]="enviando()"
           (input)="digitarContato(valorDe($event))"
           [attr.aria-invalid]="erros().contato ? 'true' : null"
           aria-describedby="k-contato-a"
@@ -170,7 +173,6 @@
       <button
         type="submit"
         class="ds-botao ds-botao--principal ds-botao--grande"
-        [attr.aria-disabled]="enviando() || null"
         [attr.aria-busy]="enviando() ? 'true' : null"
       >
         Criar conta e abrir a agenda

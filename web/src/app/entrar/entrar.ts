@@ -23,7 +23,9 @@ export class Entrar {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly email = signal("");
+  /** Vindo do "Entrar com este e-mail" do Cadastro: pelo state da navegação, não pela URL,
+   *  para o e-mail não aparecer na barra nem em log de servidor. */
+  readonly email = signal(String(this.router.currentNavigation()?.extras.state?.["email"] ?? ""));
   readonly senha = signal("");
   readonly senhaVisivel = signal(false);
   readonly erroEmail = signal("");
@@ -53,7 +55,7 @@ export class Entrar {
 
   enviar(evento: Event) {
     evento.preventDefault();
-    if (this.enviando()) return; // aria-disabled não bloqueia o envio
+    if (this.enviando()) return; // aria-busy não bloqueia o Enter
     const erroEmail = erroDeEmail(this.email());
     const erroSenha = this.senha() ? "" : "Escreva a senha.";
     this.erroEmail.set(erroEmail);
