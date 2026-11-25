@@ -83,7 +83,7 @@ Todos os pares de texto conferidos (AA) nos dois temas em 17/11/2026.
 **Proporção numa tela de trabalho:** neutros 70 % · grafite 16 % · ameixa até 9 % ·
 pêssego até 3 % · status até 2 % · degradê 0 %.
 
-**Pares aprovados:** só os da tabela 3.3 de `boas-praticas-identidade.md`. Cor nova
+**Pares aprovados:** só os da seção "Cor" do [`Design.html`](../../Design.html). Cor nova
 precisa passar 4,5:1 (texto) ou 3:1 (ícone, borda, gráfico) antes de virar token.
 
 ### 2.2 Tipografia
@@ -148,7 +148,7 @@ de trabalho além disso. `prefers-reduced-motion` zera as durações.
   `ds-acao`. No menu, 22 px. Ícones de utilidade (fechar, setas, busca, tema, mais, check):
   mesmo traço, 16–20 px, sem ponto. Abaixo de 16 px: traço 2,5 e ponto na cor do traço.
 - Ícone de status: traço 2,6, 15 px no chip, 14 no bloco, 18 no aviso.
-- Logo: `logo-horizontal.svg` 26 px de altura no menu, 24 em Entrar, 20 no rodapé da
+- Logo: `app-logo` (SVG inline em `web/src/app/layout.ts`; seção "Logo" do `Design.html`), 26 px de altura no menu, 24 em Entrar, 20 no rodapé da
   página do cliente ("agendado com" + logo). Mínimo 96 × 20 px.
 - Ilustrações de estado vazio: 176 × 132, tokens `--ilu-*`. Sem personagem, sem mascote.
 
@@ -458,7 +458,7 @@ sem texto.
 | Estado vazio | §4.19 · `Estados` | `app-vazio` | no código |
 | Esqueleto | §4.20 · `Estados` | `web/src/styles.css` (`.esqueleto`), desenhado em cada tela | no código |
 | Gráfico de barras | §4.21 · `Financeiro` | — | só design |
-| Casca (menu, top-bar, cabeçalho) | §4.22 · todas | `web/src/app/layout.ts`, `painel.html` (`.cabecalho-tela`) | no código, sem seletor de empresa nem rodapé de usuário (ainda não há login) |
+| Casca (menu, top-bar, cabeçalho) | §4.22 · todas | `web/src/app/layout.ts`, `painel.html` (`.cabecalho-tela`) | no código, sem seletor de empresa nem rodapé de usuário (entram com a casca, #121) |
 | Painel de marca | §4.23 · `Entrar`, `Cadastro` | — | só design |
 
 ---

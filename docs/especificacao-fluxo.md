@@ -711,17 +711,17 @@ card indicado.
 | HTTP | `codigo` | Quando | Card |
 |---|---|---|---|
 | 400 | `requisicao_invalida` | JSON malformado, campo obrigatório ausente, valor inválido | 1.7 |
-| 401 | `nao_autenticado` | Cookie ausente, expirado ou revogado (previsto) | 2.5 |
-| 401 | `credencial_invalida` | Login com e-mail inexistente ou senha errada (previsto) | 2.3 |
-| 403 | `sem_permissao` | Agendamento de outro prestador; `prestador_id` de outro pedido por prestador; rota só de administrador; remover o criador; administrador não criador removendo administrador; aceite com sessão de outro e-mail (previsto) | 2.7, 2.19, 5.8 |
+| 401 | `nao_autenticado` | Cookie ausente, expirado ou revogado | 2.5 |
+| 401 | `credencial_invalida` | Login com e-mail inexistente ou senha errada | 2.3 |
+| 403 | `sem_permissao` | Rota de tenant com sessão sem empresa escolhida ou sem membership ativo na empresa da sessão. Previstos: agendamento de outro prestador; `prestador_id` de outro pedido por prestador; rota só de administrador; remover o criador; administrador não criador removendo administrador; aceite com sessão de outro e-mail | 2.6; previstos: 2.7, 2.19, 5.8 |
 | 404 | `nao_encontrado` | Recurso inexistente ou de outro tenant; rota inexistente; slug inexistente; token de convite inexistente | 1.7, #162 |
 | 405 | `metodo_nao_permitido` | Rota existe, mas não com esse método; o cabeçalho `Allow` lista os aceitos | 1.13 |
 | 409 | `conflito_horario` | Sobreposição (23P01) no `POST` e no `PATCH` | 1.5, 5.1 |
 | 409 | `status_invalido` | Concluir antes do início; cancelar, remarcar ou trocar serviço de `cancelado` ou `concluido` (previsto) | 5.1 |
 | 409 | `convite_invalido` | Convite expirado, já aceito ou para e-mail com membership ativo (previsto) | 2.18, 2.19, 2.22 |
-| 409 | `email_em_uso` | Cadastro ou criar conta pelo convite com e-mail que já tem conta (previsto) | 2.2, 2.22 |
-| 409 | `slug_em_uso` | Cadastro com slug já usado (previsto) | 2.2 |
-| 429 | `muitas_tentativas` | Rotas públicas acima de 60 leituras ou 10 envios por minuto, por IP, com `Retry-After`. No login, previsto | #162, 2.8 |
+| 409 | `email_em_uso` | Cadastro com e-mail que já tem conta; criar conta pelo convite com esse e-mail (previsto) | 2.2, 2.22 |
+| 409 | `slug_em_uso` | Cadastro com slug já usado | 2.2 |
+| 429 | `muitas_tentativas` | Rotas públicas acima de 60 leituras ou 10 envios por minuto, por IP, com `Retry-After`; no login, 5 falhas por e-mail ou 20 por IP em 15 minutos | #162, 2.8 |
 | 500 | `erro_interno` | Falha inesperada; mensagem genérica, detalhe só no log | 1.7 |
 
 ---
