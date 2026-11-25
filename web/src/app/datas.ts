@@ -1,5 +1,5 @@
 // A API fala em UTC (ISO 8601); o painel, no fuso do navegador; a página pública, no fuso da empresa.
-// Formatos da tela (DESIGN.md, Público e voz): "quarta, 10h" em frase; 10:00 em grade e lista;
+// Formatos da tela (DESIGN.md › Como escrevemos): "quarta, 10h" em frase; 10:00 em grade e lista;
 // "18 de novembro" em data.
 
 /** Date no formato "AAAA-MM-DD" do <input type="date">, no dia local (toISOString daria o dia em UTC). */

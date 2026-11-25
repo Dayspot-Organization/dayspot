@@ -12,7 +12,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     { provide: TitleStrategy, useClass: TituloDayspot },
     provideHttpClient(withFetch(), withInterceptors([errosApiInterceptor])),
-    // Ícones Lucide com o traço da v3 (Design.html › Ícones); o tamanho vem da classe .ds-ic.
+    // Ícones Lucide com o traço da v3 (DESIGN.md › Ícones); o tamanho vem da classe .ds-ic.
     provideLucideConfig({ strokeWidth: 1.75 }),
   ],
 };

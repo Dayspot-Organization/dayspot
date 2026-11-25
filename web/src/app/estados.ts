@@ -1,5 +1,6 @@
 // Estados de tela comuns: carregando, erro e vazio. Nenhuma tela fica em branco.
-// Desenho: docs/design-system/README.md §4.11 (aviso), §4.19 (vazio) e §4.20 (esqueleto).
+// Desenho da v2.1. Na v3, o erro usa o aviso de erro; o vazio e o esqueleto ainda não estão
+// desenhados (DESIGN.md › Peças que faltam desenhar).
 import { ChangeDetectionStrategy, Component, booleanAttribute, input, output } from "@angular/core";
 
 /**

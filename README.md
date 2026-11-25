@@ -271,7 +271,7 @@ dayspot/
 ├── .env.example
 ├── CLAUDE.md                   # regras para o Claude Code
 ├── CONTRIBUTING.md
-└── Design.html                 # referência visual do web/
+└── DESIGN.md                   # referência de design do web/ (v3)
 ```
 
 Estrutura-alvo — cada pasta nasce no card que a usa:

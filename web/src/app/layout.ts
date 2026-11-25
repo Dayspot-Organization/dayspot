@@ -1,4 +1,5 @@
-// Casca do painel (painel.html) e suas peças: logo, menu e botão de tema. Medidas: docs/design-system/README.md §4.22.
+// Casca do painel (painel.html) e suas peças: logo, menu e botão de tema. Ainda na v2.1;
+// a casca da v3 está no DESIGN.md › Peças da Agenda.
 import { ChangeDetectionStrategy, Component, type ElementRef, inject, input, output, viewChild } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import {
@@ -136,7 +137,7 @@ export class BotaoTema {
   }
 }
 
-// Estrutura do DESIGN.md: celular com top-bar e gaveta (<dialog>), desktop com menu
+// Estrutura da v2.1: celular com top-bar e gaveta (<dialog>), desktop com menu
 // lateral fixo (o CSS troca a partir de 1024 px).
 @Component({
   selector: "app-painel",
