@@ -1,5 +1,5 @@
 /* Estilos globais (CSS v2.1 sobre os tokens v3; telas novas usam a seção "Componentes v3" no fim). Tokens em tokens.css (carregado antes, pelo angular.json); regras e
-   componentes em docs/design-system/README.md. Nenhum hex aqui: tudo por var(--ds-*).
+   componentes no DESIGN.md. Nenhum hex aqui: tudo por var(--ds-*).
    Web primeiro (1440 px); abaixo de 1024 px o menu vira gaveta. */
 
 * {
@@ -150,7 +150,7 @@ a:hover {
 }
 
 .logo-simbolo {
-  fill: var(--ds-simbolo);
+  fill: var(--ds-acao);
 }
 
 .logo-nome {
@@ -1464,7 +1464,7 @@ input.invalido {
 }
 
 /* ══ Componentes v3 ═══════════════════════════════════════════════════════════
-   Design.html › Componentes (Botão, Campo, Aviso) e as peças de Entrar e Cadastro do canvas.
+   DESIGN.md › Componentes: Botão, Campo, Aviso, Etapas e Painel de marca (Entrar e Cadastro).
    Telas novas usam só esta seção; as classes .botao, .campo e .aviso de cima são v2.1. */
 
 .ds-ic {
@@ -1735,14 +1735,6 @@ input.invalido {
   background: var(--ds-erro-chip);
   color: var(--ds-erro-texto);
 }
-.ds-aviso--atencao {
-  background: var(--ds-aguardando-chip);
-  color: var(--ds-aguardando-texto);
-}
-.ds-aviso--sucesso {
-  background: var(--ds-confirmado-chip);
-  color: var(--ds-confirmado-texto);
-}
 .ds-aviso--neutro {
   background: var(--ds-faixa);
   box-shadow: inset 0 0 0 var(--ds-b-fio) var(--ds-divisoria);
@@ -1797,7 +1789,7 @@ input.invalido {
   gap: var(--ds-e-4);
 }
 .entrada-simbolo path {
-  fill: var(--ds-simbolo);
+  fill: var(--ds-acao);
 }
 .entrada-form {
   display: flex;
@@ -1857,7 +1849,7 @@ input.invalido {
 .entrada-troca > .ds-botao--fantasma {
   margin-left: calc(-1 * var(--ds-e-3));
 }
-/* Degradê só aqui, sem texto em cima (Design.html › Peças de marca). */
+/* Degradê só aqui, sem texto em cima (DESIGN.md › Painel de marca). */
 .painel-marca {
   display: grid;
   flex: 0 1 576px;

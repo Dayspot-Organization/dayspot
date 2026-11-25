@@ -1,13 +1,13 @@
-/* Dayspot · tokens v3 (20/11/2026). Valores do Design.html (Design system v3, fundações aprovadas
-   em 20/11/2026). Nenhuma tela usa hex solto: só var(--ds-*).
+/* Dayspot · tokens v3, fundações aprovadas em 20/11/2026. Nomes e usos no DESIGN.md.
+   Nenhuma tela usa hex solto: só var(--ds-*).
    light-dark(claro, escuro): o color-scheme do <html> escolhe o lado.
    Sem data-tema, segue o sistema; data-tema="claro" | "escuro" força o tema.
-   Pares de texto conferidos (WCAG AA) no Design.html. Sincronia guia → código: design-sync.json. */
+   Pares de texto conferidos (WCAG AA) em 19/11/2026. */
 
 :root {
   color-scheme: light dark;
 
-  /* ── Cor (Design.html › Cor) ─────────────────────────────── */
+  /* ── Cor (DESIGN.md › Cor) ───────────────────────────────── */
   --ds-fundo: light-dark(#f7f7f8, #141414); /* casca: atrás do painel, topo e menu */
   --ds-superficie: light-dark(#ffffff, #1c1c1c); /* painel, campo, menu suspenso */
   --ds-hover: light-dark(#f4f4f5, #282627); /* pressionado */
@@ -38,7 +38,6 @@
   --ds-menu-ativo: light-dark(#fcedf3, #33282e);
   --ds-hoje: light-dark(#fef9fb, #1f1a1d);
   --ds-acento: light-dark(#f4a08a, #f4b49a); /* pêssego: só nas peças de marca */
-  --ds-marca: #86315c; /* símbolo D e wordmark; nunca em interface */
   --ds-degrade-1: light-dark(#fbe1ed, #2c2220); /* peças de marca (Entrar, Cadastro): sem texto em cima */
   --ds-degrade-2: light-dark(#eaa2c1, #33232b);
   --ds-degrade-3: light-dark(#b994dc, #45283a);
@@ -65,9 +64,8 @@
   --ds-erro-chip: light-dark(#fdeeee, #3e2324);
   --ds-sombra: 0 1px 2px light-dark(rgba(24, 24, 27, 0.08), #0000); /* no escuro, sem sombra */
   --ds-sombra-flutuante: 0 12px 32px -12px light-dark(rgba(24, 24, 27, 0.18), #0000), 0 2px 6px -2px light-dark(rgba(24, 24, 27, 0.06), #0000);
-  --ds-simbolo: light-dark(#86315C, #EE9DBF); /* símbolo D na casca: ameixa no claro, rosa no escuro (Design.html › Logo) */
 
-  /* ── Espaço, forma, altura, largura, fio (Design.html › Espaço, forma e altura) ── */
+  /* ── Espaço, forma, altura, largura, fio (DESIGN.md › Espaço, raio e altura) ── */
   --ds-e-1: 4px;
   --ds-e-rotulo: 6px;
   --ds-e-2: 8px;
