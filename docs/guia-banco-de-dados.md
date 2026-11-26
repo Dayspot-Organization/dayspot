@@ -6,13 +6,17 @@ Versão **1.14** · 25/11/2026
 
 ## Mudanças desde a v1.13
 
-Uma migration nova (#198).
+Guia conferido contra o código depois da Fatia 2 (#200) e uma migration nova (#198).
 
 - **Migration `20261124120000_RestringirAppUser` (#198):** tira o `DELETE` do `app_user`
   em `tenants`, `usuarios` e `memberships` (remoção é `removido_em`, como na 009) e dá ao
   `app_user` `lock_timeout = '5s'` e `statement_timeout = '15s'` (§Usuário de aplicação).
 - **Pré-condição no Neon:** o papel da `MIGRATIONS_DATABASE_URL` precisa poder rodar
   `ALTER ROLE app_user` (§Usuário de aplicação).
+- **Consultas sem `tenantId` e fora da transação:** são as das tabelas fora do RLS (login,
+  cadastro e sessão) mais o `BuscarEmpresaPorSlug` (§Acesso a dados).
+- **`app_user`:** o trecho de SQL é o do `db/init/app_user.sh`.
+- **Notas da v1.1 à v1.9** (Go, goose e a migração para .NET): foram para o fim do arquivo (§Histórico).
 
 ## Mudanças desde a v1.12
 
@@ -51,123 +55,6 @@ regra muda.
   está em §Seed e teste de isolamento; `db/` guarda só o seed e o `db/init/app_user.sh`.
 - **Rodar e testar localmente:** o fluxo completo (compose, migrations, seed,
   `dotnet test`) e os passos de banco do CI, na ordem do `ci.yml`.
-
-## Mudanças desde a v1.8
-
-Decisão do time de 15/11/2026 (`requisitos.md` v0.12): as migrations saem do goose
-e passam para EF Core Migrations. O schema não muda: cada migration tem o mesmo SQL,
-na mesma ordem.
-
-- **Migrations:** uma classe por migration em `src/Api/Migrations/`, de
-  `00000000000001_CriarExtensoes` a `00000000000010_CriarSessoes`, com o SQL em
-  `migrationBuilder.Sql` no `Up` e no `Down` (§Antes de escrever a primeira
-  migration). O `AppDbModelSnapshot` reflete o modelo do `AppDb`; o CI confere com
-  `dotnet ef migrations has-pending-model-changes`.
-- **Blocos de SQL deste guia:** `-- Up` e `-- Down` marcam o SQL de cada método.
-  Sem `StatementBegin/End`: o EF manda o texto inteiro ao Postgres.
-- **Conexão de dono:** `MIGRATIONS_DATABASE_URL` no lugar de `GOOSE_DBSTRING`, com
-  o mesmo papel (migrations e seed). A API continua só com a `DATABASE_URL`.
-- **Banco de dev migrado pelo goose** (tem `goose_db_version`, não tem
-  `__EFMigrationsHistory`): recriar com `docker compose down -v`. Não há transição.
-- As notas de versões anteriores citam o goose e os comandos dele: ficam como
-  histórico.
-
-## Mudanças desde a v1.7
-
-Decisão do time de 15/11/2026 (`requisitos.md` v0.11): o backend passa de Go para
-.NET e a decisão "pgx v5 + sqlc, sem ORM" é revertida. O schema não muda.
-
-- **Acesso a dados:** EF Core com Npgsql no lugar de pgx + sqlc (§Acesso a dados).
-  O EF **só mapeia** o schema; as migrations continuam no goose, em SQL puro. Não há
-  EF Migrations, `sqlc.yaml` nem `db/queries/`.
-- **Helper de transação:** `AppDb.IniciarComTenant` no lugar do `Store.ComTenant`;
-  a regra é a mesma: `set_config('app.tenant_id', ..., true)` dentro da transação.
-- **Testes de banco:** em `tests/Api.Tests/BancoTests.cs` (xUnit), contra o Postgres
-  com as migrations do goose.
-- As notas de versões anteriores abaixo citam arquivos Go (`internal/storage` etc.)
-  que não existem mais: ficam como histórico.
-
-## Mudanças desde a v1.6
-
-- **Helper de transação (1.2):** o `fn` do `ComTenant` recebe `pgx.Tx`, não
-  `*db.Queries`. Os repositórios de `internal/storage` são construídos sobre o
-  `tx`; assim o middleware da 1.3 não importa `internal/storage/db`, e passar o
-  pool no lugar da transação não compila.
-
-## Mudanças desde a v1.5
-
-Correções achadas ao escrever e testar as migrations 007, 008 e 009 (cards 0.12 a 0.14).
-Nenhuma decisão muda: dois `Down` que não revertiam tudo e um `GRANT` que sumia.
-
-- **007:** o `Down` só apagava a tabela e deixava `app.tocar_atualizado_em()` para trás.
-  Consequência, reproduzida: o `Down` da 001 falha (`DROP SCHEMA app`, `2BP01`) e um
-  `goose up` depois de desfazer a 007 falha (`function already exists`, `42723`). O `Down`
-  agora apaga a função também.
-- **009:** `DISABLE ROW LEVEL SECURITY` não desfaz o `FORCE` (são duas flags em
-  `pg_class`). O `Down` agora faz `NO FORCE` antes do `DISABLE`, e o bloco traz as
-  cinco tabelas por extenso em vez de "repetir o bloco acima".
-- **009:** `GRANT USAGE ON SCHEMA app TO app_user` também na migration. O `Down` da
-  001 apaga o schema `app` e o `Up` o recria sem o `GRANT` do script da 0.15: depois
-  de um `goose down-to 0` (que a 003 manda rodar em banco de dev), o `app_user`
-  perdia o acesso a `app.*` (`42501`). Achado pelo teste de isolamento.
-- **Teste de isolamento:** está em `internal/storage/isolamento_test.go` e pula sem
-  `GOOSE_DBSTRING` e `DATABASE_URL`; como rodar em §Seed e teste de isolamento.
-
-## Mudanças desde a v1.4
-
-Decisão de 03/10/2026 (`requisitos.md` v0.9): nomenclatura padronizada em português.
-
-- Papel `owner` renomeado para `administrador`: o `CHECK` de papel em `memberships` e
-  `convites` aceita `administrador` e `prestador` (os nomes das constraints não mudam).
-
-## Mudanças desde a v1.3
-
-Decisões de 02/10/2026 (`requisitos.md` v0.8). Nenhuma migration nova é escrita
-agora: o guia descreve o que as 003, 005, 007, 009 e 011 vão conter.
-
-- `CHECK` de papel só com `administrador` e `prestador`, em `memberships` e `convites`.
-- `tenants.criado_por` entra por `ALTER TABLE` na 003: a 002 já foi mergeada.
-- Dinheiro em centavos (§Dinheiro): `servicos.preco_centavos` sem `DEFAULT` e
-  `agendamentos.valor_centavos`, os dois com `CHECK >= 0`.
-- Índice `idx_agendamentos_prestador_inicio` para o escopo por prestador.
-- `REVOKE DELETE ON agendamentos FROM app_user` na 009: agendamento nunca é apagado.
-- `sessoes` e `convites` também ficam fora do RLS: são cinco tabelas com `WHERE` manual.
-- Membership removido: o que exige ativo e o que mostra removidos; reconvite reativa.
-- Seed na ordem `usuarios` → `tenants` → `memberships`.
-- Escopo por prestador e operações por id em §Acesso a dados.
-- Checklist da Fatia 0 com papel inválido, valor negativo e `DELETE` em `agendamentos`.
-
-## Mudanças desde a v1.2
-
-- Por que sem ORM, registrado em §Acesso a dados.
-- UUID no Go é `google/uuid` (`overrides` no `sqlc.yaml`); `ComTenant` recebe `uuid.UUID`.
-- Script do `app_user` roda no compose e no CI.
-- goose e sqlc com versão fixa, igual nas três máquinas e no CI.
-- Duas conexões no `.env`: `GOOSE_DBSTRING` (dono das tabelas, migrations e seed)
-  e `DATABASE_URL` (`app_user`, a API).
-
-## Mudanças desde a v1.1
-
-- Referências a fases trocadas pelas fatias do backlog v2.1. Nenhuma mudança de
-  schema nem de acesso a dados: continua pgx v5 + sqlc, sem ORM.
-- O helper `ComTenant` é chamado pelo middleware da 1.3 (uma transação por
-  requisição).
-- Checklist dividido: Fatia 0 (schema e RLS) e Fatia 1 (sqlc e repositório).
-
-## Mudanças desde a v1.0
-
-| # | O que mudou | Onde |
-|---|---|---|
-| 1 | `UNIQUE (lower(email))` em `usuarios` | 003 |
-| 2 | `removido_em` em `memberships` e `clientes` (exclusão lógica) | 003, 004 |
-| 3 | `vinculo_expira_em` em `clientes`; token é credencial de uso único | 004 |
-| 4 | Índice de FK em `notificacoes (agendamento_id, tenant_id)` | 008 |
-| 5 | Migration 010 — `sessoes` | 010 |
-| 6 | Migration 011 — `convites` (RF12) | 011 |
-| 7 | Nota sobre `tenants` fora do RLS e segredo por tenant | 009 |
-| 8 | Aviso sobre `NULLS NOT DISTINCT` em `telegram_chat_id` | 004 |
-| 9 | Checklist ganhou exclusão de tenant, índices de FK e e-mail duplicado | final |
-| 10 | Acesso a dados com pgx v5 + sqlc e helper de transação com tenant | Acesso a dados |
 
 ---
 
@@ -874,7 +761,7 @@ query, sem policy extra (§Acesso a dados).
 ## 010 — sessoes
 
 > Depende da decisão "cookie de sessão vs JWT" (requisitos, seção 9). Com a
-> decisão atual — cookie `HttpOnly` —, esta migration entra na Fatia 2 (item 2.14), antes do login (2.3).
+> decisão atual — cookie `HttpOnly` —, esta migration entrou na Fatia 2 (item 2.14), antes do login (2.3).
 
 ```sql
 -- Up
@@ -947,12 +834,19 @@ registro.
 
 ## Usuário de aplicação (`app_user`)
 
+O `db/init/app_user.sh` roda este SQL como dono das tabelas (`POSTGRES_USER`), com a
+senha, o dono e o banco passados por variável do `psql`:
+
 ```sql
-CREATE ROLE app_user LOGIN PASSWORD '...';
-GRANT CONNECT ON DATABASE dayspot TO app_user;
+CREATE ROLE app_user LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD :'senha';
+
+-- O schema app nasce na 001, que roda depois deste script: criado aqui para o GRANT.
+CREATE SCHEMA IF NOT EXISTS app;
+
+GRANT CONNECT ON DATABASE :"banco" TO app_user;
 GRANT USAGE   ON SCHEMA public, app TO app_user;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
+ALTER DEFAULT PRIVILEGES FOR ROLE :"dono" IN SCHEMA public
   GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_user;
 ```
 
@@ -1129,9 +1023,11 @@ coluna com nome ou tipo errado aparece no CI, não em produção.
 `long`; `time` ↔ `TimeOnly`.
 
 As consultas ficam em `src/Api/Dados/Consultas.cs`, como métodos de extensão do
-`AppDb`. Toda uma recebe `tenantId` logo depois do contexto. A única exceção é
-`BuscarEmpresaPorSlug`, que descobre o tenant das rotas públicas (§O helper de transação
-com tenant):
+`AppDb`. Toda consulta a tabela com RLS recebe `tenantId` logo depois do contexto. Não
+recebem as que leem ou gravam as tabelas fora do RLS (§009), porque é delas que o tenant
+sai: `BuscarEmpresaPorSlug` (rotas públicas), `BuscarUsuarioPorEmail`, `BuscarUsuario`,
+`ListarEmpresasDoUsuario`, `CriarEmpresa`, `CriarSessao`, `BuscarSessaoValida`,
+`RevogarSessao` e `GravarEmpresaDaSessao`. Nelas o `WHERE` manual é a única barreira:
 
 ```csharp
 public static Task<List<Cliente>> ListarClientes(this AppDb db, Guid tenantId, CancellationToken ct = default) =>
@@ -1165,10 +1061,17 @@ SQL injection.
 Uma consulta pelo `AppDb` fora de transação roda **sem** `set_config`, portanto sem
 tenant, portanto zero linhas (RLS falha fechado) ou, pior, bug silencioso nas
 tabelas fora do RLS. Por isso toda consulta roda dentro de uma transação aberta por
-este helper, com uma exceção: `BuscarEmpresaPorSlug` roda **antes** da transação nas
-rotas públicas, porque é ela que descobre o tenant. Lê só `tenants`, que fica fora do
-RLS, filtra pelo slug da rota e devolve só `id`, `nome`, `fuso_horario` e `contato_publico`
-(empresa sem contato volta nula, como slug inexistente, #170).
+este helper. As exceções leem só tabelas fora do RLS, antes de existir tenant:
+
+- `BuscarEmpresaPorSlug` roda **antes** da transação nas rotas públicas, porque é ela que
+  descobre o tenant. Filtra pelo slug da rota e devolve só `id`, `nome`, `fuso_horario` e
+  `contato_publico` (empresa sem contato volta nula, como slug inexistente, #170).
+- `BuscarSessaoValida` roda no `UseAutenticacao` (`src/Api/Autenticacao.cs`), antes da
+  transação, porque é a sessão que diz o tenant.
+- `POST /api/login` e `POST /api/signup` ficam fora da transação por requisição
+  (`TransacaoPropria`, em `src/Api/Transacao.cs`), para o Argon2 não segurar uma conexão do
+  pool: o login roda cada consulta em autocommit, e o cadastro abre a própria transação
+  depois do hash.
 
 ```csharp
 public async Task<IDbContextTransaction> IniciarComTenant(Guid tenantId, CancellationToken ct = default)
@@ -1307,8 +1210,131 @@ na véspera da entrega.
 ## Checklist da Fatia 1 (1.2 e 1.3)
 
 - [ ] O modelo do EF casa com o schema das migrations (`ModeloCasaComOSchema` no CI)
-- [ ] Toda consulta de `Consultas.cs` recebe `tenantId` e filtra por ele, menos
-      `BuscarEmpresaPorSlug`, que descobre o tenant antes da transação
+- [ ] Toda consulta de `Consultas.cs` a tabela com RLS recebe `tenantId` e filtra por
+      ele; as das tabelas fora do RLS (§009) filtram pelo `WHERE` manual
 - [ ] Duas requisições seguidas na mesma conexão do pool, com tenants diferentes,
       não se enxergam
 - [ ] Nenhum `SET app.tenant_id` no repositório fora de `set_config(..., true)`
+
+---
+
+## Histórico: notas da v1.1 à v1.9
+
+Notas da época do backend em Go, do goose e do pgx + sqlc, e da migração para .NET. Ficam como registro: o que vale hoje está nas seções acima.
+
+### Mudanças desde a v1.8
+
+Decisão do time de 15/11/2026 (`requisitos.md` v0.12): as migrations saem do goose
+e passam para EF Core Migrations. O schema não muda: cada migration tem o mesmo SQL,
+na mesma ordem.
+
+- **Migrations:** uma classe por migration em `src/Api/Migrations/`, de
+  `00000000000001_CriarExtensoes` a `00000000000010_CriarSessoes`, com o SQL em
+  `migrationBuilder.Sql` no `Up` e no `Down` (§Antes de escrever a primeira
+  migration). O `AppDbModelSnapshot` reflete o modelo do `AppDb`; o CI confere com
+  `dotnet ef migrations has-pending-model-changes`.
+- **Blocos de SQL deste guia:** `-- Up` e `-- Down` marcam o SQL de cada método.
+  Sem `StatementBegin/End`: o EF manda o texto inteiro ao Postgres.
+- **Conexão de dono:** `MIGRATIONS_DATABASE_URL` no lugar de `GOOSE_DBSTRING`, com
+  o mesmo papel (migrations e seed). A API continua só com a `DATABASE_URL`.
+- **Banco de dev migrado pelo goose** (tem `goose_db_version`, não tem
+  `__EFMigrationsHistory`): recriar com `docker compose down -v`. Não há transição.
+- As notas de versões anteriores citam o goose e os comandos dele: ficam como
+  histórico.
+
+### Mudanças desde a v1.7
+
+Decisão do time de 15/11/2026 (`requisitos.md` v0.11): o backend passa de Go para
+.NET e a decisão "pgx v5 + sqlc, sem ORM" é revertida. O schema não muda.
+
+- **Acesso a dados:** EF Core com Npgsql no lugar de pgx + sqlc (§Acesso a dados).
+  O EF **só mapeia** o schema; as migrations continuam no goose, em SQL puro. Não há
+  EF Migrations, `sqlc.yaml` nem `db/queries/`.
+- **Helper de transação:** `AppDb.IniciarComTenant` no lugar do `Store.ComTenant`;
+  a regra é a mesma: `set_config('app.tenant_id', ..., true)` dentro da transação.
+- **Testes de banco:** em `tests/Api.Tests/BancoTests.cs` (xUnit), contra o Postgres
+  com as migrations do goose.
+- As notas de versões anteriores abaixo citam arquivos Go (`internal/storage` etc.)
+  que não existem mais: ficam como histórico.
+
+### Mudanças desde a v1.6
+
+- **Helper de transação (1.2):** o `fn` do `ComTenant` recebe `pgx.Tx`, não
+  `*db.Queries`. Os repositórios de `internal/storage` são construídos sobre o
+  `tx`; assim o middleware da 1.3 não importa `internal/storage/db`, e passar o
+  pool no lugar da transação não compila.
+
+### Mudanças desde a v1.5
+
+Correções achadas ao escrever e testar as migrations 007, 008 e 009 (cards 0.12 a 0.14).
+Nenhuma decisão muda: dois `Down` que não revertiam tudo e um `GRANT` que sumia.
+
+- **007:** o `Down` só apagava a tabela e deixava `app.tocar_atualizado_em()` para trás.
+  Consequência, reproduzida: o `Down` da 001 falha (`DROP SCHEMA app`, `2BP01`) e um
+  `goose up` depois de desfazer a 007 falha (`function already exists`, `42723`). O `Down`
+  agora apaga a função também.
+- **009:** `DISABLE ROW LEVEL SECURITY` não desfaz o `FORCE` (são duas flags em
+  `pg_class`). O `Down` agora faz `NO FORCE` antes do `DISABLE`, e o bloco traz as
+  cinco tabelas por extenso em vez de "repetir o bloco acima".
+- **009:** `GRANT USAGE ON SCHEMA app TO app_user` também na migration. O `Down` da
+  001 apaga o schema `app` e o `Up` o recria sem o `GRANT` do script da 0.15: depois
+  de um `goose down-to 0` (que a 003 manda rodar em banco de dev), o `app_user`
+  perdia o acesso a `app.*` (`42501`). Achado pelo teste de isolamento.
+- **Teste de isolamento:** está em `internal/storage/isolamento_test.go` e pula sem
+  `GOOSE_DBSTRING` e `DATABASE_URL`; como rodar em §Seed e teste de isolamento.
+
+### Mudanças desde a v1.4
+
+Decisão de 03/10/2026 (`requisitos.md` v0.9): nomenclatura padronizada em português.
+
+- Papel `owner` renomeado para `administrador`: o `CHECK` de papel em `memberships` e
+  `convites` aceita `administrador` e `prestador` (os nomes das constraints não mudam).
+
+### Mudanças desde a v1.3
+
+Decisões de 02/10/2026 (`requisitos.md` v0.8). Nenhuma migration nova é escrita
+agora: o guia descreve o que as 003, 005, 007, 009 e 011 vão conter.
+
+- `CHECK` de papel só com `administrador` e `prestador`, em `memberships` e `convites`.
+- `tenants.criado_por` entra por `ALTER TABLE` na 003: a 002 já foi mergeada.
+- Dinheiro em centavos (§Dinheiro): `servicos.preco_centavos` sem `DEFAULT` e
+  `agendamentos.valor_centavos`, os dois com `CHECK >= 0`.
+- Índice `idx_agendamentos_prestador_inicio` para o escopo por prestador.
+- `REVOKE DELETE ON agendamentos FROM app_user` na 009: agendamento nunca é apagado.
+- `sessoes` e `convites` também ficam fora do RLS: são cinco tabelas com `WHERE` manual.
+- Membership removido: o que exige ativo e o que mostra removidos; reconvite reativa.
+- Seed na ordem `usuarios` → `tenants` → `memberships`.
+- Escopo por prestador e operações por id em §Acesso a dados.
+- Checklist da Fatia 0 com papel inválido, valor negativo e `DELETE` em `agendamentos`.
+
+### Mudanças desde a v1.2
+
+- Por que sem ORM, registrado em §Acesso a dados.
+- UUID no Go é `google/uuid` (`overrides` no `sqlc.yaml`); `ComTenant` recebe `uuid.UUID`.
+- Script do `app_user` roda no compose e no CI.
+- goose e sqlc com versão fixa, igual nas três máquinas e no CI.
+- Duas conexões no `.env`: `GOOSE_DBSTRING` (dono das tabelas, migrations e seed)
+  e `DATABASE_URL` (`app_user`, a API).
+
+### Mudanças desde a v1.1
+
+- Referências a fases trocadas pelas fatias do backlog v2.1. Nenhuma mudança de
+  schema nem de acesso a dados: continua pgx v5 + sqlc, sem ORM.
+- O helper `ComTenant` é chamado pelo middleware da 1.3 (uma transação por
+  requisição).
+- Checklist dividido: Fatia 0 (schema e RLS) e Fatia 1 (sqlc e repositório).
+
+### Mudanças desde a v1.0
+
+| # | O que mudou | Onde |
+|---|---|---|
+| 1 | `UNIQUE (lower(email))` em `usuarios` | 003 |
+| 2 | `removido_em` em `memberships` e `clientes` (exclusão lógica) | 003, 004 |
+| 3 | `vinculo_expira_em` em `clientes`; token é credencial de uso único | 004 |
+| 4 | Índice de FK em `notificacoes (agendamento_id, tenant_id)` | 008 |
+| 5 | Migration 010 — `sessoes` | 010 |
+| 6 | Migration 011 — `convites` (RF12) | 011 |
+| 7 | Nota sobre `tenants` fora do RLS e segredo por tenant | 009 |
+| 8 | Aviso sobre `NULLS NOT DISTINCT` em `telegram_chat_id` | 004 |
+| 9 | Checklist ganhou exclusão de tenant, índices de FK e e-mail duplicado | final |
+| 10 | Acesso a dados com pgx v5 + sqlc e helper de transação com tenant | Acesso a dados |

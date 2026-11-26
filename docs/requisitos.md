@@ -2,9 +2,19 @@
 
 Sistema de agendamentos multi-tenant, com página pública para o cliente final e avisos
 planejados pelo WhatsApp.
-Documento de requisitos e decisões técnicas — **v0.15** · 18/11/2026
+Documento de requisitos e decisões técnicas — **v0.16** · 24/11/2026
 
 > Fonte da verdade: este arquivo. A pasta do Drive é histórico.
+
+## Mudanças desde a v0.15
+
+Conferência contra o código depois da Fatia 2 (#200). Nenhuma decisão muda.
+
+| # | O que mudou | Onde |
+|---|---|---|
+| 1 | A página pública e as regras do agendamento público (#163, #169, #170) saem de "planejado": estão entregues | 3, 5, 12 |
+| 2 | A camada de acesso a dados registra a exceção do `tenantId`: as consultas das tabelas fora do RLS | 6 |
+| 3 | A sessão vem do login: `TENANT_FIXO` não é mais lido como tenant | 12 |
 
 ## Mudanças desde a v0.14
 
@@ -182,12 +192,12 @@ erro.
 | RF18 | Preço por serviço, em centavos; o valor do agendamento é copiado na criação; recopiado só ao trocar o serviço (novo `fim` + sobreposição); remarcar mantém | Alta |
 | RF19 | Agendamento público: o cliente final, sem conta, escolhe serviço, profissional e horário em `/agendar/:slug` e informa nome e telefone | Alta |
 
-**Agendamento público (RF19).** Já existe na API (#162): rotas `/api/publico/{slug}`,
-de segunda a sábado, com início a partir de 08:00 e fim até 19:00, no fuso da empresa;
-todos os memberships ativos aparecem como profissionais; limite por IP de 60 leituras e
-10 envios por minuto. Planejado: a tela `/agendar/:slug` (#163, PR #167); até 60 dias de
-antecedência, grade de 30 minutos, até 3 agendamentos futuros por telefone e telefone
-brasileiro normalizado, sem SMS (#169); contato da empresa na página (#170).
+**Agendamento público (RF19).** Entregue: a tela `/agendar/:slug` (#163) e as rotas
+`/api/publico/{slug}` (#162). De segunda a sábado, com início a partir de 08:00 e fim até
+19:00, no fuso da empresa; todos os memberships ativos aparecem como profissionais; limite
+por IP de 60 leituras e 10 envios por minuto; até 60 dias de antecedência, grade de 30
+minutos, até 3 agendamentos futuros por telefone e telefone brasileiro normalizado, sem SMS
+(#169); contato da empresa na página (#170).
 
 **Ciclo de vida do agendamento (RF05).** Nasce `confirmado`. Concluir só com
 `inicio <= now()`; cancelar a qualquer momento enquanto `confirmado`; `cancelado` e
@@ -239,7 +249,7 @@ agendam os mesmos clientes. Só o administrador gerencia serviços e preços.
 
 **Página pública.** `/agendar/:slug` abre sem login e chama as rotas
 `/api/publico/{slug}`, que ficam fora da sessão: o tenant sai do slug da rota (RNF05,
-§9). As rotas estão na `main` (#162); a tela entra pelo #163 (PR #167).
+§9).
 
 **Worker separado da API (planejado):** a API responde HTTP e precisa ser rápida; o
 envio de lembretes é um processo periódico. Juntar os dois funciona com uma instância
@@ -340,8 +350,10 @@ await db.Database.ExecuteSqlInterpolatedAsync(
 Nunca `SET` sem escopo local: com pool de conexões, a variável sobrevive ao fim da
 requisição e a próxima pega a conexão reciclada com o tenant da anterior.
 
-**(b) Camada de acesso a dados** — nenhuma consulta roda sem receber `tenantId`
-logo depois do contexto e filtrar por ele. Torna o erro difícil de escrever, não
+**(b) Camada de acesso a dados** — nenhuma consulta a tabela com RLS roda sem receber
+`tenantId` logo depois do contexto e filtrar por ele. A exceção são as consultas das
+tabelas fora do RLS (abaixo), que descobrem o tenant no login, no cadastro, na sessão e
+no slug da página pública. Torna o erro difícil de escrever, não
 só difícil de passar. As consultas ficam em `src/Api/Dados/Consultas.cs`, sobre o
 `AppDb` do EF Core, e rodam dentro da transação que o `AppDb.IniciarComTenant`
 abre com `set_config` (ver `docs/guia-banco-de-dados.md`).
@@ -589,7 +601,7 @@ usuário do tenant A e verificar que nenhum endpoint retorna dado do tenant B (i
 | UUID no C# | `Guid` (nulo: `Guid?`) |
 | Rotas da API | Tudo sob `/api`; proxy do `ng serve` sem reescrita |
 | Serviço na Fatia 1 | `SERVICO_FIXO` no config até a 6.6 |
-| Sessão na Fatia 1 | `TENANT_FIXO` e `PRESTADOR_FIXO` no config até a 2.12 |
+| Sessão na Fatia 1 | `TENANT_FIXO` e `PRESTADOR_FIXO` no config. Desde a Fatia 2, o tenant vem da sessão; o `PRESTADOR_FIXO` segue no `POST /api/agendamentos` do painel até a 2.12, e o `TENANT_FIXO` é lido sem uso |
 | Configuração | Só `src/Api/Config.cs` lê o ambiente; `.env` lido pelo próprio `Config`, ambiente real vence o arquivo |
 | Worker × RLS | Laço por tenant com `IniciarComTenant`, como `app_user` |
 
@@ -648,7 +660,7 @@ Decidido em 18/11/2026, para o piloto (#180):
 | Hospedagem | Render e Neon, com frontend e API no mesmo endereço, deploy da `main` depois do CI e migrations aplicadas fora do deploy (RNF09, #173) |
 | Serviços do piloto | Cadastrados por SQL no provisionamento (#174) |
 | `POST /api/agendamentos` do painel | Grava o serviço e o prestador fixos da empresa piloto (`SERVICO_FIXO` e `PRESTADOR_FIXO`) e copia o preço desse serviço. O corpo traz só `cliente_id`, `inicio` e `fim` |
-| Regras planejadas do agendamento público | Até 60 dias de antecedência, grade de 30 minutos, até 3 agendamentos futuros por telefone e telefone brasileiro normalizado, sem SMS (#169) |
+| Regras do agendamento público | Até 60 dias de antecedência, grade de 30 minutos, até 3 agendamentos futuros por telefone e telefone brasileiro normalizado, sem SMS (#169) |
 | Contato na página pública | A página mostra um contato da empresa (#170); o endereço fica fora |
 | Convites | Ficam para depois do piloto |
 | Dados pessoais | A empresa é a controladora; retenção de 12 meses após o último atendimento; validação jurídica pendente (#175) |

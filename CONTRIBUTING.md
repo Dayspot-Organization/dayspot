@@ -23,7 +23,7 @@ Regras de trabalho do time. Valem para os três integrantes e para o Claude Code
    ```
 
 5. Mova o card para **In review** e peça revisão a outro integrante.
-6. Com aprovação e CI verde, faça **squash merge** e apague a branch.
+6. Com aprovação e CI verde, faça o merge (**merge commit**) e apague a branch.
 7. Mova o card para **Done** (o `Closes #N` fecha a issue sozinho).
 
 > Não existe branch `dev`. Todo trabalho sai da `main` e volta para a `main` por PR.
@@ -93,7 +93,7 @@ fix/t2-sessao-expirada
 - Título: o mesmo da issue — `[T0] 0.10 Migration: clientes`.
 - Descrição com `Closes #N` (o template já traz o campo).
 - Precisa de **1 aprovação de outro integrante** e **CI verde** para mergear.
-- Merge por **squash**; a mensagem final segue o padrão de commit.
+- Merge por **merge commit** (o botão "Create a merge commit" do GitHub), não squash: os commits da branch, já no padrão, entram na `main` como estão.
 - Apague a branch depois do merge.
 
 Quem revisa confere: critérios de aceite da issue, testes, e se o card foi movido no board.
