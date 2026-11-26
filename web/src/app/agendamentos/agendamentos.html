@@ -1,173 +1,183 @@
-<!-- Padrão B do sistema de design: cabeçalho, barra de filtros, grade de horas + painel de detalhe. -->
-<div class="cabecalho-tela">
-  <div>
-    <h1>{{ titulo() }}</h1>
-    @if (carregando()) {
-      <span class="esqueleto resumo-esqueleto" aria-hidden="true"></span>
-    } @else if (!erro()) {
-      <p class="resumo">{{ resumo() }}</p>
+<!-- Agenda da semana da proposta v3: barra da tela, grade de horas e detalhe ao lado (padrão B). -->
+<ng-template #icone let-status>
+  @switch (status) {
+    @case ("aguardando") {
+      <svg lucideClock class="ds-ic" aria-hidden="true"></svg>
     }
-  </div>
-  <div class="acoes">
-    <a class="botao" routerLink="/agendamentos/novo">
-      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
-      </svg>
-      Novo agendamento
-    </a>
-  </div>
-</div>
+    @case ("confirmado") {
+      <svg lucideCircleCheck class="ds-ic" aria-hidden="true"></svg>
+    }
+    @case ("feito") {
+      <svg lucideCheckCheck class="ds-ic" aria-hidden="true"></svg>
+    }
+    @case ("cancelado") {
+      <svg lucideCircleX class="ds-ic" aria-hidden="true"></svg>
+    }
+  }
+</ng-template>
 
-<div class="filtros">
-  <button
-    type="button"
-    class="interruptor"
-    role="switch"
-    [attr.aria-checked]="mostrarCancelados()"
-    (click)="mostrarCancelados.set(!mostrarCancelados())"
-  >
-    <span class="interruptor-trilho" aria-hidden="true"></span>
-    Mostrar cancelados ({{ totalCancelados() }})
-  </button>
-  <div class="navegacao">
-    <button type="button" class="botao-icone" [attr.aria-label]="rotuloAnterior()" (click)="andar(-1)">
-      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M14 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
+<header class="barra-tela">
+  <div class="barra-tela-titulo">
+    <h1>{{ titulo() }}</h1>
+    <p class="agenda-contagem">
+      @if (contagem(); as n) {
+        <span class="agenda-total">{{ n.total }}</span>
+        @if (n.aguardando) {
+          <span><svg lucideClock class="ds-ic" aria-hidden="true"></svg>{{ n.aguardando }} aguardando resposta</span>
+        }
+      }
+    </p>
+  </div>
+  <div class="agenda-nav">
+    <button type="button" class="ds-botao" (click)="irParaHoje()">Hoje</button>
+    <button
+      type="button"
+      class="ds-botao ds-botao--fantasma ds-botao--icone"
+      [attr.aria-label]="rotuloAnterior()"
+      (click)="andar(-1)"
+    >
+      <svg lucideChevronLeft class="ds-ic" aria-hidden="true"></svg>
     </button>
-    <button type="button" class="botao botao-secundario botao-pequeno" (click)="irParaHoje()">Hoje</button>
-    <button type="button" class="botao-icone" [attr.aria-label]="rotuloProximo()" (click)="andar(1)">
-      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M10 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
+    <button
+      type="button"
+      class="ds-botao ds-botao--fantasma ds-botao--icone"
+      [attr.aria-label]="rotuloProximo()"
+      (click)="andar(1)"
+    >
+      <svg lucideChevronRight class="ds-ic" aria-hidden="true"></svg>
     </button>
   </div>
-  <div class="segmento" role="group" aria-label="Período">
+  <div class="ds-segmento" role="group" aria-label="Período">
     <button type="button" [attr.aria-pressed]="modo() === 'dia'" (click)="trocarModo('dia')">Dia</button>
     <button type="button" [attr.aria-pressed]="modo() === 'semana'" (click)="trocarModo('semana')">Semana</button>
   </div>
-</div>
+  <a class="ds-botao ds-botao--principal" routerLink="/agendamentos/novo">
+    <svg lucidePlus class="ds-ic" aria-hidden="true"></svg>
+    Novo horário
+  </a>
+</header>
 
-@if (semConexao()) {
-  <section class="cartao">
-    <app-vazio ilustracao="conexao" titulo="Sem conexão">
-      <p>Tente de novo quando a internet voltar. Nada do que estava salvo foi perdido.</p>
-      <button type="button" class="botao" (click)="agendamentos.reload()">Tentar de novo</button>
-    </app-vazio>
-  </section>
-} @else if (erro()) {
-  <app-mensagem-erro [mensagem]="mensagemErro()" podeRepetir (tentarDeNovo)="agendamentos.reload()" />
+@if (erro()) {
+  <div class="agenda-erro">
+    <p class="ds-aviso ds-aviso--erro" role="alert">
+      <svg lucideCircleAlert class="ds-ic" aria-hidden="true"></svg>
+      <span>{{ mensagemErro() }}</span>
+    </p>
+    <button type="button" class="ds-botao" (click)="agendamentos.reload()">Tentar de novo</button>
+  </div>
 } @else {
-  <div class="com-painel" [class.aberto]="selecionado()">
+  <div class="agenda-corpo" [class.com-detalhe]="selecionado()">
     <section
-      class="cartao agenda"
+      class="agenda-rolagem"
       [attr.aria-label]="modo() === 'semana' ? 'Agenda da semana' : 'Agenda do dia'"
       [attr.aria-busy]="carregando()"
     >
-      <div class="agenda-rolagem">
-        <div class="agenda-grade" [style.--colunas]="colunas().length">
-          <div class="agenda-cabecalho">
-            <div></div>
-            @for (c of colunas(); track c.dia) {
-              <div class="agenda-dia" [class.hoje]="c.hoje">
-                <p class="legenda">{{ c.rotulo }}</p>
-                <p class="agenda-numero">{{ c.numero }}</p>
-              </div>
+      <div class="agenda-cab" [style.--colunas]="colunas().length">
+        <div></div>
+        @for (c of colunas(); track c.dia) {
+          <div class="agenda-dcab" [class.hoje]="c.hoje">
+            {{ c.rotulo }} <b>{{ c.numero }}</b>
+            @if (c.hoje) {
+              <span class="so-leitor">, hoje</span>
             }
           </div>
-          <div class="agenda-corpo" [style.height.px]="alturaGrade()">
-            <div class="agenda-horas" aria-hidden="true">
-              @for (h of horas().rotulos; track h) {
-                <span class="legenda numeros">{{ pad(h) }}</span>
-              }
-            </div>
-            @for (c of colunas(); track c.dia; let i = $index) {
-              <div class="agenda-coluna" [class.hoje]="c.hoje">
-                @if (carregando()) {
-                  @for (e of esqueleto; track $index) {
-                    <span class="esqueleto agenda-esqueleto" [style.top.px]="e.topo + (i % 3) * 72" [style.height.px]="e.altura"></span>
-                  }
-                } @else {
-                  @for (b of c.blocos; track b.a.id) {
-                    <button
-                      type="button"
-                      class="bloco"
-                      [id]="'bloco-' + b.a.id"
-                      [class]="'bloco st-' + b.status"
-                      [class.compacto]="b.altura < 30"
-                      [class.selecionado]="selecionadoId() === b.a.id"
-                      [style.top.px]="b.topo"
-                      [style.height.px]="b.altura"
-                      [style.left]="'calc(' + b.esquerda + '% + 4px)'"
-                      [style.width]="'calc(' + b.largura + '% - 8px)'"
-                      [attr.aria-label]="b.rotulo"
-                      [attr.aria-pressed]="selecionadoId() === b.a.id"
-                      (click)="selecionar(b.a.id)"
-                    >
-                      <span class="bloco-linha">
-                        <span class="bloco-hora">{{ formatarHora(b.a.inicio) }}</span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-                          <path
-                            [attr.d]="ICONE_STATUS[b.status]"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.6"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                      </span>
-                      @if (b.linhas === 2) {
-                        <span class="bloco-nome">{{ b.a.cliente_nome }}</span>
-                      }
-                    </button>
-                  }
-                  @if (c.hoje && agoraTopo() !== null) {
-                    <div class="agora" [style.top.px]="agoraTopo()" role="img" [attr.aria-label]="'Agora, ' + formatarHora(agora())">
-                      <span></span>
-                    </div>
-                  }
-                }
-              </div>
-            }
-          </div>
+        }
+      </div>
+      <div class="agenda-grade" [style.--colunas]="colunas().length">
+        <div class="agenda-horas" aria-hidden="true">
+          @for (h of rotulosHoras(); track h.texto) {
+            <span [style.top.px]="h.topo" [style.visibility]="h.escondido ? 'hidden' : null">{{ h.texto }}</span>
+          }
+          @if (agoraTopo() !== null) {
+            <span class="agenda-agora-hora" [style.top.px]="agoraTopo()">{{ formatarHora(agora()) }}</span>
+          }
         </div>
+        @for (c of colunas(); track c.dia) {
+          <div
+            class="agenda-dia"
+            [class.hoje]="c.hoje"
+            [style.height.px]="alturaGrade() + 1"
+            (mousemove)="aoMover($event, c)"
+            (mouseleave)="vazio.set(null)"
+          >
+            @for (b of c.blocos; track b.a.id) {
+              <button
+                type="button"
+                [id]="'bloco-' + b.a.id"
+                [class]="'agenda-bloco st-' + b.status"
+                [class.curto]="b.curto"
+                [class.ativo]="selecionadoId() === b.a.id"
+                [style.top.px]="b.topo"
+                [style.height.px]="b.altura"
+                [style.left]="'calc(' + b.esquerda + '% + 4px)'"
+                [style.width]="'calc(' + b.largura + '% - 8px)'"
+                [attr.aria-label]="b.rotulo"
+                [attr.aria-pressed]="selecionadoId() === b.a.id"
+                (click)="selecionar(b.a.id)"
+              >
+                <span class="agenda-bloco-l1">
+                  <!-- Feito sem ícone: o cinza já diz que passou. -->
+                  @if (b.status !== "feito") {
+                    <ng-container *ngTemplateOutlet="icone; context: { $implicit: b.status }" />
+                  }
+                  <span class="agenda-bloco-hora">{{ formatarHora(b.a.inicio) }}</span>
+                  @if (b.curto) {
+                    <span class="agenda-bloco-nome">{{ b.nome }}</span>
+                  }
+                </span>
+                @if (!b.curto) {
+                  <span class="agenda-bloco-nome">{{ b.nome }}</span>
+                }
+              </button>
+            }
+            <!-- Atalho só do mouse, fora do Tab e do leitor de tela: pelo teclado, o "Novo horário" da barra. -->
+            @if (vazio(); as v) {
+              @if (v.dia === c.dia) {
+                <a
+                  class="agenda-vazio"
+                  routerLink="/agendamentos/novo"
+                  [queryParams]="{ dia: v.dia, hora: hhmm(v.inicio) }"
+                  tabindex="-1"
+                  aria-hidden="true"
+                  [style.top.px]="(v.inicio / 60 - horas().primeira) * HORA_PX + 2"
+                >
+                  <svg lucidePlus class="ds-ic" aria-hidden="true"></svg>{{ hhmm(v.inicio) }}
+                </a>
+              }
+            }
+            @if (c.hoje && agoraTopo() !== null) {
+              <div class="agenda-agora" [style.top.px]="agoraTopo()" role="img" [attr.aria-label]="'Agora, ' + formatarHora(agora())"></div>
+            }
+          </div>
+        }
       </div>
     </section>
 
     @if (selecionado(); as s) {
-      <aside id="painel-detalhe" class="cartao painel" tabindex="-1" aria-label="Detalhe do agendamento">
-        <div class="painel-topo">
-          <span class="chip" [class]="'chip st-' + s.status">
-            <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
-              <path [attr.d]="s.icone" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+      <aside class="agenda-detalhe" aria-label="Detalhe do horário">
+        <div class="agenda-detalhe-topo">
+          <span [class]="'ds-etiqueta st-' + s.status">
+            <ng-container *ngTemplateOutlet="icone; context: { $implicit: s.status }" />
             {{ s.rotuloStatus }}
           </span>
-          <button type="button" class="botao-icone no-painel" aria-label="Fechar detalhe" (click)="fecharDetalhe()">
-            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
-            </svg>
+          <button
+            type="button"
+            class="ds-botao ds-botao--fantasma ds-botao--icone"
+            aria-label="Fechar detalhe"
+            (click)="fecharDetalhe()"
+          >
+            <svg lucideX class="ds-ic" aria-hidden="true"></svg>
           </button>
         </div>
-        <div>
-          <p class="horario-destaque">{{ s.inicio }} <small>às {{ s.fim }}</small></p>
-          <p class="secundario">{{ s.dia }}.</p>
-        </div>
-        <div class="pessoa">
-          <span class="avatar avatar-44" aria-hidden="true">{{ s.iniciais }}</span>
-          <p class="pessoa-nome">{{ s.a.cliente_nome }}</p>
-        </div>
-        <dl class="pares">
-          <div>
-            <dt>Duração</dt>
-            <dd>{{ s.duracao }}</dd>
+        <div class="agenda-detalhe-corpo">
+          <h2>{{ s.a.cliente_nome }}</h2>
+          <p class="agenda-detalhe-hora">{{ s.inicio }} <small>às {{ s.fim }}</small></p>
+          <p class="agenda-detalhe-sub">{{ s.dia }}</p>
+          <div class="agenda-detalhe-servico">
+            <p>{{ s.duracao }}</p>
+            <p class="agenda-detalhe-sub">{{ s.valor }}</p>
           </div>
-          <div>
-            <dt>Valor</dt>
-            <dd>{{ s.valor }}</dd>
-          </div>
-        </dl>
+        </div>
       </aside>
     }
   </div>

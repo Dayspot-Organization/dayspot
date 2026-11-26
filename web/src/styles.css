@@ -9,8 +9,7 @@
 /* Elementos-hospedeiro dos componentes Angular não entram no layout: os filhos ficam
    onde estariam no HTML (flex, grid e seletores descendentes continuam valendo). */
 app-root,
-app-mensagem-erro,
-app-vazio {
+app-mensagem-erro {
   display: contents;
 }
 
@@ -88,6 +87,17 @@ a:hover {
   .conteudo {
     padding: 28px var(--ds-e-8) var(--ds-e-12);
   }
+}
+
+/* Tela só com o estado vazio: ele fica no meio do painel, e não da coluna de 1240. */
+.conteudo:has(> .ds-vazio) {
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+  min-height: 100%;
+}
+.conteudo > .ds-vazio {
+  margin-block: auto;
 }
 
 /* Logo horizontal da v2.1 (app-logo), hoje só no /agendar. */
@@ -259,11 +269,6 @@ a:hover {
   cursor: not-allowed;
 }
 
-.botao-icone.no-painel {
-  width: var(--ds-a-botao-pequeno);
-  height: var(--ds-a-botao-pequeno);
-}
-
 /* ── Campo (§4.2) ──────────────────────────────────────────────────────── */
 
 .campo {
@@ -368,10 +373,6 @@ select:disabled {
 }
 
 @media (min-width: 1024px) {
-  .com-painel.aberto {
-    grid-template-columns: minmax(0, 1fr) var(--ds-l-painel);
-  }
-
   .com-painel.largo {
     grid-template-columns: minmax(0, 1fr) var(--ds-l-painel-largo);
   }
@@ -380,13 +381,6 @@ select:disabled {
     position: sticky;
     top: var(--ds-e-6);
   }
-}
-
-.painel-topo {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ds-e-3);
 }
 
 .horario-destaque {
@@ -452,11 +446,6 @@ select:disabled {
   font-weight: 700;
 }
 
-.avatar-44 {
-  width: 44px;
-  height: 44px;
-}
-
 /* ── Chip de status (§4.9) ─────────────────────────────────────────────── */
 
 .chip {
@@ -472,106 +461,9 @@ select:disabled {
   white-space: nowrap;
 }
 
-.st-aguardando {
-  --st: var(--ds-aguardando);
-  --st-texto: var(--ds-aguardando-texto);
-  --st-chip: var(--ds-aguardando-chip);
-}
-
-.st-confirmado {
-  --st: var(--ds-confirmado);
-  --st-texto: var(--ds-confirmado-texto);
-  --st-chip: var(--ds-confirmado-chip);
-}
-
-.st-feito {
-  --st: var(--ds-feito);
-  --st-texto: var(--ds-feito-texto);
-  --st-chip: var(--ds-feito-chip);
-}
-
-.st-cancelado {
-  --st: var(--ds-cancelado);
-  --st-texto: var(--ds-cancelado-texto);
-  --st-chip: var(--ds-cancelado-chip);
-}
-
 .chip[class*="st-"] {
   background: var(--st-chip);
   color: var(--st-texto);
-}
-
-/* ── Segmento e interruptor (§4.6, §4.7) ───────────────────────────────── */
-
-.segmento {
-  display: inline-flex;
-  gap: 2px;
-  padding: 4px;
-  border-radius: var(--ds-raio-pilula);
-  background: var(--ds-hover);
-}
-
-.segmento button {
-  height: var(--ds-a-botao-pequeno);
-  padding: 0 var(--ds-e-4);
-  border: 0;
-  border-radius: var(--ds-raio-pilula);
-  background: transparent;
-  color: var(--ds-texto-2);
-  font: var(--ds-tx-controle);
-  cursor: pointer;
-}
-
-.segmento button:hover {
-  color: var(--ds-texto);
-}
-
-.segmento button[aria-pressed="true"] {
-  background: var(--ds-superficie);
-  color: var(--ds-texto);
-  box-shadow: var(--ds-sombra);
-}
-
-.interruptor {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ds-e-aviso);
-  padding: 0;
-  border: 0;
-  background: none;
-  font: var(--ds-tx-controle);
-  cursor: pointer;
-}
-
-.interruptor-trilho {
-  position: relative;
-  flex: none;
-  width: 44px;
-  height: 26px;
-  border-radius: var(--ds-raio-pilula);
-  background: var(--ds-borda);
-  transition: background-color var(--ds-t-rapido);
-}
-
-.interruptor-trilho::after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--ds-superficie);
-  box-shadow: var(--ds-sombra);
-  transition: transform var(--ds-t-rapido);
-}
-
-.interruptor[aria-checked="true"] .interruptor-trilho {
-  background: var(--ds-tinta);
-}
-
-.interruptor[aria-checked="true"] .interruptor-trilho::after {
-  transform: translateX(18px);
 }
 
 /* ── Aviso (§4.11) ─────────────────────────────────────────────────────── */
@@ -609,56 +501,7 @@ select:disabled {
   background: var(--ds-superficie);
 }
 
-/* ── Estado vazio e esqueleto (§4.19, §4.20) ───────────────────────────── */
-
-.vazio {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--ds-e-2);
-  padding: var(--ds-e-6);
-  text-align: center;
-}
-
-.vazio p {
-  max-width: 30ch;
-  color: var(--ds-texto-2);
-  font: var(--ds-tx-tabela);
-}
-
-.vazio .botao {
-  margin-top: var(--ds-e-2);
-}
-
-.ilu-tr,
-.ilu-li,
-.ilu-tracejado {
-  fill: none;
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.ilu-tr {
-  stroke: var(--ilu-traco);
-}
-
-.ilu-tracejado {
-  stroke: var(--ilu-traco);
-  stroke-dasharray: 2 8;
-}
-
-.ilu-li {
-  stroke: var(--ilu-linha);
-}
-
-.ilu-pr {
-  fill: var(--ilu-preenchimento);
-}
-
-.ilu-ac {
-  fill: var(--ilu-ponto);
-}
+/* ── Esqueleto (§4.20)───────────────────────────── */
 
 .esqueleto {
   display: block;
@@ -691,200 +534,12 @@ select:disabled {
   }
 }
 
-/* ── Agenda: barra de filtros e grade de horas (§4.10, padrão B) ───────── */
-
-.filtros {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ds-e-3) 14px;
-  align-items: center;
-  justify-content: flex-end;
-  margin-bottom: var(--ds-e-4);
-}
+/* Setas de navegação dos dias, na página do cliente. */
 
 .navegacao {
   display: inline-flex;
   gap: var(--ds-e-1);
   align-items: center;
-}
-
-.resumo-esqueleto {
-  width: 320px;
-  max-width: 100%;
-  height: 16px;
-  margin-top: var(--ds-e-2);
-}
-
-.agenda {
-  overflow: hidden;
-}
-
-/* No celular a semana rola de lado; a grade web (1440 px) cabe inteira. */
-.agenda-rolagem {
-  overflow-x: auto;
-}
-
-.agenda-grade {
-  --colunas: 6;
-  min-width: calc(64px + var(--colunas) * 112px);
-}
-
-.agenda-cabecalho,
-.agenda-corpo {
-  display: grid;
-  grid-template-columns: 64px repeat(var(--colunas), minmax(0, 1fr));
-}
-
-.agenda-cabecalho {
-  border-bottom: 1px solid var(--ds-divisoria);
-}
-
-.agenda-dia {
-  padding: var(--ds-e-3) var(--ds-e-aviso);
-}
-
-.agenda-numero {
-  font: 800 24px/28px var(--ds-titulo);
-  font-variant-numeric: tabular-nums;
-}
-
-.agenda-dia.hoje {
-  background: var(--ds-hover);
-}
-
-.agenda-dia.hoje p {
-  color: var(--ds-tinta);
-}
-
-.agenda-dia.hoje .legenda {
-  font-weight: 700;
-}
-
-/* Uma linha por hora (72 px), desenhada no fundo do corpo. */
-.agenda-corpo {
-  background-image: repeating-linear-gradient(
-    to bottom,
-    var(--ds-divisoria) 0,
-    var(--ds-divisoria) 1px,
-    transparent 1px,
-    transparent var(--ds-l-hora-agenda)
-  );
-}
-
-.agenda-horas span {
-  display: block;
-  height: var(--ds-l-hora-agenda);
-  padding: 2px var(--ds-e-aviso) 0 0;
-  text-align: right;
-}
-
-.agenda-coluna {
-  position: relative;
-  border-left: 1px solid var(--ds-divisoria);
-}
-
-.agenda-coluna.hoje {
-  background: var(--ds-fundo);
-}
-
-.agenda-esqueleto {
-  position: absolute;
-  left: 4px;
-  right: 4px;
-}
-
-.bloco {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  overflow: hidden;
-  padding: 6px var(--ds-e-aviso);
-  border: 0;
-  border-radius: var(--ds-raio-bloco);
-  background: var(--st-chip);
-  color: var(--ds-texto);
-  text-align: left;
-  cursor: pointer;
-  transition: background-color var(--ds-t-rapido);
-}
-
-.bloco.compacto {
-  padding: 1px var(--ds-e-aviso);
-}
-
-.bloco:hover {
-  background: color-mix(in srgb, var(--ds-texto) 3%, var(--st-chip));
-}
-
-.bloco.st-aguardando {
-  border-left: 4px dashed var(--ds-aguardando);
-}
-
-.bloco.st-confirmado {
-  border-left: 4px solid var(--ds-confirmado);
-}
-
-.bloco.st-cancelado {
-  border: var(--ds-borda-campo) dashed var(--ds-borda);
-  background: var(--ds-superficie);
-}
-
-.bloco.st-cancelado .bloco-hora,
-.bloco.st-cancelado .bloco-nome {
-  opacity: 0.6;
-  text-decoration: line-through;
-}
-
-.bloco.selecionado {
-  box-shadow: 0 0 0 var(--ds-anel-selecao) var(--ds-tinta);
-}
-
-.bloco-linha {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ds-e-1);
-  width: 100%;
-}
-
-.bloco-linha svg {
-  flex: none;
-  color: var(--st-texto);
-}
-
-.bloco-hora {
-  font: var(--ds-tx-horario-bloco);
-  font-variant-numeric: tabular-nums;
-}
-
-.bloco-nome {
-  width: 100%;
-  overflow: hidden;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 17px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.agora {
-  position: absolute;
-  left: -1px;
-  right: 0;
-  height: 2px;
-  background: var(--ds-texto);
-  pointer-events: none;
-}
-
-.agora span {
-  position: absolute;
-  top: -4px;
-  left: -4px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--ds-texto);
 }
 
 /* ── Novo agendamento: passos, opções, dia e horário (§4.3–4.5, §4.17, padrão C) ── */
@@ -1039,14 +694,6 @@ select:disabled {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.sem-resultado {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ds-e-2);
-  align-items: center;
-  margin-top: var(--ds-e-3);
 }
 
 .campo-duracao input {
@@ -1323,8 +970,8 @@ input.invalido {
 }
 
 /* ══ Componentes v3 ═══════════════════════════════════════════════════════════
-   DESIGN.md › Componentes: Botão, Menu suspenso, Campo, Aviso, Etapas e Painel de marca, mais a
-   casca do painel.
+   DESIGN.md › Componentes: Botão, Menu suspenso, Etiqueta, Segmento, Campo, Aviso, Etapas e Painel de
+   marca, mais o estado vazio, a casca e a Agenda.
    Telas novas usam só esta seção; as classes .botao, .campo e .aviso de cima são v2.1. */
 
 .ds-ic {
@@ -1353,6 +1000,7 @@ input.invalido {
   box-shadow: inset 0 0 0 var(--ds-b-fio) var(--ds-divisoria);
   color: var(--ds-texto);
   font: 500 13px/1 var(--font-sans);
+  text-decoration: none; /* também em <a>, quando o botão navega */
   white-space: nowrap;
   cursor: pointer;
   transition:
@@ -1370,6 +1018,7 @@ input.invalido {
 }
 .ds-botao:hover {
   background: var(--ds-hover-leve);
+  color: var(--ds-texto); /* vence o a:hover */
 }
 .ds-botao:active {
   background: var(--ds-hover);
@@ -1389,6 +1038,10 @@ input.invalido {
 .ds-botao--principal:hover,
 .ds-botao--principal:active {
   background: var(--ds-acao-pressionada);
+  color: var(--ds-acao-texto);
+}
+.ds-botao--principal:has(> .ds-ic:first-child) {
+  padding: 0 14px 0 10px; /* da proposta: o principal com ícone ("+ Novo horário") */
 }
 .ds-botao--fantasma {
   background: transparent;
@@ -1509,6 +1162,89 @@ input.invalido {
   height: var(--ds-b-fio);
   margin: var(--ds-e-1) var(--ds-e-rotulo);
   background: var(--ds-divisoria-suave);
+}
+
+/* ── Status: as cores de cada um em --st, --st-texto e --st-chip (etiqueta, bloco da agenda e o chip v2.1) ── */
+.st-aguardando {
+  --st: var(--ds-aguardando);
+  --st-texto: var(--ds-aguardando-texto);
+  --st-chip: var(--ds-aguardando-chip);
+}
+
+.st-confirmado {
+  --st: var(--ds-confirmado);
+  --st-texto: var(--ds-confirmado-texto);
+  --st-chip: var(--ds-confirmado-chip);
+}
+
+.st-feito {
+  --st: var(--ds-feito);
+  --st-texto: var(--ds-feito-texto);
+  --st-chip: var(--ds-feito-chip);
+}
+
+.st-cancelado {
+  --st: var(--ds-cancelado);
+  --st-texto: var(--ds-cancelado-texto);
+  --st-chip: var(--ds-cancelado-chip);
+}
+
+/* ── Etiqueta de status: fundo cinza, palavra em texto e a cor do status só no ícone ── */
+.ds-etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-e-rotulo);
+  height: var(--ds-a-etiqueta);
+  padding: 0 var(--ds-e-aviso) 0 var(--ds-e-2);
+  border-radius: var(--ds-raio-pilula);
+  background: var(--ds-hover);
+  color: var(--ds-texto);
+  font: 500 13px/1 var(--font-sans);
+  white-space: nowrap;
+}
+.ds-etiqueta .ds-ic {
+  color: var(--st, var(--ds-icone));
+}
+
+/* ── Segmento: troca a visão da mesma coisa (Dia ou Semana) ──
+   O 3, o 2 e o 26 ficam fora da escala de propósito: encaixam o trilho em 32. */
+.ds-segmento {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--ds-raio-pilula);
+  background: var(--ds-hover);
+}
+.ds-segmento button {
+  position: relative;
+  height: 26px;
+  padding: 0 var(--ds-e-3);
+  border: 0;
+  border-radius: var(--ds-raio-pilula);
+  background: transparent;
+  color: var(--ds-texto-2);
+  font: 500 13px/1 var(--font-sans);
+  cursor: pointer;
+  transition:
+    background-color var(--ds-t-rapido),
+    color var(--ds-t-rapido);
+}
+.ds-segmento button::before {
+  content: "";
+  position: absolute;
+  inset: -5px 0; /* clique de 36 px */
+}
+.ds-segmento button:hover {
+  color: var(--ds-texto);
+}
+.ds-segmento button[aria-pressed="true"] {
+  background: var(--ds-superficie);
+  box-shadow: var(--ds-sombra);
+  color: var(--ds-texto);
+}
+.ds-segmento button:focus-visible {
+  outline: var(--ds-b-foco) solid var(--ds-foco);
+  outline-offset: 2px;
 }
 
 /* ── Casca do painel: topo e menu na casca, conteúdo no painel branco ──
@@ -1699,6 +1435,370 @@ input.invalido {
   scrollbar-color: var(--ds-rolagem) transparent;
 }
 
+/* ── Barra da tela: título e o que pede ação à esquerda, controles à direita, fio de ponta a ponta ── */
+.barra-tela {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-e-2);
+  min-height: var(--ds-l-barra);
+  padding: var(--ds-e-2) var(--ds-e-6) var(--ds-e-2) var(--ds-e-8);
+  border-bottom: var(--ds-b-fio) solid var(--ds-divisoria);
+}
+.barra-tela-titulo {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  margin-right: auto;
+}
+.barra-tela h1 {
+  font: 500 18px/26px var(--font-sans);
+  letter-spacing: -0.015em;
+}
+
+/* ── Agenda (DESIGN.md › Peças da Agenda): ocupa o painel, e só a grade rola ── */
+app-agendamentos {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font: 400 13px/20px var(--font-sans);
+}
+.agenda-contagem {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-e-1) 14px;
+  min-height: 18px; /* sem a contagem (carregando), o título não pula */
+  color: var(--ds-texto-2);
+  font: 400 13px/18px var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.agenda-contagem span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.agenda-contagem .ds-ic {
+  width: 13px;
+  height: 13px;
+}
+.agenda-total {
+  color: var(--ds-texto);
+  font-weight: 500;
+}
+.agenda-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-e-1);
+  margin-right: var(--ds-e-2);
+}
+.barra-tela .ds-segmento {
+  margin-right: var(--ds-e-2);
+}
+.agenda-erro {
+  display: grid;
+  justify-items: start;
+  gap: var(--ds-e-3);
+  padding: var(--ds-e-6) var(--ds-e-8);
+}
+.agenda-corpo {
+  position: relative;
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+}
+.agenda-corpo.com-detalhe {
+  grid-template-columns: minmax(0, 1fr) var(--ds-l-lateral);
+}
+/* Uma rolagem só: o cabeçalho dos dias fica parado em cima e acompanha a grade de lado. */
+.agenda-rolagem {
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ds-rolagem) transparent;
+}
+.agenda-cab,
+.agenda-grade {
+  --colunas: 6;
+  display: grid;
+  grid-template-columns: 64px repeat(var(--colunas), minmax(0, 1fr));
+  min-width: calc(64px + var(--colunas) * 96px); /* abaixo disso, a semana rola de lado */
+}
+.agenda-cab {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  height: 48px;
+  border-bottom: var(--ds-b-fio) solid var(--ds-divisoria);
+  background: var(--ds-superficie);
+}
+.agenda-dcab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ds-e-2);
+  border-left: var(--ds-b-fio) solid var(--ds-grade-hora);
+  color: var(--ds-texto-2);
+}
+.agenda-dcab b {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 var(--ds-e-1);
+  border-radius: var(--ds-raio-pilula);
+  color: var(--ds-texto);
+  font-size: 14px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.agenda-dcab.hoje {
+  background: var(--ds-hoje);
+  color: var(--ds-tinta);
+  font-weight: 500;
+}
+.agenda-dcab.hoje b {
+  background: var(--ds-acao);
+  color: var(--ds-acao-texto);
+}
+.agenda-grade {
+  padding-block: var(--ds-e-3);
+}
+/* Horas centradas na linha; a pílula de agora cobre a hora da coluna. */
+.agenda-horas {
+  position: relative;
+}
+.agenda-horas span {
+  position: absolute;
+  right: var(--ds-e-3);
+  translate: 0 -50%;
+  color: var(--ds-texto-3);
+  font: 400 13px/18px var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.agenda-horas .agenda-agora-hora {
+  right: 6px;
+  z-index: 3;
+  padding: 0 6px;
+  border-radius: var(--ds-raio-pilula);
+  background: var(--ds-acao);
+  color: var(--ds-acao-texto);
+  font-weight: 500;
+}
+/* Linhas da hora e da meia hora, contínuas entre as colunas: uma hora tem 72 px. */
+.agenda-dia {
+  position: relative;
+  border-left: var(--ds-b-fio) solid var(--ds-grade-hora);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--ds-grade-hora) 0 1px,
+    transparent 1px 36px,
+    var(--ds-grade-meia) 36px 37px,
+    transparent 37px 72px
+  );
+}
+.agenda-dia.hoje {
+  background-color: var(--ds-hoje);
+}
+.agenda-agora {
+  position: absolute;
+  left: -1px;
+  right: 0;
+  z-index: 3;
+  height: 1.5px;
+  translate: 0 -0.75px;
+  background: var(--ds-tinta);
+  pointer-events: none;
+}
+.agenda-agora::before {
+  content: "";
+  position: absolute;
+  top: -2.75px;
+  left: -3.5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ds-tinta);
+}
+/* Bloco: 4 px de folga de cada lado (no left e no width, que dividem a coluna na sobreposição). */
+.agenda-bloco {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+  padding: 6px var(--ds-e-2);
+  border: 0;
+  border-radius: var(--ds-raio-bloco);
+  background: var(--ds-bloco);
+  box-shadow:
+    inset 0 0 0 var(--ds-b-fio) var(--ds-contorno),
+    var(--ds-sombra);
+  color: var(--ds-texto);
+  font: 400 13px/18px var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    box-shadow var(--ds-t-agenda),
+    background-color var(--ds-t-agenda);
+}
+.agenda-bloco:hover {
+  box-shadow:
+    inset 0 0 0 var(--ds-b-fio) var(--ds-contorno-hover),
+    var(--ds-sombra);
+}
+.agenda-bloco.curto {
+  justify-content: center;
+  padding-block: 0;
+}
+.agenda-bloco-l1 {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-e-rotulo);
+  min-width: 0;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.agenda-bloco .ds-ic {
+  width: 13px;
+  height: 13px;
+  color: var(--st);
+}
+.agenda-bloco-hora {
+  color: var(--ds-texto-2);
+  font-variant-numeric: tabular-nums;
+}
+.agenda-bloco-nome {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.agenda-bloco.st-feito {
+  background: var(--ds-faixa);
+  box-shadow: inset 0 0 0 var(--ds-b-fio) var(--ds-divisoria);
+  color: var(--ds-texto-2);
+}
+.agenda-bloco.st-feito .agenda-bloco-nome {
+  color: var(--ds-texto-2);
+}
+.agenda-bloco.st-cancelado {
+  background: var(--ds-superficie);
+  box-shadow: none;
+  outline: var(--ds-b-fio) dashed var(--ds-tracejado);
+  outline-offset: -1px;
+  color: var(--ds-texto-3);
+}
+.agenda-bloco.st-cancelado .agenda-bloco-nome {
+  color: var(--ds-texto-3);
+  text-decoration: line-through;
+}
+.agenda-bloco.ativo {
+  z-index: 2;
+  background: var(--ds-acao-suave);
+  box-shadow:
+    inset 0 0 0 var(--ds-b-selecao) var(--ds-tinta),
+    var(--ds-sombra-forte);
+}
+.agenda-bloco:focus-visible {
+  z-index: 4;
+  outline: var(--ds-b-foco) solid var(--ds-foco);
+  outline-offset: 2px;
+}
+/* Novo horário no vazio: 30 min tracejados sob o mouse; o clique abre o novo horário. */
+.agenda-vazio {
+  position: absolute;
+  right: 4px;
+  left: 4px;
+  display: flex;
+  align-items: center;
+  gap: var(--ds-e-rotulo);
+  height: 32px;
+  padding: 0 var(--ds-e-2);
+  border: var(--ds-b-fio) dashed var(--ds-tracejado);
+  border-radius: var(--ds-raio-bloco);
+  background: var(--ds-faixa);
+  color: var(--ds-texto-2);
+  font: 500 13px/18px var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+.agenda-vazio:hover {
+  color: var(--ds-texto-2); /* é link só por navegar: sem o rosa do a:hover */
+}
+.agenda-vazio .ds-ic {
+  width: 13px;
+  height: 13px;
+}
+/* Detalhe: 360 px ao lado da grade. O 28 e o 20 são da proposta. */
+.agenda-detalhe {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  border-left: var(--ds-b-fio) solid var(--ds-divisoria);
+  background: var(--ds-superficie);
+  scrollbar-width: thin;
+}
+.agenda-detalhe-topo {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-e-1);
+  padding: var(--ds-e-4) var(--ds-e-4) 0 28px;
+}
+.agenda-detalhe-topo .ds-etiqueta {
+  margin-right: auto;
+}
+.agenda-detalhe-corpo {
+  padding: 20px 28px 28px;
+}
+.agenda-detalhe h2 {
+  font: 500 18px/26px var(--font-sans);
+  letter-spacing: -0.01em;
+}
+.agenda-detalhe-hora {
+  margin-top: var(--ds-e-6);
+  font: 500 20px/28px var(--font-sans);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.agenda-detalhe-hora small {
+  margin-left: var(--ds-e-1);
+  color: var(--ds-texto-2);
+  font: 400 13px/18px var(--font-sans);
+  letter-spacing: 0;
+}
+.agenda-detalhe-sub {
+  color: var(--ds-texto-2);
+}
+.agenda-detalhe-servico {
+  display: grid;
+  gap: 2px;
+  margin-top: var(--ds-e-6);
+}
+/* Sem largura para empurrar a grade (menos de 96 px por dia), o detalhe cobre a direita dela. */
+@media (max-width: 1099px) {
+  .agenda-corpo.com-detalhe {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .agenda-detalhe {
+    position: absolute;
+    inset: 0 0 0 auto;
+    z-index: 6;
+    width: min(var(--ds-l-lateral), 100%);
+  }
+}
+@media (max-width: 640px) {
+  .barra-tela {
+    padding-inline: var(--ds-e-4);
+  }
+}
+
 /* ── Campo ── */
 .ds-campo {
   display: grid;
@@ -1853,6 +1953,61 @@ input.invalido {
 }
 .ds-aviso--neutro .ds-ic {
   color: var(--ds-icone);
+}
+
+/* ── Estado vazio: ícone num quadrado cinza, o fato no título e o próximo passo na frase, no meio
+   do espaço que a lista ocuparia, sem caixa em volta. Dentro de lista, só a linha de texto ── */
+.ds-vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 360px;
+  margin-inline: auto;
+  padding-block: var(--ds-e-8);
+  text-align: center;
+}
+.ds-vazio-icone {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--ds-raio-campo);
+  background: var(--ds-hover);
+  color: var(--ds-icone);
+}
+.ds-vazio-icone .ds-ic {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.5;
+}
+.ds-vazio-titulo {
+  margin-top: var(--ds-e-4);
+  font: 500 15px/22px var(--font-sans);
+  letter-spacing: -0.01em;
+}
+.ds-vazio-frase {
+  max-width: 36ch;
+  margin-top: var(--ds-e-1);
+  color: var(--ds-texto-2);
+  font: 400 13px/20px var(--font-sans);
+}
+.ds-vazio .ds-botao {
+  margin-top: var(--ds-e-4);
+}
+.ds-vazio .ds-aviso {
+  margin-top: var(--ds-e-3);
+  text-align: left;
+}
+.ds-vazio-linha {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 1 / -1; /* na grade de opções, ocupa a linha toda */
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-e-2) var(--ds-e-3);
+  min-height: var(--ds-a-linha);
+  color: var(--ds-texto-2);
+  font: 400 13px/20px var(--font-sans);
 }
 
 /* ── Etapas: o texto diz a etapa, as barras só repetem ── */

@@ -16,8 +16,8 @@ proposta, e este arquivo é corrigido no mesmo PR. Os valores dos tokens ficam e
 4. **Peça, cor ou medida nova** entra primeiro na proposta e aqui, nunca direto na tela
    ([Mudando o sistema](#mudando-o-sistema)).
 5. **Só `var(--ds-*)` e classes `.ds-*`.** Os apelidos v2.1 do `tokens.css` e as classes
-   `.botao`, `.campo` e `.aviso` são das telas que ainda estão na v2.1 (Agenda, Novo agendamento
-   e `/agendar`) e saem quando elas forem redesenhadas.
+   `.botao`, `.campo` e `.aviso` são das telas que ainda estão na v2.1 (Novo agendamento e
+   `/agendar`) e saem quando elas forem redesenhadas.
 
 ## Produto e público
 
@@ -113,9 +113,8 @@ mesmos nomes, e os valores estão no `tokens.css`. Todos os pares de texto passa
 | `ds-menu-hover` | hover do item do menu e das ações em tinta |
 | `ds-menu-ativo` | item ativo do menu e aba escolhida (tinta em cima: 5,3:1) |
 | `ds-hoje` | fundo da coluna de hoje na agenda |
-| `ds-acento` | pêssego: só em peça de marca e ilustração, como preenchimento |
-| **Outros** | |
-| `--ilu-*` | ilustração de estado: um desenho serve aos dois temas |
+| `ds-bloco` | fundo do bloco da agenda: branco no claro e um tom acima do painel no escuro |
+| `ds-acento` | pêssego: só em peça de marca (Entrar e divulgação), como preenchimento |
 | **Peças de marca** | |
 | `ds-degrade-1` a `-3` | degradê do rosa claro ao lilás, só em Entrar, Cadastro e divulgação, sem texto em cima |
 | `ds-arco` | arcos de 1 px sobre o degradê |
@@ -206,7 +205,7 @@ um fio.
 |---|---|
 | `ds-sombra` | opção ativa do segmento e bloco da agenda, que precisa se descolar da grade |
 | `ds-sombra-flutuante` | o que flutua: menu suspenso e diálogo |
-| sombra forte | bloco selecionado da agenda, junto do anel de 1,5 px: `0 6px 16px -4px rgba(24, 24, 27, 0.12)`. Vira `--ds-sombra-forte` quando o bloco entrar no código |
+| `ds-sombra-forte` | bloco selecionado da agenda, junto do anel de 1,5 px |
 
 ### Movimento
 
@@ -226,10 +225,11 @@ O indicador de carregamento gira em 800 ms, linear.
 
 Lucide (licença ISC), pelo `@lucide/angular`: cada ícone é um `<svg lucideNome>`, e o traço de
 1,75 vem do `provideLucideConfig`. Grade de 24, pontas redondas. Tamanhos: 13 px no bloco da
-agenda e na ajuda do campo, 14 nos controles, na etiqueta e no aviso, e 20 no menu, com traço 1,5.
+agenda e na ajuda do campo, 14 nos controles, na etiqueta e no aviso, e 20 no menu e no estado
+vazio, com traço 1,5.
 A cor vem de `ds-icone` parado, de `ds-tinta` quando ativo e de `ds-<status>` no status. Ícone que
 faltar é desenhado na mesma grade e no mesmo traço. O ponto da marca não vai nos ícones: fica na
-logo e nas ilustrações de estado.
+logo.
 
 | Função | Ícone |
 |---|---|
@@ -297,12 +297,13 @@ mantém a cor no hover: `ds-erro` com texto branco fica em 3,97:1.
 | Botão | `.ds-botao`, com `--principal`, `--fantasma`, `--icone` e `--grande` | sim, menos o texto perigo e o perigo |
 | Campo | `.ds-campo`, `.ds-entrada`, `.ds-prefixo`, `.ds-junto`, `.ds-ajuda`, `--grande` e `--erro` | sim |
 | Aviso | `.ds-aviso`, com `--erro` e `--neutro` | sim |
+| Estado vazio | `.ds-vazio`, `.ds-vazio-linha` | sim |
 | Etapas | `.ds-etapas` | sim |
 | Painel de marca | `.painel-marca` | sim |
 | Select | `.ds-selecao` | não |
 | Menu suspenso | `.ds-menu`, `.ds-opcao`, `.ds-menu-sep` | sim |
-| Etiqueta de status | `.ds-etiqueta` | não |
-| Segmento | `.ds-segmento` | não |
+| Etiqueta de status | `.ds-etiqueta` | sim |
+| Segmento | `.ds-segmento` | sim |
 | Abas | `.ds-abas`, `.ds-aba` | não |
 | Lista | `.ds-lista`, `.ds-linha` | não |
 | Horário | `.ds-horario` | não |
@@ -471,6 +472,34 @@ pessoa e o dia (novo agendamento e remarcar). Mostre os ocupados só quando ajud
 Medidas: 36 px, no mínimo 72 de largura, padding 0 12, raio 10, texto 500 13 tabular e 12 px entre
 horários.
 
+### Estado vazio
+
+Uma peça de ferramenta, sem a ilustração da v2.1: o ícone Lucide num quadrado cinza, como o item do
+menu, o fato no título e o próximo passo numa frase. Fica no meio do espaço que a lista ou a grade
+ocuparia, sem caixa em volta.
+
+- **O título diz o fato:** "Nenhum cliente ainda", "Sem conexão". Sem "Ops", sem exclamação e sem
+  culpar ninguém.
+- **A frase diz o que fazer:** uma frase em você, com até 36 caracteres por linha. Se não há o que
+  fazer, ela diz o que esperar.
+- **Uma ação, no máximo:** em botão secundário. O principal fica para quando o vazio é o começo do
+  fluxo da tela.
+- **Dentro de lista, só texto:** busca sem resultado e passo sem opção viram uma linha de texto de
+  apoio (`.ds-vazio-linha`), alinhada à esquerda e sem ícone.
+
+Medidas: quadrado de 40 px, raio 10, `ds-hover` e ícone de 20 com traço 1,5; título 15/22 500 a
+16 px dele; frase 13/20 em `ds-texto-2` a 4 px; ação a 16 px; até 360 px de largura.
+
+| Onde | Texto | Ação |
+|---|---|---|
+| Novo agendamento, sem clientes | Nenhum cliente ainda. Quem agenda pelo seu link entra aqui sozinho. Mande o link para receber o primeiro. | Copiar link, quando o painel conhece o link |
+| Sem conexão, no painel e na página do cliente | Sem conexão. Confira a internet e tente de novo. O que já estava salvo continua salvo. | Tentar de novo |
+| Busca sem resultado | Nenhum cliente com “Paulo”. | Limpar busca, com o foco de volta na busca |
+| Agenda sem horário | A grade continua, porque ela é o conteúdo; a barra diz "Semana livre, sem horário marcado" ("Dia livre" no modo dia) | o "+ 13:30" no hover |
+| Página do cliente, link errado | Este link não leva a nenhuma agenda. Confira se ele chegou inteiro. Se continuar assim, peça o link de novo para quem mandou. | — |
+| Página do cliente, dia sem horário | Nenhum horário livre hoje ("nesse dia" nos outros dias). Escolha outro dia ou outra pessoa ("ou outra pessoa" só com mais de uma). | — |
+| Página do cliente, passo sem opção | Ainda não há serviços para agendar por aqui. Fale com a empresa. No passo "Com quem": Ainda não há com quem agendar por aqui. Fale com a empresa. | — |
+
 ### Peças da Agenda
 
 Desenhadas só dentro da tela da Agenda, na proposta. Quando forem para o código, usam estas
@@ -502,8 +531,7 @@ medidas:
 - **Bloco:** raio 8, 4 px de folga de cada lado e 2 entre blocos seguidos, contorno `ds-contorno`
   com `ds-sombra`, padding 6 × 8, texto 13/18 e ícone de 13. Mostra só a hora de início e o nome. O
   de 30 min tem 34 px e uma linha, com o sobrenome abreviado; o de 45 min ou mais traz a hora em
-  cima e o nome embaixo. O fundo é branco no claro e #252324 no escuro, e vira token quando o bloco
-  entrar no código.
+  cima e o nome embaixo. O fundo é `ds-bloco`.
 - **Bloco por status:** Aguardando e Confirmado em branco, com ícone; Feito em `ds-faixa`, sem
   ícone; Faltou em `ds-faixa`, com ícone; Cancelado tracejado e riscado. Hover: contorno
   `ds-contorno-hover`. Selecionado: anel de 1,5 px em `ds-tinta`, fundo `ds-acao-suave` e a sombra
@@ -525,7 +553,7 @@ medidas:
 
 Antes de usar numa tela, desenhe na proposta. O visual da v2.1 não volta.
 
-Diálogo (fora a confirmação), estado vazio, esqueleto, tabela, gráfico, interruptor, avatar como
+Diálogo (fora a confirmação), esqueleto, tabela, gráfico, interruptor, avatar como
 peça própria, calendário de dias, opção em cartão, passo numerado, faixa de horário, aviso de
 atenção e de sucesso, escolha de empresa e a casca no celular.
 
@@ -555,7 +583,7 @@ aberta.
   ("—").
 - **Sistema:** primeiro carregamento (esqueleto) · atualização (sem esqueleto) · falha ao carregar
   (aviso de erro e "Tentar de novo") · sem conexão · sessão expirada · conflito 409 (horário
-  ocupado) · 404 ou outra empresa.
+  ocupado) · 404 ou outra empresa. Vazio e sem conexão usam o [estado vazio](#estado-vazio).
 - **Pessoas:** administrador × prestador (o que some) · removido, com "(removido)" · a própria
   pessoa, com "(você)" · cliente sem WhatsApp.
 - **WhatsApp:** enviada · entregue · não entregue · cliente respondeu.
@@ -611,7 +639,9 @@ frases, e o histórico vai para a ficha do cliente; e o atalho do WhatsApp fica 
 | 24/11/2026 | Este arquivo volta a ser a referência de design do repo, transcrito da proposta. Saem o `Design.html` e o guia e a auditoria da v2.1 (`docs/design-system/`), que ficam no histórico do Git | um texto só, que aparece no diff do PR |
 | 25/11/2026 | Ícone do app: símbolo rosa sobre quadrado escuro | o ícone não acompanha o tema da página; com o quadrado escuro, o rosa da marca fica em cerca de 9:1 em qualquer aba |
 | 25/11/2026 | Casca v3 no código. No piloto, o topo fica sem a busca e sem a troca de empresa; o tema e Sair ficam no menu da conta; a mesma casca vale em toda largura | a busca ainda não tem rota e cada pessoa tem uma empresa só; o topo fica com as três peças da proposta, sem um botão de tema a mais; o celular ainda não está desenhado |
+| 25/11/2026 | Agenda v3 no código, só com o que a API já devolve. Ficam de fora o "Toda a equipe", o telefone com o WhatsApp, o serviço e o profissional, a frase da conversa e as ações do detalhe (mais ações, Remarcar, Cancelar e Agendar de novo); o intervalo também, até existir o horário de funcionamento. O domingo continua aparecendo quando tem horário ou é hoje. Abaixo de 1100 px o detalhe cobre a grade em vez de empurrá-la, e a semana rola de lado com 96 px por dia. O primeiro carregamento fica sem esqueleto: a grade aparece vazia e os blocos entram quando chegam | a API ainda não traz esses dados nem as ações (#171, #168, 5.1 e 2.21), e a tela não mostra o que não funciona; os dias fechados estão em aberto; o celular e o esqueleto não estão desenhados |
 | 25/11/2026 | Menu com nome e recolhível: 200 px aberto, 60 recolhido, trocado no pé do menu e salvo no navegador; na primeira visita, abre a partir de 1280 px. O primeiro item desce para 24 px do topo | o menu só de ícones esconde o nome até o hover, e dono de salão pouco técnico pode estranhar; recolhido, a grade ganha espaço |
+| 25/11/2026 | Estado vazio v3: ícone Lucide num quadrado cinza, o fato no título, o próximo passo numa frase e uma ação no máximo; dentro de lista, uma linha de texto. Todos os vazios foram reescritos, e saem as ilustrações e os tokens `--ilu-*` da v2.1 | a ilustração dentro de cartão era da v2.1, e os textos não diziam o próximo passo nem falavam como o produto |
 | 26/11/2026 | Logo em `ds-tinta`: #A83B70 no claro e #EAA2C1 no escuro, como recomenda a proposta | o rosa claro sobre o branco fica em 2:1; a tinta é o mesmo rosa, mais escuro (6,0:1) |
 
 ## Em aberto

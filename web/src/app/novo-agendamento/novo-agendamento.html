@@ -9,12 +9,12 @@
 <!-- Região viva fora do @if: existe antes do texto mudar, então o leitor anuncia. -->
 <p class="so-leitor" aria-live="polite">{{ clientes.isLoading() ? "Carregando" : "" }}</p>
 @if (semConexao()) {
-  <section class="cartao">
-    <app-vazio ilustracao="conexao" titulo="Sem conexão">
-      <p>Tente de novo quando a internet voltar. Nada do que estava salvo foi perdido.</p>
-      <button type="button" class="botao" (click)="clientes.reload()">Tentar de novo</button>
-    </app-vazio>
-  </section>
+  <div class="ds-vazio">
+    <span class="ds-vazio-icone"><svg lucideWifiOff class="ds-ic" aria-hidden="true"></svg></span>
+    <h2 class="ds-vazio-titulo">Sem conexão</h2>
+    <p class="ds-vazio-frase">Confira a internet e tente de novo. O que já estava salvo continua salvo.</p>
+    <button type="button" class="ds-botao" (click)="clientes.reload()">Tentar de novo</button>
+  </div>
 } @else if (erroClientes()) {
   <app-mensagem-erro [mensagem]="erroClientes()" podeRepetir (tentarDeNovo)="clientes.reload()" />
 } @else if (!clientes.hasValue()) {
@@ -32,11 +32,27 @@
     </div>
   </div>
 } @else if (semClientes()) {
-  <section class="cartao">
-    <app-vazio ilustracao="clientes" titulo="Nenhum cliente ainda">
-      <p>Quando houver clientes cadastrados, eles aparecem aqui para você escolher.</p>
-    </app-vazio>
-  </section>
+  <div class="ds-vazio">
+    <span class="ds-vazio-icone"><svg lucideUsers class="ds-ic" aria-hidden="true"></svg></span>
+    <h2 class="ds-vazio-titulo">Nenhum cliente ainda</h2>
+    <p class="ds-vazio-frase">Quem agenda pelo seu link entra aqui sozinho. Mande o link para receber o primeiro.</p>
+    @if (linkPublico(); as link) {
+      <button type="button" class="ds-botao" (click)="copiarLink(link)">
+        @if (copia() === "feita") {
+          <svg lucideCheck class="ds-ic" aria-hidden="true"></svg>
+        } @else {
+          <svg lucideLink class="ds-ic" aria-hidden="true"></svg>
+        }
+        <span aria-live="polite">{{ copia() === "feita" ? "Link copiado" : "Copiar link" }}</span>
+      </button>
+      @if (copia() === "falhou") {
+        <p class="ds-aviso ds-aviso--erro" role="alert">
+          <svg lucideCircleAlert class="ds-ic" aria-hidden="true"></svg>
+          <span>Não deu para copiar. O link é {{ link }}</span>
+        </p>
+      }
+    }
+  </div>
 } @else {
   <form class="com-painel largo" aria-label="Novo agendamento" novalidate (submit)="agendar($event)">
     <div class="cartao passos">
@@ -76,10 +92,12 @@
             />
           </div>
           @if (clientesFiltrados().length === 0) {
-            <div class="sem-resultado">
-              <p class="secundario">Nenhum cliente com "{{ busca() }}".</p>
-              <button type="button" class="botao botao-terciario botao-pequeno" (click)="busca.set('')">Limpar busca</button>
-            </div>
+            <p class="ds-vazio-linha">
+              Nenhum cliente com “{{ busca() }}”.
+              <button type="button" class="ds-botao ds-botao--fantasma" (click)="busca.set(''); campoBusca.focus()">
+                Limpar busca
+              </button>
+            </p>
           } @else {
             <!-- Botões, não rádios: escolher fecha a lista, e a seta de um rádio já escolheria. -->
             <div class="opcoes opcoes-2 opcoes-rolagem" role="group" aria-labelledby="passo-cliente">

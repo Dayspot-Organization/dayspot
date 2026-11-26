@@ -2,11 +2,11 @@
 <div class="publica">
   @if (naoEncontrada()) {
     <h1 class="so-leitor">Agendamento</h1>
-    <section class="cartao" role="alert">
-      <app-vazio titulo="Empresa não encontrada">
-        <p>Confira o link que você recebeu ou fale com a empresa.</p>
-      </app-vazio>
-    </section>
+    <div class="ds-vazio" role="alert">
+      <span class="ds-vazio-icone"><svg lucideLink2Off class="ds-ic" aria-hidden="true"></svg></span>
+      <h2 class="ds-vazio-titulo">Este link não leva a nenhuma agenda</h2>
+      <p class="ds-vazio-frase">Confira se ele chegou inteiro. Se continuar assim, peça o link de novo para quem mandou.</p>
+    </div>
   } @else {
     @if (nomeEmpresa(); as nome) {
       <header class="publica-empresa">
@@ -52,12 +52,12 @@
   <!-- Região viva fora do @if: existe antes do texto mudar, então o leitor anuncia. -->
   <p class="so-leitor" aria-live="polite">{{ carregandoBase() && !semConexao() && !mensagemErroBase() ? "Carregando" : "" }}</p>
   @if (semConexao()) {
-    <section class="cartao">
-      <app-vazio ilustracao="conexao" titulo="Sem conexão">
-        <p>Tente de novo quando a internet voltar.</p>
-        <button type="button" class="botao" (click)="tentarDeNovo()">Tentar de novo</button>
-      </app-vazio>
-    </section>
+    <div class="ds-vazio">
+      <span class="ds-vazio-icone"><svg lucideWifiOff class="ds-ic" aria-hidden="true"></svg></span>
+      <h2 class="ds-vazio-titulo">Sem conexão</h2>
+      <p class="ds-vazio-frase">Confira a internet e tente de novo. O que já estava salvo continua salvo.</p>
+      <button type="button" class="ds-botao" (click)="tentarDeNovo()">Tentar de novo</button>
+    </div>
   } @else if (mensagemErroBase()) {
     <app-mensagem-erro [mensagem]="mensagemErroBase()" podeRepetir (tentarDeNovo)="tentarDeNovo()" />
   } @else if (carregandoBase()) {
@@ -100,7 +100,7 @@
                 <span class="opcao-preco numeros">{{ s.preco }}</span>
               </label>
             } @empty {
-              <p class="secundario">Nenhum serviço disponível agora.</p>
+              <p class="ds-vazio-linha">Ainda não há serviços para agendar por aqui. Fale com a empresa.</p>
             }
           </div>
         </section>
@@ -122,7 +122,7 @@
                 <span class="pessoa-nome">{{ p.nome }}</span>
               </label>
             } @empty {
-              <p class="secundario">Nenhum profissional disponível agora.</p>
+              <p class="ds-vazio-linha">Ainda não há com quem agendar por aqui. Fale com a empresa.</p>
             }
           </div>
         </section>
@@ -196,9 +196,13 @@
               }
             </div>
           } @else if (livres().length === 0) {
-            <app-vazio ilustracao="horarios" [titulo]="'Não tem horário livre ' + (dia() === hoje() ? 'hoje' : 'nesse dia')">
-              <p>Escolha outro dia ou outra pessoa.</p>
-            </app-vazio>
+            <div class="ds-vazio">
+              <span class="ds-vazio-icone"><svg lucideCalendarX class="ds-ic" aria-hidden="true"></svg></span>
+              <h3 class="ds-vazio-titulo">Nenhum horário livre {{ dia() === hoje() ? "hoje" : "nesse dia" }}</h3>
+              <p class="ds-vazio-frase">
+                {{ listaPrestadores().length > 1 ? "Escolha outro dia ou outra pessoa." : "Escolha outro dia." }}
+              </p>
+            </div>
           } @else {
             @for (grupo of [{ nome: 'Manhã', lista: manha() }, { nome: 'Tarde', lista: tarde() }]; track grupo.nome) {
               @if (grupo.lista.length) {
