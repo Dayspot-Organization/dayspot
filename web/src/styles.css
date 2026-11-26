@@ -1123,7 +1123,14 @@ select:disabled {
   border-color: var(--ds-texto-2);
 }
 
-.opcao[aria-checked="true"],
+/* A opção é um <label> com o <input type="radio"> escondido: o estado vem do rádio. */
+.opcao:has(input:focus-visible),
+.horario:has(input:focus-visible) {
+  outline: 3px solid var(--ds-foco);
+  outline-offset: 2px;
+}
+
+.opcao:has(input:checked),
 .opcao.escolhida {
   border: var(--ds-borda-selecao) solid var(--ds-tinta);
   background: var(--ds-acao-suave);
@@ -1149,11 +1156,11 @@ select:disabled {
   border-radius: 50%;
 }
 
-.opcao[aria-checked="true"] .radio {
+.opcao:has(input:checked) .radio {
   border-color: var(--ds-tinta);
 }
 
-.opcao[aria-checked="true"] .radio::after {
+.opcao:has(input:checked) .radio::after {
   content: "";
   width: 10px;
   height: 10px;
@@ -1273,6 +1280,8 @@ input.invalido {
 
 .horario {
   position: relative;
+  display: grid;
+  place-items: center;
   height: var(--ds-a-botao);
   border: var(--ds-borda-campo) solid var(--ds-borda);
   border-radius: var(--ds-raio-pilula);
@@ -1284,11 +1293,11 @@ input.invalido {
   transition: border-color var(--ds-t-rapido);
 }
 
-.horario:hover:not(:disabled) {
+.horario:hover:not(:has(input:disabled)) {
   border-color: var(--ds-texto-2);
 }
 
-.horario:disabled {
+.horario:has(input:disabled) {
   border-color: var(--ds-hover);
   background: var(--ds-hover);
   color: var(--ds-texto-3);
@@ -1297,13 +1306,13 @@ input.invalido {
 }
 
 /* Escolhido: ameixa cheio + o marcador pêssego no canto ("o horário marcado"). */
-.horario[aria-pressed="true"] {
+.horario:has(input:checked) {
   border-color: var(--ds-acao);
   background: var(--ds-acao);
   color: var(--ds-acao-texto);
 }
 
-.horario[aria-pressed="true"]::after {
+.horario:has(input:checked)::after {
   content: "";
   position: absolute;
   top: -3px;
@@ -1536,16 +1545,20 @@ input.invalido {
 .ds-botao--grande::before {
   inset: 0;
 }
-.ds-botao:disabled {
+/* aria-disabled no envio: o botão fica parecendo desligado, mas não perde o foco. */
+.ds-botao:disabled,
+.ds-botao[aria-disabled="true"] {
   background: transparent;
   box-shadow: inset 0 0 0 var(--ds-b-fio) var(--ds-divisoria-suave);
   color: var(--ds-texto-3);
   cursor: not-allowed;
 }
-.ds-botao--fantasma:disabled {
+.ds-botao--fantasma:disabled,
+.ds-botao--fantasma[aria-disabled="true"] {
   box-shadow: none;
 }
-.ds-botao:disabled .ds-ic {
+.ds-botao:disabled .ds-ic,
+.ds-botao[aria-disabled="true"] .ds-ic {
   color: var(--ds-texto-3);
 }
 /* Carregando: mesma largura, texto invisível e o indicador no centro. */
