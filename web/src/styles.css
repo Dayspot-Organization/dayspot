@@ -826,7 +826,8 @@ select:disabled {
     animation: none;
   }
 
-  .botao[aria-busy="true"]::after {
+  .botao[aria-busy="true"]::after,
+  .ds-botao[aria-busy="true"]::after {
     animation-duration: 2.4s;
   }
 }
@@ -1756,6 +1757,7 @@ input.invalido {
   display: flex;
   align-items: center;
   gap: var(--ds-e-aviso);
+  margin-bottom: var(--ds-e-2);
   font: 400 13px/18px var(--font-sans);
   color: var(--ds-texto-2);
 }
@@ -1776,7 +1778,6 @@ input.invalido {
 /* ── Entrar e Cadastro: formulário à esquerda, peça de marca à direita ── */
 .entrada-pagina {
   display: flex;
-  flex-wrap: wrap;
   min-height: 100vh;
   background: var(--ds-superficie);
   color: var(--ds-texto);
@@ -1804,8 +1805,10 @@ input.invalido {
   gap: var(--ds-e-4);
   width: 100%;
   max-width: var(--ds-l-formulario);
-  margin: 0 auto;
-  padding: 200px 0 var(--ds-e-12);
+  /* Centrado na coluna, como o align-self: safe center do artefato: margin auto num flex
+     em coluna centraliza e, se o formulário for mais alto que a tela, vira 0 e não corta. */
+  margin: auto;
+  padding: var(--ds-e-12) 0;
 }
 .entrada-cabeca {
   display: flex;
@@ -1870,12 +1873,14 @@ input.invalido {
 .painel-marca path {
   fill: var(--ds-simbolo-degrade);
 }
-@media (max-width: 900px) {
+/* Abaixo de 1148 px (560 da coluna + 576 do painel + 12 de margem) o painel quebraria para
+   baixo do formulário: some, e o formulário sobe para o topo. */
+@media (max-width: 1147px) {
   .entrada-coluna {
     padding: var(--ds-e-6) 20px;
   }
   .entrada-form {
-    padding-top: var(--ds-e-12);
+    margin-block: 0;
   }
   .painel-marca {
     display: none;

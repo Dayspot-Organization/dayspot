@@ -45,7 +45,7 @@
             <span>
               {{ erro }}
               @if (emailJaTemConta()) {
-                <a routerLink="/entrar">Entrar</a>
+                <a routerLink="/entrar" [state]="{ email: email().trim() }">Entrar com este e-mail</a>
               }
             </span>
           </span>
@@ -101,6 +101,13 @@
         <p class="entrada-frase">É o nome que os clientes veem ao agendar.</p>
       </div>
 
+      @if (erroGeral()) {
+        <div class="ds-aviso ds-aviso--erro" role="alert">
+          <svg lucideCircleAlert class="ds-ic" aria-hidden="true"></svg>
+          <span>{{ erroGeral() }}</span>
+        </div>
+      }
+
       <div class="ds-campo ds-campo--grande" [class.ds-campo--erro]="erros().empresa">
         <label for="k-empresa">Nome da empresa</label>
         <input
@@ -109,6 +116,7 @@
           type="text"
           autocomplete="organization"
           [value]="empresa()"
+          [readOnly]="enviando()"
           (input)="digitarEmpresa(valorDe($event))"
           [attr.aria-invalid]="erros().empresa ? 'true' : null"
           [attr.aria-describedby]="erros().empresa ? 'k-empresa-a' : null"
@@ -126,6 +134,7 @@
             class="ds-entrada"
             id="k-endereco"
             [value]="endereco()"
+            [readOnly]="enviando()"
             (input)="digitarEndereco($event)"
             autocapitalize="none"
             spellcheck="false"
@@ -149,6 +158,7 @@
           type="text"
           autocomplete="tel"
           [value]="contato()"
+          [readOnly]="enviando()"
           (input)="digitarContato(valorDe($event))"
           [attr.aria-invalid]="erros().contato ? 'true' : null"
           aria-describedby="k-contato-a"
@@ -160,17 +170,9 @@
         }
       </div>
 
-      @if (erroGeral()) {
-        <div class="ds-aviso ds-aviso--erro" role="alert">
-          <svg lucideCircleAlert class="ds-ic" aria-hidden="true"></svg>
-          <span>{{ erroGeral() }}</span>
-        </div>
-      }
-
       <button
         type="submit"
         class="ds-botao ds-botao--principal ds-botao--grande"
-        [attr.aria-disabled]="enviando() || null"
         [attr.aria-busy]="enviando() ? 'true' : null"
       >
         Criar conta e abrir a agenda

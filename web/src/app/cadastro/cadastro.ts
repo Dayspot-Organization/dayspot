@@ -126,7 +126,7 @@ export class Cadastro {
 
   criar(evento: Event) {
     evento.preventDefault();
-    if (this.enviando()) return; // aria-disabled não bloqueia o envio
+    if (this.enviando()) return; // aria-busy não bloqueia o Enter
     const erros: Erros = {};
     if (!this.empresa().trim()) erros.empresa = "Escreva o nome da empresa.";
     else if (this.empresa().trim().length > 120) erros.empresa = "Use até 120 caracteres.";
@@ -188,7 +188,8 @@ export class Cadastro {
       this.etapa.set(1);
       afterNextRender(() => this.focar(`k-${campo}`), { injector: this.injector });
     } else {
-      this.focar(`k-${campo}`);
+      // Endereço já usado e afins: o texto fica selecionado, pronto para trocar.
+      this.host.nativeElement.querySelector<HTMLInputElement>(`#k-${campo}`)?.select();
     }
   }
 
