@@ -114,13 +114,12 @@ mesmos nomes, e os valores estão no `tokens.css`. Todos os pares de texto passa
 | `ds-menu-ativo` | item ativo do menu e aba escolhida (tinta em cima: 5,3:1) |
 | `ds-hoje` | fundo da coluna de hoje na agenda |
 | `ds-acento` | pêssego: só em peça de marca e ilustração, como preenchimento |
+| **Outros** | |
+| `--ilu-*` | ilustração de estado: um desenho serve aos dois temas |
 | **Peças de marca** | |
 | `ds-degrade-1` a `-3` | degradê do rosa claro ao lilás, só em Entrar, Cadastro e divulgação, sem texto em cima |
 | `ds-arco` | arcos de 1 px sobre o degradê |
 | `ds-simbolo-degrade` | o símbolo D sobre o degradê: branco no claro, rosa no escuro |
-| **Outros** | |
-| `ds-veu` | atrás da gaveta do celular (casca da v2.1) |
-| `--ilu-*` | ilustração de estado: um desenho serve aos dois temas |
 
 **Status.** Seis, fora da marca, cada um com um ícone e três tokens: `ds-<status>` é a cor do
 ícone (3,6:1 ou mais sobre `ds-hover`), `ds-<status>-texto` é a palavra quando ela precisa de cor
@@ -186,14 +185,15 @@ Nenhum padding fora da escala. As poucas exceções da proposta estão no compon
 | `ds-a-etiqueta` | 24 | etiqueta de status, avatar pequeno |
 | `ds-a-controle` | 32 | botão, aba, busca e segmento no painel |
 | `ds-a-alvo` | 36 | área mínima de clique no painel; campo, select, horário, opção de menu |
-| `ds-a-menu` | 38 | item do menu de ícones |
+| `ds-a-menu` | 38 | item do menu da casca |
 | `ds-a-linha` | 40 | linha de lista |
 | `ds-a-campo-grande` | 44 | campo de Entrar e Cadastro; alvo mínimo de quem agenda |
 | `ds-a-acao-grande` | 48 | ação principal fora do painel |
 
 No painel, os controles têm 32 px desenhados e 36 de área de clique: um `::before` passa 2 px da
-borda. Medidas de layout: topo de 48 (`ds-l-topo`), barra da tela de 64 (`ds-l-barra`), busca de
-320, painel lateral de 360 (`ds-l-lateral`), formulário de 400 e hora da grade de 72. Borda de
+borda. Medidas de layout: topo de 48 (`ds-l-topo`), menu de 200 aberto (`ds-l-menu-aberto`) e de
+60 recolhido (`ds-l-menu`), barra da tela de 64 (`ds-l-barra`), busca de 320, painel lateral de 360 (`ds-l-lateral`), formulário de 400
+e hora da grade de 72. Borda de
 1 px sempre (`ds-b-fio`); a seleção do bloco usa um anel de 1,5 (`ds-b-selecao`) e o foco, 2
 (`ds-b-foco`).
 
@@ -217,10 +217,10 @@ Discreto, e zerado com `prefers-reduced-motion`.
 | `--ds-t-rapido` | 120 ms | hover, cor, contorno |
 | `--ds-t-medio` | 220 ms | painel lateral e diálogo abrindo |
 | `--ds-t-saida` | 160 ms | fechar, sempre mais rápido que abrir |
+| `--ds-t-agenda` | 150 ms | peças da Agenda: menu, empresa no topo, busca e bloco |
 | `--ds-curva` | `cubic-bezier(.2, .8, .2, 1)` | quase tudo |
 
-O indicador de carregamento gira em 800 ms, linear. As peças da Agenda (menu de ícones, empresa no
-topo, busca e bloco) usam 150 ms.
+O indicador de carregamento gira em 800 ms, linear.
 
 ### Ícones
 
@@ -300,7 +300,7 @@ mantém a cor no hover: `ds-erro` com texto branco fica em 3,97:1.
 | Etapas | `.ds-etapas` | sim |
 | Painel de marca | `.painel-marca` | sim |
 | Select | `.ds-selecao` | não |
-| Menu suspenso | `.ds-menu`, `.ds-opcao` | não |
+| Menu suspenso | `.ds-menu`, `.ds-opcao`, `.ds-menu-sep` | sim |
 | Etiqueta de status | `.ds-etiqueta` | não |
 | Segmento | `.ds-segmento` | não |
 | Abas | `.ds-abas`, `.ds-aba` | não |
@@ -392,8 +392,8 @@ Medidas: 36 px, padding 0 36 0 12, e `chevron-down` de 14 a 12 px da direita, em
 
 ### Menu suspenso
 
-Uma lista curta que abre de um botão e fecha ao escolher: o "Toda a equipe ▾" da Agenda e a troca
-de empresa no topo.
+Uma lista curta que abre de um botão e fecha ao escolher: o "Toda a equipe ▾" da Agenda, a troca
+de empresa e a conta, no topo.
 
 - Para pessoa, empresa ou visão quando não cabe em Abas (mais de 5 pessoas) ou quando a escolha é
   rara. Para valor de formulário, use o Select.
@@ -405,6 +405,11 @@ de empresa no topo.
 - Teclado: setas movem, Enter escolhe, Esc fecha e devolve o foco ao botão. A ordem é Toda a
   equipe, você, a equipe em ordem alfabética e os removidos por último. Nome longo fica numa linha
   com reticências, e o completo vai no `title`.
+- Conta: o avatar do topo abre um menu de ações (`aria-haspopup="menu"`) com Tema escuro, marcado
+  pelo check quando ligado, um separador e Sair. Tab fecha o menu. Se Sair falhar, o aviso de erro
+  aparece dentro do menu, que continua aberto.
+- No código, a lista é um popover nativo: abrir, fechar no Esc ou no clique fora e devolver o foco
+  ao botão são do navegador.
 
 ### Etiqueta de status
 
@@ -471,11 +476,17 @@ horários.
 Desenhadas só dentro da tela da Agenda, na proposta. Quando forem para o código, usam estas
 medidas:
 
-- **Casca:** `ds-fundo` atrás de tudo, topo de 48 px e menu de 60 na casca. O conteúdo fica num
-  painel branco com fio de 1 px em cima e à esquerda e canto superior esquerdo de 16.
-- **Menu de ícones:** itens de 38 × 38, raio 10 e 8 px entre eles, com ícone de 20 em traço 1,5 e
-  `ds-icone`. Hover em `ds-menu-hover`; ativo em `ds-menu-ativo`, com o ícone em `ds-tinta`. O
-  nome aparece numa dica escura ao lado, no hover e no foco. Configurações fica embaixo.
+- **Casca:** `ds-fundo` atrás de tudo, topo de 48 px e o menu, de 200 aberto ou 60 recolhido, na
+  casca. O conteúdo fica num painel branco com fio de 1 px em cima e à esquerda e canto superior
+  esquerdo de 16.
+- **Menu:** dois estados, trocados pelo botão no pé do menu, "Recolher menu" ou "Expandir menu",
+  com `aria-expanded`. Aberto, com 200 px: o nome em 13/500 ao lado do ícone. Recolhido, com 60:
+  só o ícone, e o nome numa dica escura ao lado, no hover e no foco. O ícone fica no mesmo lugar
+  nos dois, e o primeiro item começa 24 px abaixo do topo, para o menu não parecer preso ao nome
+  da empresa. Itens de 38 px de altura, raio 10 e 8 px entre eles, com ícone de 20 em traço 1,5 e
+  `ds-icone`. Hover em `ds-menu-hover`; ativo em `ds-menu-ativo`, com ícone e nome em `ds-tinta`.
+  Configurações e o botão de recolher ficam embaixo. A escolha fica salva no navegador; na
+  primeira visita, o menu abre a partir de 1280 px de largura e começa recolhido abaixo disso.
 - **Topo:** a empresa à esquerda (logo de 22 px, nome 13/500 e seta, que abre o menu suspenso), a
   busca de 320 px no centro, só com a borda em tinta no foco, e a conta à direita, num avatar
   cinza.
@@ -599,6 +610,8 @@ frases, e o histórico vai para a ficha do cliente; e o atalho do WhatsApp fica 
 | 24/11/2026 | O painel de marca some abaixo de 1148 px | 560 da coluna, 576 do painel e 12 de margem não cabem lado a lado |
 | 24/11/2026 | Este arquivo volta a ser a referência de design do repo, transcrito da proposta. Saem o `Design.html` e o guia e a auditoria da v2.1 (`docs/design-system/`), que ficam no histórico do Git | um texto só, que aparece no diff do PR |
 | 25/11/2026 | Ícone do app: símbolo rosa sobre quadrado escuro | o ícone não acompanha o tema da página; com o quadrado escuro, o rosa da marca fica em cerca de 9:1 em qualquer aba |
+| 25/11/2026 | Casca v3 no código. No piloto, o topo fica sem a busca e sem a troca de empresa; o tema e Sair ficam no menu da conta; a mesma casca vale em toda largura | a busca ainda não tem rota e cada pessoa tem uma empresa só; o topo fica com as três peças da proposta, sem um botão de tema a mais; o celular ainda não está desenhado |
+| 25/11/2026 | Menu com nome e recolhível: 200 px aberto, 60 recolhido, trocado no pé do menu e salvo no navegador; na primeira visita, abre a partir de 1280 px. O primeiro item desce para 24 px do topo | o menu só de ícones esconde o nome até o hover, e dono de salão pouco técnico pode estranhar; recolhido, a grade ganha espaço |
 | 26/11/2026 | Logo em `ds-tinta`: #A83B70 no claro e #EAA2C1 no escuro, como recomenda a proposta | o rosa claro sobre o branco fica em 2:1; a tinta é o mesmo rosa, mais escuro (6,0:1) |
 
 ## Em aberto
@@ -607,8 +620,6 @@ Da proposta, ainda sem decisão:
 
 - **Wordmark:** redesenhar só o nome numa sans neutra, feito por quem cuida da marca. Até lá, a
   interface usa só o símbolo.
-- **Menu de ícones ou com nome:** a recomendação é ícones, com o nome no hover e no leitor de tela,
-  revendo depois do primeiro uso real.
 - **Status no bloco:** só o ícone, com a palavra no detalhe e no leitor de tela, ou uma legenda
   curta na barra.
 - **Domingo e dias fechados:** somem ou aparecem em cinza quando o salão abre em escala.
@@ -618,4 +629,5 @@ Da proposta, ainda sem decisão:
 - **Domínio do link:** o campo mostra só "agendar/", porque o domínio ainda não está definido.
 - **Esqueci a senha:** não está no backlog, então a tela não oferece.
 - **Escolha de empresa:** a tela de quem tem mais de uma empresa não está desenhada.
-- **Casca no celular:** a proposta só desenha o desktop.
+- **Casca no celular:** a proposta só desenha o desktop. Até sair o desenho, o código usa a mesma
+  casca em toda largura, e abaixo de 1280 px o menu começa recolhido, com 60 px.

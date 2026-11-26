@@ -1,20 +1,16 @@
 /* Estilos globais (CSS v2.1 sobre os tokens v3; telas novas usam a seção "Componentes v3" no fim). Tokens em tokens.css (carregado antes, pelo angular.json); regras e
    componentes no DESIGN.md. Nenhum hex aqui: tudo por var(--ds-*).
-   Web primeiro (1440 px); abaixo de 1024 px o menu vira gaveta. */
+   Web primeiro (1440 px); a casca do painel é a mesma em toda largura. */
 
 * {
   box-sizing: border-box;
 }
 
 /* Elementos-hospedeiro dos componentes Angular não entram no layout: os filhos ficam
-   onde estariam no HTML (flex, grid e seletores como .lateral .menu continuam valendo). */
+   onde estariam no HTML (flex, grid e seletores descendentes continuam valendo). */
 app-root,
-app-menu,
-app-botao-tema,
 app-mensagem-erro,
-app-vazio,
-app-agendamentos,
-app-novo-agendamento {
+app-vazio {
   display: contents;
 }
 
@@ -80,64 +76,21 @@ a:hover {
   font: var(--ds-tx-h3);
 }
 
-.ponto {
-  fill: var(--ds-tinta);
-}
-
-/* ── Casca: menu lateral, top-bar e conteúdo (§4.22) ───────────────────── */
-
-.lateral {
-  display: none;
-}
-
-.coluna {
-  min-width: 0;
-}
-
-.topo {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: var(--ds-e-3);
-  height: var(--ds-l-topbar);
-  padding: 0 var(--ds-e-4);
-  background: var(--ds-fundo);
-  border-bottom: 1px solid var(--ds-divisoria);
-}
-
-.trilha {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  margin-right: auto;
-  font: var(--ds-tx-controle);
-  color: var(--ds-texto-2);
-  white-space: nowrap;
-}
-
-.trilha a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.trilha a:hover {
-  color: var(--ds-texto);
-}
-
-.trilha [aria-current] {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--ds-texto);
-}
+/* ── Conteúdo das telas v2.1 dentro do painel (a casca está em "Componentes v3") ── */
 
 .conteudo {
+  display: block; /* também no hospedeiro do componente, que nasce inline */
   max-width: var(--ds-l-conteudo);
   padding: var(--ds-e-6) var(--ds-e-4) var(--ds-e-12);
 }
 
+@media (min-width: 1024px) {
+  .conteudo {
+    padding: 28px var(--ds-e-8) var(--ds-e-12);
+  }
+}
+
+/* Logo horizontal da v2.1 (app-logo), hoje só no /agendar. */
 .logo {
   display: block;
   padding: 4px 14px 24px;
@@ -155,100 +108,6 @@ a:hover {
 
 .logo-nome {
   fill: var(--ds-texto);
-}
-
-.menu {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.menu a {
-  display: flex;
-  align-items: center;
-  gap: var(--ds-e-3);
-  height: var(--ds-a-botao);
-  padding: 0 14px;
-  border-radius: var(--ds-raio-pilula);
-  color: var(--ds-texto);
-  font: var(--ds-tx-controle);
-  text-decoration: none;
-  transition: background-color var(--ds-t-rapido);
-}
-
-.menu a:hover {
-  background: var(--ds-fundo);
-}
-
-/* Ativo: fundo hover + ameixa, sem trocar o peso. */
-.menu a.ativo {
-  background: var(--ds-hover);
-  color: var(--ds-tinta);
-}
-
-.gaveta {
-  flex-direction: column;
-  width: var(--ds-l-menu);
-  max-width: calc(100% - 56px);
-  height: 100dvh;
-  max-height: none;
-  margin: 0;
-  padding: var(--ds-e-4) 14px var(--ds-e-6);
-  border: none;
-  border-right: 1px solid var(--ds-divisoria);
-  background: var(--ds-superficie);
-  color: var(--ds-texto);
-}
-
-.gaveta[open] {
-  display: flex;
-}
-
-.gaveta::backdrop {
-  background: var(--ds-veu);
-}
-
-.gaveta-topo {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--ds-e-4);
-}
-
-.gaveta-topo .logo {
-  padding: 0 14px;
-}
-
-@media (min-width: 1024px) {
-  .app {
-    display: grid;
-    grid-template-columns: var(--ds-l-menu) minmax(0, 1fr);
-    min-height: 100dvh;
-  }
-
-  .lateral {
-    position: sticky;
-    top: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    height: 100dvh;
-    padding: var(--ds-e-6) 14px;
-    background: var(--ds-superficie);
-    border-right: 1px solid var(--ds-divisoria);
-  }
-
-  .topo .abrir-menu {
-    display: none;
-  }
-
-  .topo {
-    padding: 0 var(--ds-e-8);
-  }
-
-  .conteudo {
-    padding: 28px var(--ds-e-8) var(--ds-e-12);
-  }
 }
 
 /* ── Cabeçalho da tela: título, resumo e ações ─────────────────────────── */
@@ -505,7 +364,7 @@ select:disabled {
   flex-direction: column;
   gap: var(--ds-e-4);
   padding: var(--ds-e-6);
-  scroll-margin-top: calc(var(--ds-l-topbar) + var(--ds-e-4)); /* não para atrás da top-bar fixa */
+  scroll-margin-top: var(--ds-e-4); /* no painel, quem rola é o .casca-painel, sem top-bar dentro */
 }
 
 @media (min-width: 1024px) {
@@ -519,7 +378,7 @@ select:disabled {
 
   .painel {
     position: sticky;
-    top: calc(var(--ds-l-topbar) + var(--ds-e-6));
+    top: var(--ds-e-6);
   }
 }
 
@@ -1464,7 +1323,8 @@ input.invalido {
 }
 
 /* ══ Componentes v3 ═══════════════════════════════════════════════════════════
-   DESIGN.md › Componentes: Botão, Campo, Aviso, Etapas e Painel de marca (Entrar e Cadastro).
+   DESIGN.md › Componentes: Botão, Menu suspenso, Campo, Aviso, Etapas e Painel de marca, mais a
+   casca do painel.
    Telas novas usam só esta seção; as classes .botao, .campo e .aviso de cima são v2.1. */
 
 .ds-ic {
@@ -1586,6 +1446,257 @@ input.invalido {
 .ds-botao--principal[aria-busy="true"]::after {
   border-color: var(--ds-acao-texto);
   border-right-color: transparent;
+}
+
+/* ── Menu suspenso: lista curta que abre de um botão e fecha ao escolher ──
+   No popover nativo: Esc, clique fora e a volta do foco ao botão são do navegador. Sem display
+   aqui, para não vencer o display: none do popover fechado. */
+.ds-menu {
+  width: 240px;
+  margin: 0;
+  padding: var(--ds-e-1);
+  border: 0;
+  border-radius: var(--ds-raio-menu);
+  background: var(--ds-superficie);
+  box-shadow:
+    0 0 0 var(--ds-b-fio) var(--ds-divisoria),
+    var(--ds-sombra-flutuante);
+  color: var(--ds-texto);
+}
+.ds-opcao {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-e-aviso);
+  width: 100%;
+  height: var(--ds-a-alvo);
+  padding: 0 var(--ds-e-aviso);
+  border: 0;
+  border-radius: var(--ds-raio-bloco);
+  background: transparent;
+  color: var(--ds-texto);
+  font: 400 13px/20px var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--ds-t-rapido);
+}
+.ds-opcao:hover {
+  background: var(--ds-hover-leve);
+}
+.ds-opcao:active {
+  background: var(--ds-hover);
+}
+.ds-opcao:focus-visible {
+  outline: var(--ds-b-foco) solid var(--ds-foco);
+  outline-offset: 2px;
+}
+.ds-opcao[aria-disabled="true"] {
+  background: transparent;
+  color: var(--ds-texto-3);
+  cursor: default;
+}
+.ds-opcao[aria-checked="true"] {
+  font-weight: 500;
+}
+.ds-opcao-ok {
+  margin-left: auto;
+  color: var(--ds-tinta);
+  visibility: hidden;
+}
+.ds-opcao[aria-checked="true"] .ds-opcao-ok {
+  visibility: visible;
+}
+.ds-menu-sep {
+  height: var(--ds-b-fio);
+  margin: var(--ds-e-1) var(--ds-e-rotulo);
+  background: var(--ds-divisoria-suave);
+}
+
+/* ── Casca do painel: topo e menu na casca, conteúdo no painel branco ──
+   DESIGN.md › Peças da Agenda. O documento não rola: rola o painel, e o topo e o menu ficam
+   parados. A mesma em toda largura até a casca no celular ser desenhada. */
+.casca {
+  display: grid;
+  grid-template-columns: var(--ds-l-menu) minmax(0, 1fr);
+  grid-template-rows: var(--ds-l-topo) minmax(0, 1fr);
+  height: 100dvh;
+  background: var(--ds-fundo);
+  transition: grid-template-columns var(--ds-t-agenda);
+}
+.casca--menu-aberto {
+  grid-template-columns: var(--ds-l-menu-aberto) minmax(0, 1fr);
+}
+@media (prefers-reduced-motion: reduce) {
+  .casca {
+    transition: none;
+  }
+}
+.casca-topo {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-e-4);
+  min-width: 0;
+  padding: 0 var(--ds-e-4) 0 10px; /* 10 e 9 (na empresa) são da proposta: o símbolo alinha com o menu */
+}
+.casca-empresa {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-e-aviso);
+  min-width: 0;
+  height: var(--ds-a-controle);
+  padding: 0 var(--ds-e-aviso) 0 9px;
+  font: 500 13px/20px var(--font-sans);
+}
+.casca-empresa > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.casca-simbolo path {
+  fill: var(--ds-tinta);
+}
+.casca-conta {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--ds-a-controle);
+  height: var(--ds-a-controle);
+  padding: 0;
+  border: 0;
+  border-radius: var(--ds-raio-pilula);
+  background: transparent;
+  cursor: pointer;
+}
+.casca-conta::before {
+  content: "";
+  position: absolute;
+  inset: -2px; /* clique de 36 px */
+}
+.casca-conta:focus-visible {
+  outline: var(--ds-b-foco) solid var(--ds-foco);
+  outline-offset: 2px;
+}
+.casca-avatar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ds-raio-pilula);
+  background: var(--ds-divisoria);
+  font: 500 13px/1 var(--font-sans);
+  transition: box-shadow var(--ds-t-agenda);
+}
+.casca-conta:hover .casca-avatar,
+.casca-conta[aria-expanded="true"] .casca-avatar {
+  box-shadow:
+    0 0 0 2px var(--ds-superficie),
+    0 0 0 3px var(--ds-contorno);
+}
+/* Abre sob o avatar, alinhado à direita do topo, que não rola. */
+.casca-menu {
+  inset: auto;
+  top: calc(var(--ds-l-topo) - 2px);
+  right: var(--ds-e-4);
+}
+.casca-menu-erro {
+  margin-top: var(--ds-e-1);
+}
+.casca-trilho {
+  position: relative;
+  z-index: 1; /* a dica com o nome passa por cima do painel */
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-e-2);
+  min-width: 0;
+  padding: var(--ds-e-6) 11px var(--ds-e-4); /* 24 em cima, longe do nome da empresa; 11 centra o item de 38 nos 60 */
+}
+/* O ícone fica no mesmo lugar aberto ou recolhido: o item cresce para a direita e o nome aparece. */
+.casca-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--ds-e-aviso);
+  height: var(--ds-a-menu);
+  padding: 0 9px; /* (38 − 20) / 2: o ícone no meio do item recolhido */
+  border: 0;
+  border-radius: var(--ds-raio-campo);
+  background: transparent;
+  color: var(--ds-icone);
+  font: 500 13px/20px var(--font-sans);
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--ds-t-agenda),
+    color var(--ds-t-agenda);
+}
+.casca-item .ds-ic {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.5;
+}
+.casca-item:hover {
+  background: var(--ds-menu-hover);
+  color: var(--ds-texto);
+}
+.casca-item[aria-current="page"] {
+  background: var(--ds-menu-ativo);
+  color: var(--ds-tinta);
+}
+.casca-item:focus-visible {
+  outline: var(--ds-b-foco) solid var(--ds-foco);
+  outline-offset: 2px;
+}
+.casca-alternar {
+  margin-top: auto;
+  color: var(--ds-texto-2);
+}
+/* Recolhido, o nome vira uma dica escura ao lado, no hover e no foco; o leitor de tela o lê sempre. */
+.casca-item-nome {
+  position: absolute;
+  left: calc(100% + var(--ds-e-3));
+  top: 50%;
+  translate: -4px -50%;
+  padding: 0 var(--ds-e-aviso);
+  border-radius: var(--ds-raio-bloco);
+  background: var(--ds-texto);
+  color: var(--ds-superficie);
+  line-height: 28px;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--ds-t-agenda),
+    translate var(--ds-t-agenda);
+}
+.casca-item:hover .casca-item-nome,
+.casca-item:focus-visible .casca-item-nome {
+  opacity: 1;
+  translate: 0 -50%;
+}
+/* Aberto, o nome fica ao lado do ícone; o seletor ganha do hover de cima. */
+.casca--menu-aberto .casca-item .casca-item-nome {
+  position: static;
+  overflow: hidden;
+  padding: 0;
+  background: none;
+  color: inherit;
+  line-height: inherit;
+  text-overflow: ellipsis;
+  opacity: 1;
+  translate: none;
+  transition: none;
+}
+.casca-painel {
+  overflow: auto;
+  border: var(--ds-b-fio) solid var(--ds-divisoria);
+  border-right: 0;
+  border-bottom: 0;
+  border-top-left-radius: var(--ds-raio-painel);
+  background: var(--ds-superficie);
+  scrollbar-width: thin;
+  scrollbar-color: var(--ds-rolagem) transparent;
 }
 
 /* ── Campo ── */

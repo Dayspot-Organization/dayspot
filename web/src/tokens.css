@@ -43,7 +43,6 @@
   --ds-degrade-3: light-dark(#b994dc, #45283a);
   --ds-arco: light-dark(rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.05));
   --ds-simbolo-degrade: light-dark(#ffffff, #eaa2c1);
-  --ds-veu: light-dark(rgba(24, 24, 27, 0.48), rgba(0, 0, 0, 0.6));
   --ds-aguardando: light-dark(#a47817, #bf973a);
   --ds-aguardando-texto: light-dark(#7a5200, #f2c14e);
   --ds-aguardando-chip: light-dark(#fdf6e1, #342c17);
@@ -99,12 +98,14 @@
   --ds-b-foco: 2px;
   --font-sans: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --ds-l-menu: 248px; /* v2.1: menu lateral atual; a v3 pede 60 px com a casca nova (#121) */
+  --ds-l-menu: 60px; /* menu da casca recolhido, só com os ícones */
+  --ds-l-menu-aberto: 200px; /* menu da casca aberto, com o nome */
 
   /* ── Movimento ───────────────────────────────────────────── */
   --ds-t-rapido: 120ms; /* hover, cor */
   --ds-t-medio: 220ms;  /* painel, diálogo abrindo */
   --ds-t-saida: 160ms;  /* fechar é mais rápido que abrir */
+  --ds-t-agenda: 150ms; /* peças da Agenda: menu, empresa no topo, busca e bloco */
   --ds-curva: cubic-bezier(.2, .8, .2, 1);
 
   /* ── Ilustração de estado (um desenho serve aos dois temas) ─ */
@@ -145,7 +146,6 @@
   --ds-a-botao: var(--ds-a-alvo);
   --ds-a-campo: var(--ds-a-alvo);
   --ds-a-botao-entrada: var(--ds-a-acao-grande);
-  --ds-l-topbar: var(--ds-l-barra);
   --ds-l-conteudo: 1240px;
   --ds-l-painel: 340px;
   --ds-l-painel-largo: var(--ds-l-lateral);
@@ -157,5 +157,5 @@
 :root[data-tema="escuro"] { color-scheme: dark; }
 
 @media (prefers-reduced-motion: reduce) {
-  :root { --ds-t-rapido: 0ms; --ds-t-medio: 0ms; --ds-t-saida: 0ms; }
+  :root { --ds-t-rapido: 0ms; --ds-t-medio: 0ms; --ds-t-saida: 0ms; --ds-t-agenda: 0ms; }
 }

@@ -27,6 +27,7 @@ function formatarTelefone(t: string): string {
 @Component({
   selector: "app-novo-agendamento",
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: "conteudo" },
   imports: [MensagemErro, Vazio],
   templateUrl: "./novo-agendamento.html",
 })

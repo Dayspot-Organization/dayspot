@@ -9,7 +9,7 @@ import { Painel, trilhaDe } from "./layout";
 import { NovoAgendamento } from "./novo-agendamento/novo-agendamento";
 import { semSessaoGuard, sessaoGuard } from "./sessao";
 
-// data.titulo vira a trilha da top-bar (layout.ts): "Agenda › Novo agendamento".
+// data.titulo vira o título da aba (TituloDayspot, no fim deste arquivo): "Novo agendamento · Dayspot".
 export const routes: Routes = [
   // Página do cliente, aberta pelo link da empresa: fora da casca do painel, sem menu nem login.
   // Sem slug válido, a própria página avisa que a empresa não foi encontrada.

@@ -1,17 +1,18 @@
-// Casca do painel (painel.html) e suas peças: logo, menu e botão de tema. Ainda na v2.1;
-// a casca da v3 está no DESIGN.md › Peças da Agenda.
-import { ChangeDetectionStrategy, Component, type ElementRef, inject, input, output, viewChild } from "@angular/core";
-import { toSignal } from "@angular/core/rxjs-interop";
+// Casca do painel (painel.html): topo com a empresa ativa e a conta, menu (aberto ou recolhido) e o painel
+// do conteúdo (DESIGN.md › Peças da Agenda). A logo horizontal é da v2.1 e fica só no /agendar.
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from "@angular/core";
+import { rxResource } from "@angular/core/rxjs-interop";
+import { type ActivatedRouteSnapshot, Router, RouterLink, RouterLinkActive, RouterOutlet } from "@angular/router";
 import {
-  type ActivatedRouteSnapshot,
-  NavigationEnd,
-  Router,
-  RouterLink,
-  RouterLinkActive,
-  RouterOutlet,
-} from "@angular/router";
-import { filter, map } from "rxjs";
-import { type Tema, TemaService } from "./tema";
+  LucideCalendar,
+  LucideCheck,
+  LucideCircleExclamationPoint,
+  LucidePanelLeftClose,
+  LucidePanelLeftOpen,
+} from "@lucide/angular";
+import { Api, mensagemDeErro } from "./api";
+import { iniciais } from "./datas";
+import { TemaService } from "./tema";
 
 /** Um passo da trilha: título declarado na própria rota e o caminho até ela. */
 export interface Passo {
@@ -85,90 +86,109 @@ export function trilhaDe(raiz: ActivatedRouteSnapshot): Passo[] {
 })
 export class Logo {}
 
-/** O menu só lista telas que existem. `navegar` avisa a gaveta para fechar. */
-@Component({
-  selector: "app-menu",
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive],
-  template: `
-    <nav class="menu" aria-label="Menu principal">
-      <a routerLink="/agendamentos" routerLinkActive="ativo" ariaCurrentWhenActive="page" (click)="navegar.emit()">
-        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-          <g fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14.5 4.5H7.5a4 4 0 0 0-4 4v8a4 4 0 0 0 4 4h9a4 4 0 0 0 4-4v-5.5" />
-            <path d="M8 11.5h4M8 15.5h7.5" />
-          </g>
-          <circle cx="19" cy="5.5" r="2.1" class="ponto" />
-        </svg>
-        Agenda
-      </a>
-    </nav>
-  `,
-})
-export class Menu {
-  readonly navegar = output();
-}
+const ITEM_DO_MENU = "[role^='menuitem']";
 
-/** Botão só ícone da top-bar: o ícone mostra o tema em uso; o clique troca. */
-@Component({
-  selector: "app-botao-tema",
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <button type="button" class="botao-icone" [attr.aria-label]="rotulo()" [title]="rotulo()" (click)="trocar.emit()">
-      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-        <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          @if (tema() === "escuro") {
-            <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />
-          } @else {
-            <circle cx="12" cy="12" r="4" />
-            <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" />
-          }
-        </g>
-      </svg>
-    </button>
-  `,
-})
-export class BotaoTema {
-  readonly tema = input.required<Tema>();
-  readonly trocar = output();
-
-  protected rotulo() {
-    return this.tema() === "escuro" ? "Tema escuro. Mudar para o claro" : "Tema claro. Mudar para o escuro";
+/** A escolha salva no navegador; sem ela, o menu abre a partir de 1280 px. localStorage pode falhar (aba anônima). */
+function menuAbertoAoEntrar(): boolean {
+  try {
+    const salvo = localStorage.getItem("menu");
+    if (salvo) return salvo === "aberto";
+  } catch {
+    /* sem localStorage, vale a largura da tela */
   }
+  return matchMedia("(min-width: 1280px)").matches;
 }
 
-// Estrutura da v2.1: celular com top-bar e gaveta (<dialog>), desktop com menu
-// lateral fixo (o CSS troca a partir de 1024 px).
+// A mesma casca em toda largura: a casca no celular ainda não está desenhada (DESIGN.md › Em aberto).
 @Component({
   selector: "app-painel",
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, Logo, Menu, BotaoTema],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    LucideCalendar,
+    LucideCheck,
+    LucideCircleExclamationPoint,
+    LucidePanelLeftClose,
+    LucidePanelLeftOpen,
+  ],
   templateUrl: "./painel.html",
 })
 export class Painel {
+  private readonly api = inject(Api);
   private readonly router = inject(Router);
-  private readonly gaveta = viewChild.required<ElementRef<HTMLDialogElement>>("gaveta");
   protected readonly tema = inject(TemaService);
 
-  /** Trilha da top-bar, recalculada a cada navegação concluída (o título da aba fica no TituloDayspot). */
-  protected readonly trilha = toSignal(
-    this.router.events.pipe(
-      filter((e) => e instanceof NavigationEnd),
-      map(() => trilhaDe(this.router.routerState.snapshot.root)),
-    ),
-    { initialValue: [] },
-  );
+  /** Quem está na sessão e a empresa ativa. Sem resposta, o topo fica só com o símbolo e a conta. */
+  protected readonly eu = rxResource({ stream: () => this.api.eu() });
+  protected readonly iniciais = computed(() => {
+    const nome = this.eu.value()?.usuario.nome;
+    return nome ? iniciais(nome) : "";
+  });
+  protected readonly rotuloConta = computed(() => {
+    const nome = this.eu.value()?.usuario.nome;
+    return nome ? `Sua conta, ${nome}` : "Sua conta";
+  });
 
-  protected abrir() {
-    this.gaveta().nativeElement.showModal();
+  /** Menu da casca aberto, com o nome, ou recolhido, só com os ícones (DESIGN.md › Peças da Agenda). */
+  protected readonly trilhoAberto = signal(menuAbertoAoEntrar());
+
+  protected readonly menuAberto = signal(false);
+  protected readonly saindo = signal(false);
+  protected readonly erroSair = signal("");
+
+  protected alternarTrilho() {
+    const aberto = !this.trilhoAberto();
+    this.trilhoAberto.set(aberto);
+    try {
+      localStorage.setItem("menu", aberto ? "aberto" : "recolhido");
+    } catch {
+      /* sem localStorage, a escolha vale só até recarregar */
+    }
   }
 
-  protected fechar() {
-    this.gaveta().nativeElement.close();
+  /**
+   * O popover nativo abre no clique do avatar e fecha no Esc, no clique fora e devolvendo o foco
+   * ao avatar. Aqui ficam o aria-expanded e o foco na primeira opção ao abrir.
+   */
+  protected aoAbrirOuFechar(e: Event) {
+    const aberto = (e as ToggleEvent).newState === "open";
+    this.menuAberto.set(aberto);
+    if (aberto) (e.target as HTMLElement).querySelector<HTMLElement>(ITEM_DO_MENU)?.focus();
+    else this.erroSair.set("");
   }
 
-  /** Clique no fundo escurecido (fora do conteúdo) fecha a gaveta. */
-  protected cliqueNaGaveta(e: MouseEvent) {
-    if (e.target === e.currentTarget) this.fechar();
+  /** Setas movem entre as opções; Tab fecha o menu e segue a ordem a partir do avatar. */
+  protected teclaNoMenu(e: KeyboardEvent, menu: HTMLElement) {
+    if (e.key === "Tab") {
+      menu.hidePopover();
+      return;
+    }
+    const passo = e.key === "ArrowDown" ? 1 : e.key === "ArrowUp" ? -1 : 0;
+    if (!passo) return;
+    e.preventDefault();
+    const itens = [...menu.querySelectorAll<HTMLElement>(ITEM_DO_MENU)];
+    const atual = itens.indexOf(document.activeElement as HTMLElement);
+    itens[(atual + passo + itens.length) % itens.length]?.focus();
+  }
+
+  protected trocarTema(menu: HTMLElement) {
+    this.tema.trocar();
+    menu.hidePopover();
+  }
+
+  /** POST /api/logout e /entrar. Voltar pelo navegador cai no sessaoGuard, que leva de novo a /entrar. */
+  protected sair() {
+    if (this.saindo()) return;
+    this.saindo.set(true);
+    this.erroSair.set("");
+    this.api.sair().subscribe({
+      next: () => void this.router.navigateByUrl("/entrar"),
+      error: (e: unknown) => {
+        this.saindo.set(false);
+        this.erroSair.set(mensagemDeErro(e));
+      },
+    });
   }
 }
