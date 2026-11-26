@@ -150,7 +150,7 @@ a:hover {
 }
 
 .logo-simbolo {
-  fill: var(--ds-acao);
+  fill: var(--ds-tinta);
 }
 
 .logo-nome {
@@ -1789,7 +1789,7 @@ input.invalido {
   gap: var(--ds-e-4);
 }
 .entrada-simbolo path {
-  fill: var(--ds-acao);
+  fill: var(--ds-tinta);
 }
 .entrada-form {
   display: flex;

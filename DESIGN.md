@@ -104,10 +104,10 @@ mesmos nomes, e os valores estão no `tokens.css`. Todos os pares de texto passa
 | `ds-texto-3` | placeholder, hora da grade, desabilitado (4,8:1). Nunca texto que precisa ser lido para agir |
 | `ds-icone` | ícone parado em botão, etiqueta e menu |
 | **Marca** | |
-| `ds-acao` | o rosa da marca, #EAA2C1 nos dois temas. Só preenchimento: botão principal, hoje, horário escolhido, hora de agora e a logo. Sobre o branco fica em 2:1, então nunca é texto nem linha |
+| `ds-acao` | o rosa da marca, #EAA2C1 nos dois temas. Só preenchimento: botão principal, hoje, horário escolhido e hora de agora. Sobre o branco fica em 2:1, então nunca é texto nem linha |
 | `ds-acao-pressionada` | hover e toque do botão principal |
 | `ds-acao-texto` | texto e ícone sobre o rosa (8,8:1) |
-| `ds-tinta` | o rosa legível: texto, ícone, linha e foco da marca, só no que está ativo ou escolhido (6,0:1) |
+| `ds-tinta` | o rosa legível: texto, ícone, linha e foco da marca, só no que está ativo ou escolhido (6,0:1), e a logo |
 | `ds-foco` | anel de foco do teclado, com o mesmo valor da tinta |
 | `ds-acao-suave` | linha, opção e bloco selecionados (tinta em cima: 5,5:1) |
 | `ds-menu-hover` | hover do item do menu e das ações em tinta |
@@ -239,7 +239,7 @@ logo e nas ilustrações de estado.
 
 ### Logo
 
-O símbolo D aberto, em `ds-acao` (#EAA2C1) nos dois temas. Sobre o degradê, `ds-simbolo-degrade`:
+O símbolo D aberto, em `ds-tinta`: #A83B70 no claro e #EAA2C1 no escuro. Sobre o degradê, `ds-simbolo-degrade`:
 branco no claro e rosa no escuro. Tamanhos: 22 px no topo da casca, 26 em Entrar e Cadastro e 168
 no painel de marca. Na interface vai só o símbolo; o wordmark (Nunito 800) espera o redesenho do
 nome. Nunca redesenhar nem distorcer o símbolo.
@@ -596,10 +596,10 @@ frases, e o histórico vai para a ficha do cliente; e o atalho do WhatsApp fica 
 | 20/11/2026 | Fundações e componentes da v3 aprovados | |
 | 20/11/2026 | O ponto da marca sai dos ícones e fica na logo e nas ilustrações | em todo ícone, ele vira enfeite |
 | 20/11/2026 | Contato da empresa obrigatório na etapa 2 do Cadastro, que a proposta não desenha | aparece na página pública: é por ele que o cliente cancela |
-| 24/11/2026 | Logo em rosa claro (`ds-acao`) nos dois temas | o rosa claro é a cor principal da marca |
 | 24/11/2026 | O painel de marca some abaixo de 1148 px | 560 da coluna, 576 do painel e 12 de margem não cabem lado a lado |
 | 24/11/2026 | Este arquivo volta a ser a referência de design do repo, transcrito da proposta. Saem o `Design.html` e o guia e a auditoria da v2.1 (`docs/design-system/`), que ficam no histórico do Git | um texto só, que aparece no diff do PR |
-| 25/11/2026 | Ícone do app: símbolo rosa sobre quadrado escuro | o símbolo segue rosa, como na logo, e o contraste fica em cerca de 9:1 |
+| 25/11/2026 | Ícone do app: símbolo rosa sobre quadrado escuro | o ícone não acompanha o tema da página; com o quadrado escuro, o rosa da marca fica em cerca de 9:1 em qualquer aba |
+| 26/11/2026 | Logo em `ds-tinta`: #A83B70 no claro e #EAA2C1 no escuro, como recomenda a proposta | o rosa claro sobre o branco fica em 2:1; a tinta é o mesmo rosa, mais escuro (6,0:1) |
 
 ## Em aberto
 

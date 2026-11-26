@@ -36,8 +36,8 @@ export function trilhaDe(raiz: ActivatedRouteSnapshot): Passo[] {
 
 /**
  * Logo horizontal com os traços de logo-horizontal.svg (assets da marca), sem redesenhar.
- * As cores vêm dos tokens: símbolo em --ds-acao e nome em --ds-texto são as mesmas de
- * logo-horizontal.svg (claro) e logo-horizontal-escuro.svg (escuro), então um desenho serve aos dois temas.
+ * As cores vêm dos tokens: símbolo em --ds-tinta (#A83B70 no claro, #EAA2C1 no escuro) e nome
+ * em --ds-texto, então um desenho serve aos dois temas.
  */
 @Component({
   selector: "app-logo",
