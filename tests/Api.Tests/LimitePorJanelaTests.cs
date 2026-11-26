@@ -120,4 +120,86 @@ public class LimitePorJanelaTests
         limite.Tentar("z", out _);
         Assert.Equal(1, limite.Quantidade);
     }
+
+    [Fact]
+    public void DevolverDescontaUmaTentativa()
+    {
+        var (limite, _) = Criar();
+        for (var i = 0; i < 5; i++)
+        {
+            Assert.True(limite.Tentar("a", out _));
+        }
+        limite.Devolver("a");
+        Assert.True(limite.Tentar("a", out _));
+        Assert.False(limite.Tentar("a", out _));
+        limite.Devolver("sem-entrada"); // chave que nunca tentou: nada acontece
+    }
+
+    [Fact]
+    public void ZerarRecomecaAChave()
+    {
+        var (limite, _) = Criar();
+        for (var i = 0; i < 5; i++)
+        {
+            limite.Tentar("a", out _);
+        }
+        limite.Zerar("a");
+        for (var i = 0; i < 5; i++)
+        {
+            Assert.True(limite.Tentar("a", out _));
+        }
+        Assert.False(limite.Tentar("a", out _));
+    }
 }
+
+public class LimiteLoginContadorTests
+{
+    private static LimiteLogin Criar() => new(new RelogioAjustavel(new DateTimeOffset(2026, 11, 24, 12, 0, 0, TimeSpan.Zero)));
+
+    // A reserva antes de conferir a senha é o que segura as requisições em paralelo.
+    [Fact]
+    public async Task ParalelasNaoPassamDoLimiteDoEmail()
+    {
+        var limite = Criar();
+        var aceitas = 0;
+        await Task.WhenAll(Enumerable.Range(0, 50).Select(i => Task.Run(() =>
+        {
+            if (limite.Tentar("ana@alfa.example", $"ip{i}", out _))
+            {
+                Interlocked.Increment(ref aceitas);
+            }
+        })));
+        Assert.Equal(5, aceitas);
+    }
+
+    [Fact]
+    public void AcertoDevolveOIpEZeraSoOEmail()
+    {
+        var limite = Criar();
+        for (var i = 0; i < 19; i++)
+        {
+            Assert.True(limite.Tentar($"u{i % 4}@x", "ip", out _));
+        }
+        limite.Acertou("u0@x", "ip"); // 18 falhas no IP; u0 zerado
+        Assert.True(limite.Tentar("u0@x", "ip", out _)); // 19
+        Assert.True(limite.Tentar("u0@x", "ip", out _)); // 20
+        Assert.False(limite.Tentar("u0@x", "ip", out _)); // IP no limite
+        Assert.False(limite.Tentar("u1@x", "outro-ip", out _)); // u1 já tem 5: não foi zerado
+    }
+
+    [Fact]
+    public void RecusaPeloIpNaoGastaOEmail()
+    {
+        var limite = Criar();
+        for (var i = 0; i < 20; i++)
+        {
+            limite.Tentar($"u{i}@x", "ip", out _);
+        }
+        Assert.False(limite.Tentar("ana@x", "ip", out _));
+        for (var i = 0; i < 5; i++)
+        {
+            Assert.True(limite.Tentar("ana@x", $"ip{i}", out _));
+        }
+    }
+}
+

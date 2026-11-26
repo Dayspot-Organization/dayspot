@@ -138,7 +138,7 @@ public sealed class Servidor : IAsyncDisposable
         var tx = await db.IniciarComTenant(tenant);
         return await Criar(
             s => s.AddSingleton(db).AddSingleton(new Fixos(tenant, Seed.Prestador, Seed.ServicoAlfa))
-                .AddSingleton(relogio ?? TimeProvider.System),
+                .AddSingleton(relogio ?? TimeProvider.System).AddLimites(),
             app =>
             {
                 // Com autenticar, a sessão é lida na mesma transação do teste; sem, os
@@ -185,24 +185,32 @@ public sealed class Servidor : IAsyncDisposable
             }
             s.AddSingleton(new AppDb(AppDb.Opcoes(Banco.ForaDoAr)))
                 .AddSingleton(new Fixos(Seed.Alfa, Seed.Prestador, Seed.ServicoAlfa))
-                .AddCadastro();
+                .AddLimites();
         },
         app =>
         {
             app.UseRouting();
-            app.UseCadastro();
+            app.UseLimites();
             app.MapApi();
         });
 
     /// <summary>A API inteira, com UseTransacaoNasRotas, sobre a connection string dada.</summary>
-    public static Task<Servidor> ComTransacao(string connectionString, Action<WebApplication> rotas) => Criar(
-        s => s.AddSingleton(AppDb.Opcoes(connectionString)).AddScoped<AppDb>()
-            .AddSingleton(new Fixos(Seed.Alfa, Seed.Prestador, Seed.ServicoAlfa))
-            .AddCadastro(),
+    public static Task<Servidor> ComTransacao(string connectionString, Action<WebApplication> rotas,
+        TimeProvider? relogio = null, ILoggerProvider? log = null) => Criar(
+        s =>
+        {
+            if (log is not null)
+            {
+                s.AddSingleton(log);
+            }
+            s.AddSingleton(relogio ?? TimeProvider.System).AddSingleton(AppDb.Opcoes(connectionString)).AddScoped<AppDb>()
+                .AddSingleton(new Fixos(Seed.Alfa, Seed.Prestador, Seed.ServicoAlfa))
+                .AddLimites();
+        },
         app =>
         {
             app.UseRouting();
-            app.UseCadastro();
+            app.UseLimites();
             // No teste, cada requisição escolhe o seu tenant, como se viesse da sessão.
             app.Use((ctx, next) =>
             {
@@ -230,14 +238,14 @@ public sealed class Servidor : IAsyncDisposable
             {
                 s.AddSingleton(relogio);
             }
-            s.AddPublico().AddCadastro();
+            s.AddPublico().AddLimites();
         },
         app =>
         {
             app.UseCabecalhos();
             app.UseRouting();
             app.UsePublico();
-            app.UseCadastro();
+            app.UseLimites();
             app.UseAutenticacao();
             app.UseTransacaoNasRotas(ctx => Publico.TenantDaRota(ctx) ?? TenantDaSessao.Ler(ctx));
             app.UseTenantDaSessao();

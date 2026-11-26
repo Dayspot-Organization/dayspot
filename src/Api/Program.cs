@@ -38,7 +38,7 @@ builder.Services.AddSingleton(AppDb.Opcoes(Config.ParaConnectionString(cfg.Datab
 builder.Services.AddScoped<AppDb>();
 builder.Services.AddSingleton(new Fixos(cfg.TenantFixo, cfg.PrestadorFixo, cfg.ServicoFixo));
 builder.Services.AddPublico();
-builder.Services.AddCadastro();
+builder.Services.AddLimites();
 
 var app = builder.Build();
 
@@ -75,7 +75,7 @@ for (var tentativa = 1; ; tentativa++)
 app.UseCabecalhos();
 app.UseRouting();
 app.UsePublico();
-app.UseCadastro();
+app.UseLimites();
 app.UseAutenticacao();
 // Toda requisição numa transação com o tenant: o do slug nas rotas públicas; nas
 // demais, o da sessão, com o membership conferido pelo UseTenantDaSessao (2.6).

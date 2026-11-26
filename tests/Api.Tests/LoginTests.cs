@@ -362,6 +362,16 @@ public class LoginTests
         }
     }
 
+    [Fact]
+    public async Task EmailAcimaDe254Eh400()
+    {
+        await using var api = await Servidor.SemBanco();
+        var email = new string('a', 255 - "@b.example".Length) + "@b.example";
+        var r = await api.Chamar("POST", "/api/login", JsonSerializer.Serialize(new { email, senha = "x" }));
+        await r.ExigirErro(HttpStatusCode.BadRequest, Erros.RequisicaoInvalida);
+        Assert.Equal("email", (await r.Json()).GetProperty("erro").GetProperty("detalhes").GetProperty("campo").GetString());
+    }
+
     // A validação vem antes de qualquer consulta: a sessão do ComBanco basta.
     [Theory]
     [InlineData("{", "")] // JSON malformado
@@ -376,5 +386,155 @@ public class LoginTests
         {
             Assert.Equal(campo, (await r.Json()).GetProperty("erro").GetProperty("detalhes").GetProperty("campo").GetString());
         }
+    }
+}
+
+/// <summary>
+/// Limite do login (2.8) com o banco fora do ar: tentativa que passa do limite chega ao
+/// banco e dá 500; a recusada sai em 429 sem consultar nada (nem conferir a senha).
+/// </summary>
+public class LimiteLoginTests
+{
+    private static RelogioAjustavel Relogio() => new(new DateTimeOffset(2026, 11, 24, 12, 0, 0, TimeSpan.Zero));
+
+    private static Task<Servidor> Api(TimeProvider relogio, LogEmMemoria? log = null) =>
+        Servidor.ComTransacao(Banco.ForaDoAr, app => app.MapApi(), relogio, log);
+
+    private static Task<HttpResponseMessage> Entrar(Servidor api, string email, string ip, string? encaminhado = null)
+    {
+        var req = new HttpRequestMessage(HttpMethod.Post, "/api/login")
+        {
+            Content = new StringContent($$"""{"email":"{{email}}","senha":"errada"}""", Encoding.UTF8, "application/json"),
+        };
+        req.Headers.Add("CF-Connecting-IP", ip);
+        if (encaminhado is not null)
+        {
+            req.Headers.Add("X-Forwarded-For", encaminhado);
+        }
+        return api.Http.SendAsync(req);
+    }
+
+    private static void Passou(HttpResponseMessage r) =>
+        Assert.Equal(HttpStatusCode.InternalServerError, r.StatusCode); // chegou ao banco
+
+    private static async Task ExigirLimite(HttpResponseMessage r, int retryAfter)
+    {
+        await r.ExigirErro(HttpStatusCode.TooManyRequests, Erros.MuitasTentativas);
+        Assert.Equal(retryAfter.ToString(), Assert.Single(r.Headers.GetValues("Retry-After")));
+    }
+
+    [Fact]
+    public async Task SextaDoMesmoEmailEh429()
+    {
+        var relogio = Relogio();
+        await using var api = await Api(relogio);
+        for (var i = 0; i < 5; i++)
+        {
+            Passou(await Entrar(api, "ana@alfa.example", $"203.0.113.{i}"));
+        }
+        relogio.Agora += TimeSpan.FromMinutes(5);
+        // E-mail normalizado: maiúsculas e espaços contam como o mesmo.
+        await ExigirLimite(await Entrar(api, " ANA@alfa.example ", "203.0.113.9"), 600);
+    }
+
+    [Fact]
+    public async Task VigesimaPrimeiraDoMesmoIpEh429()
+    {
+        await using var api = await Api(Relogio());
+        for (var i = 0; i < 20; i++)
+        {
+            Passou(await Entrar(api, $"u{i}@alfa.example", "203.0.113.1"));
+        }
+        await ExigirLimite(await Entrar(api, "outro@alfa.example", "203.0.113.1"), 900);
+        Passou(await Entrar(api, "outro@alfa.example", "203.0.113.2"));
+    }
+
+    [Fact]
+    public async Task XForwardedForForjadoNaoMudaOIp()
+    {
+        await using var api = await Api(Relogio());
+        for (var i = 0; i < 20; i++)
+        {
+            Passou(await Entrar(api, $"u{i}@alfa.example", "203.0.113.1", $"198.51.100.{i}"));
+        }
+        await ExigirLimite(await Entrar(api, "outro@alfa.example", "203.0.113.1", "198.51.100.200"), 900);
+    }
+
+    // Recusada pelo e-mail não gasta o limite do IP.
+    [Fact]
+    public async Task RecusaPorEmailNaoContaParaOIp()
+    {
+        await using var api = await Api(Relogio());
+        for (var i = 0; i < 5; i++)
+        {
+            Passou(await Entrar(api, "ana@alfa.example", "203.0.113.1"));
+        }
+        for (var i = 0; i < 20; i++)
+        {
+            await ExigirLimite(await Entrar(api, "ana@alfa.example", "203.0.113.1"), 900);
+        }
+        for (var i = 0; i < 15; i++)
+        {
+            Passou(await Entrar(api, $"u{i}@alfa.example", "203.0.113.1"));
+        }
+        await ExigirLimite(await Entrar(api, "outro@alfa.example", "203.0.113.1"), 900);
+    }
+
+    [Fact]
+    public async Task PassadaAJanelaVoltaAAceitar()
+    {
+        var relogio = Relogio();
+        await using var api = await Api(relogio);
+        for (var i = 0; i < 5; i++)
+        {
+            Passou(await Entrar(api, "ana@alfa.example", "203.0.113.1"));
+        }
+        await ExigirLimite(await Entrar(api, "ana@alfa.example", "203.0.113.1"), 900);
+        relogio.Agora += TimeSpan.FromMinutes(15);
+        Passou(await Entrar(api, "ana@alfa.example", "203.0.113.1"));
+    }
+
+    [Fact]
+    public async Task LimiteGeraLogSemDadoPessoal()
+    {
+        var log = new LogEmMemoria();
+        await using var api = await Api(Relogio(), log);
+        for (var i = 0; i < 5; i++)
+        {
+            Passou(await Entrar(api, "ana@alfa.example", "203.0.113.1"));
+        }
+        await ExigirLimite(await Entrar(api, "ana@alfa.example", "203.0.113.1"), 900);
+        Assert.Single(log.Linhas, l => l.StartsWith("429 pelo limite do login"));
+        Assert.All(log.Linhas, l =>
+        {
+            Assert.DoesNotContain("203.0.113", l);
+            Assert.DoesNotContain("ana@", l);
+        });
+    }
+
+    // Com banco: a senha certa zera o contador do e-mail.
+    [Fact]
+    public async Task LoginCertoZeraOContadorDoEmail()
+    {
+        await using var api = await Servidor.ComBanco(Seed.Alfa, relogio: Relogio());
+        var id = Guid.NewGuid();
+        var email = $"{id:N}@teste.example";
+        await api.Db.Database.ExecuteSqlAsync(
+            $"INSERT INTO usuarios (id, email, senha_hash, nome) VALUES ({id}, {email}, {Senha.GerarHash("senha-certa-123")}, 'Ana Teste')");
+        await api.Db.Database.ExecuteSqlAsync(
+            $"INSERT INTO memberships (usuario_id, tenant_id, papel) VALUES ({id}, {Seed.Alfa}, 'prestador')");
+        Task<HttpResponseMessage> Entrar(string senha) =>
+            api.Chamar("POST", "/api/login", $$"""{"email":"{{email}}","senha":"{{senha}}"}""");
+
+        for (var i = 0; i < 4; i++)
+        {
+            await (await Entrar("errada")).ExigirErro(HttpStatusCode.Unauthorized, Erros.CredencialInvalida);
+        }
+        Assert.Equal(HttpStatusCode.OK, (await Entrar("senha-certa-123")).StatusCode);
+        for (var i = 0; i < 5; i++)
+        {
+            await (await Entrar("errada")).ExigirErro(HttpStatusCode.Unauthorized, Erros.CredencialInvalida);
+        }
+        await (await Entrar("senha-certa-123")).ExigirErro(HttpStatusCode.TooManyRequests, Erros.MuitasTentativas);
     }
 }
