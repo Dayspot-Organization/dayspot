@@ -1,4 +1,5 @@
-// Casca do painel (painel.html) e suas peças: logo, menu e botão de tema. Medidas: docs/design-system/README.md §4.22.
+// Casca do painel (painel.html) e suas peças: logo, menu e botão de tema. Ainda na v2.1;
+// a casca da v3 está no DESIGN.md › Peças da Agenda.
 import { ChangeDetectionStrategy, Component, type ElementRef, inject, input, output, viewChild } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import {
@@ -35,8 +36,8 @@ export function trilhaDe(raiz: ActivatedRouteSnapshot): Passo[] {
 
 /**
  * Logo horizontal com os traços de logo-horizontal.svg (assets da marca), sem redesenhar.
- * As cores vêm dos tokens: símbolo em --ds-acao e nome em --ds-texto são as mesmas de
- * logo-horizontal.svg (claro) e logo-horizontal-escuro.svg (escuro), então um desenho serve aos dois temas.
+ * As cores vêm dos tokens: símbolo em --ds-tinta (#A83B70 no claro, #EAA2C1 no escuro) e nome
+ * em --ds-texto, então um desenho serve aos dois temas.
  */
 @Component({
   selector: "app-logo",
@@ -136,7 +137,7 @@ export class BotaoTema {
   }
 }
 
-// Estrutura do DESIGN.md: celular com top-bar e gaveta (<dialog>), desktop com menu
+// Estrutura da v2.1: celular com top-bar e gaveta (<dialog>), desktop com menu
 // lateral fixo (o CSS troca a partir de 1024 px).
 @Component({
   selector: "app-painel",
