@@ -118,6 +118,20 @@ export interface Credenciais {
   senha: string;
 }
 
+/** Empresa em que o usuário tem membership ativo, com o papel dele nela. */
+export interface EmpresaDoUsuario {
+  nome: string;
+  slug: string;
+  papel: string;
+}
+
+/** Resposta do GET /api/me (2.9). `empresa_ativa` nula: sessão ainda sem empresa escolhida. */
+export interface Eu {
+  usuario: { id: string; nome: string; email: string };
+  empresas: EmpresaDoUsuario[];
+  empresa_ativa: EmpresaDoUsuario | null;
+}
+
 const rotaPublica = (slug: string) => `/api/publico/${encodeURIComponent(slug)}`;
 
 /** Única porta de entrada para a API. Os erros chegam convertidos pelo errosApiInterceptor. */
@@ -135,9 +149,14 @@ export class Api {
     return this.http.post<unknown>(ROTA_LOGIN, credenciais);
   }
 
-  /** GET /api/me. 401 sem sessão; o formato da resposta é do #119. */
+  /** GET /api/me. 401 sem sessão. */
   eu() {
-    return this.http.get<unknown>(ROTA_EU);
+    return this.http.get<Eu>(ROTA_EU);
+  }
+
+  /** POST /api/logout: revoga a sessão e apaga o cookie (204). */
+  sair() {
+    return this.http.post<void>("/api/logout", null);
   }
 
   /** GET /api/agendamentos. Sem de/ate, a API usa o período padrão; sem prestador_id, todos do tenant. */

@@ -87,7 +87,7 @@ interface Coluna {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, MensagemErro, Vazio],
   templateUrl: "./agendamentos.html",
-  host: { "(document:keydown.escape)": "fecharDetalhe()" },
+  host: { class: "conteudo", "(document:keydown.escape)": "fecharDetalhe()" },
 })
 export class Agendamentos {
   private readonly api = inject(Api);
