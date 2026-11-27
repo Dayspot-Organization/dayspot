@@ -12,6 +12,7 @@ import {
 } from "@angular/core";
 import { rxResource, takeUntilDestroyed, toObservable } from "@angular/core/rxjs-interop";
 import { finalize, skip, takeUntil } from "rxjs";
+import { LucideCalendarX, LucideLink2Off, LucideWifiOff } from "@lucide/angular";
 import { Api, ApiError, ErroRede, mensagemDeErro } from "../api";
 import {
   dataLonga,
@@ -30,7 +31,7 @@ import {
   numeroDoDia,
   somarDias,
 } from "../datas";
-import { MensagemErro, Vazio } from "../estados";
+import { MensagemErro } from "../estados";
 import { Logo } from "../layout";
 
 // Página do cliente (padrão C dentro do padrão F): serviço, com quem, dia, horário e os dados dele.
@@ -63,7 +64,7 @@ function normalizarTelefone(t: string): string {
 @Component({
   selector: "app-agendar",
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgTemplateOutlet, MensagemErro, Vazio, Logo],
+  imports: [NgTemplateOutlet, MensagemErro, Logo, LucideCalendarX, LucideLink2Off, LucideWifiOff],
   templateUrl: "./agendar.html",
 })
 export class Agendar {

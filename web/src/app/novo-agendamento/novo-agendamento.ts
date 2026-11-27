@@ -1,14 +1,24 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, inject, signal } from "@angular/core";
 import { rxResource, takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { Router } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
+import { LucideCheck, LucideCircleExclamationPoint, LucideLink, LucideUsers, LucideWifiOff } from "@lucide/angular";
 import { Api, ErroRede, mensagemDeErro } from "../api";
 import { dataLonga, diaEmFrase, diaLocal, duracaoEmTexto, formatarHora, horaEmFrase, iniciais, juntar } from "../datas";
-import { MensagemErro, Vazio } from "../estados";
+import { MensagemErro } from "../estados";
 
 // Padrão C do sistema de design (passos + resumo), no painel: cliente, data, hora e duração livres.
 // Serviço e profissional não aparecem enquanto POST /api/agendamentos gravar os valores fixos (#163).
 
 const soDigitos = (s: string) => s.replace(/\D/g, "");
+
+/** O valor da URL só entra no formulário no formato do campo; senão, fica o padrão. */
+const valido = (valor: string | null, formato: RegExp) => (valor && formato.test(valor) ? valor : null);
+
+/** Dia que existe no calendário: "2026-02-30" vira 2 de março na ida e não volta igual. */
+const diaValido = (valor: string | null) => {
+  const dia = valido(valor, /^\d{4}-\d{2}-\d{2}$/);
+  return dia && diaLocal(new Date(`${dia}T00:00`)) === dia ? dia : null;
+};
 
 const semAcento = (s: string) =>
   s
@@ -27,15 +37,17 @@ function formatarTelefone(t: string): string {
 @Component({
   selector: "app-novo-agendamento",
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: "conteudo" },
-  imports: [MensagemErro, Vazio],
+  imports: [MensagemErro, LucideCheck, LucideCircleExclamationPoint, LucideLink, LucideUsers, LucideWifiOff],
   templateUrl: "./novo-agendamento.html",
+  host: { class: "conteudo" },
 })
 export class NovoAgendamento {
   private readonly api = inject(Api);
   private readonly router = inject(Router);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
+  /** ?dia=AAAA-MM-DD&hora=HH:MM: o vazio da Agenda que foi clicado. */
+  private readonly pedido = inject(ActivatedRoute).snapshot.queryParamMap;
 
   protected readonly hoje = diaLocal(new Date());
 
@@ -57,6 +69,19 @@ export class NovoAgendamento {
 
   protected readonly semClientes = computed(() => this.clientes.hasValue() && this.listaClientes().length === 0);
 
+  /** Link da página de agendamento, para o vazio sem clientes: a empresa só é buscada quando ele aparece. */
+  private readonly eu = rxResource({ params: () => this.semClientes() || undefined, stream: () => this.api.eu() });
+  protected readonly linkPublico = computed(() => {
+    const slug = this.eu.hasValue() ? this.eu.value().empresa_ativa?.slug : undefined;
+    return slug ? `${location.origin}/agendar/${slug}` : "";
+  });
+  protected readonly copia = signal<"" | "feita" | "falhou">("");
+  private relogioCopia?: ReturnType<typeof setTimeout>;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => clearTimeout(this.relogioCopia));
+  }
+
   protected readonly clientesFiltrados = computed(() => {
     const termo = semAcento(this.busca().trim());
     const digitos = soDigitos(termo);
@@ -68,8 +93,8 @@ export class NovoAgendamento {
   protected readonly cliente = computed(() => this.listaClientes().find((c) => c.id === this.clienteId()) ?? null);
 
   // ── Data, hora e duração ────────────────────────────────────
-  protected readonly data = signal(this.hoje);
-  protected readonly hora = signal("");
+  protected readonly data = signal(diaValido(this.pedido.get("dia")) ?? this.hoje);
+  protected readonly hora = signal(valido(this.pedido.get("hora"), /^([01]\d|2[0-3]):[0-5]\d$/) ?? "");
   protected readonly duracao = signal("30");
   /** Depois da primeira tentativa de envio, os campos vazios aparecem como erro. */
   protected readonly tentou = signal(false);
@@ -116,6 +141,19 @@ export class NovoAgendamento {
   protected escolherCliente(id: string) {
     this.clienteId.set(id);
     this.busca.set("");
+  }
+
+  /** Sem permissão ou fora de https a cópia falha, e o link aparece para copiar à mão. */
+  protected async copiarLink(link: string) {
+    clearTimeout(this.relogioCopia);
+    try {
+      await navigator.clipboard.writeText(link);
+      this.copia.set("feita");
+      // "Link copiado" por 2 s e o botão volta a "Copiar link".
+      this.relogioCopia = setTimeout(() => this.copia.set(""), 2000);
+    } catch {
+      this.copia.set("falhou");
+    }
   }
 
   protected agendar(e: SubmitEvent) {

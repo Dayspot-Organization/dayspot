@@ -37,6 +37,7 @@
   --ds-menu-hover: light-dark(#fdf5f9, #241f22);
   --ds-menu-ativo: light-dark(#fcedf3, #33282e);
   --ds-hoje: light-dark(#fef9fb, #1f1a1d);
+  --ds-bloco: light-dark(#ffffff, #252324); /* bloco da agenda: no escuro, um tom acima do painel */
   --ds-acento: light-dark(#f4a08a, #f4b49a); /* pêssego: só nas peças de marca */
   --ds-degrade-1: light-dark(#fbe1ed, #2c2220); /* peças de marca (Entrar, Cadastro): sem texto em cima */
   --ds-degrade-2: light-dark(#eaa2c1, #33232b);
@@ -63,6 +64,7 @@
   --ds-erro-chip: light-dark(#fdeeee, #3e2324);
   --ds-sombra: 0 1px 2px light-dark(rgba(24, 24, 27, 0.08), #0000); /* no escuro, sem sombra */
   --ds-sombra-flutuante: 0 12px 32px -12px light-dark(rgba(24, 24, 27, 0.18), #0000), 0 2px 6px -2px light-dark(rgba(24, 24, 27, 0.06), #0000);
+  --ds-sombra-forte: 0 6px 16px -4px light-dark(rgba(24, 24, 27, 0.12), #0000); /* bloco selecionado, com o anel */
 
   /* ── Espaço, forma, altura, largura, fio (DESIGN.md › Espaço, raio e altura) ── */
   --ds-e-1: 4px;
@@ -108,16 +110,8 @@
   --ds-t-agenda: 150ms; /* peças da Agenda: menu, empresa no topo, busca e bloco */
   --ds-curva: cubic-bezier(.2, .8, .2, 1);
 
-  /* ── Ilustração de estado (um desenho serve aos dois temas) ─ */
-  --ilu-traco: var(--ds-borda);
-  --ilu-linha: var(--ds-divisoria);
-  --ilu-preenchimento: var(--ds-hover);
-  --ilu-superficie: var(--ds-superficie);
-  --ilu-ponto: var(--ds-tinta);
-  --ilu-acento: var(--ds-acento);
-
   /* ── Apelidos v2.1 → v3 ──────────────────────────────────────
-     Só para as telas ainda no CSS v2.1 (Agenda, Novo agendamento, /agendar). Tela nova não usa.
+     Só para as telas ainda no CSS v2.1 (Novo agendamento e /agendar). Tela nova não usa.
      Saem quando essas telas forem redesenhadas na v3. */
   --ds-titulo: var(--font-sans);
   --ds-texto-fonte: var(--font-sans);
@@ -132,14 +126,12 @@
   --ds-tx-horario-destaque: 500 32px/38px var(--font-sans);
   --ds-tx-horario-lista: 500 18px/26px var(--font-sans);
   --ds-tx-horario-botao: 500 13px/20px var(--font-sans);
-  --ds-tx-horario-bloco: 500 13px/18px var(--font-sans);
   --ds-e-5: 20px;
   --ds-e-10: 40px;
   --ds-raio-medio: var(--ds-raio-campo);
   --ds-raio-cartao: var(--ds-raio-painel);
   --ds-borda-campo: var(--ds-b-fio);
   --ds-borda-selecao: var(--ds-b-selecao);
-  --ds-anel-selecao: var(--ds-b-selecao);
   --ds-a-chip: var(--ds-a-etiqueta);
   --ds-a-botao-pequeno: var(--ds-a-controle);
   --ds-a-icone: var(--ds-a-alvo);
@@ -147,10 +139,8 @@
   --ds-a-campo: var(--ds-a-alvo);
   --ds-a-botao-entrada: var(--ds-a-acao-grande);
   --ds-l-conteudo: 1240px;
-  --ds-l-painel: 340px;
   --ds-l-painel-largo: var(--ds-l-lateral);
   --ds-l-publica: 1040px;
-  --ds-l-hora-agenda: var(--ds-l-hora);
 }
 
 :root[data-tema="claro"]  { color-scheme: light; }
