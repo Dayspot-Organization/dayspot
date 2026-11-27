@@ -1,5 +1,15 @@
 import { NgTemplateOutlet } from "@angular/common";
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, linkedSignal, signal } from "@angular/core";
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  linkedSignal,
+  signal,
+} from "@angular/core";
 import { rxResource } from "@angular/core/rxjs-interop";
 import { RouterLink } from "@angular/router";
 import {
@@ -107,10 +117,11 @@ interface MeiaHora {
     LucideX,
   ],
   templateUrl: "./agendamentos.html",
-  host: { "(document:keydown.escape)": "fecharDetalhe()" },
+  host: { "(document:keydown.escape)": "aoEsc($event)" },
 })
 export class Agendamentos {
   private readonly api = inject(Api);
+  private readonly injector = inject(Injector);
 
   /** Relógio da linha "agora" e de "hoje": anda de minuto em minuto. */
   protected readonly agora = signal(new Date());
@@ -277,8 +288,20 @@ export class Agendamentos {
 
   /** O detalhe abre ao lado, empurrando a grade; clicar de novo no mesmo horário fecha. */
   protected selecionar(id: string) {
-    if (this.selecionadoId() === id) this.fecharDetalhe();
-    else this.selecionadoId.set(id);
+    if (this.selecionadoId() === id) {
+      this.fecharDetalhe();
+      return;
+    }
+    this.selecionadoId.set(id);
+    afterNextRender(() => document.getElementById("agenda-detalhe")?.focus({ preventScroll: true }), {
+      injector: this.injector,
+    });
+  }
+
+  /** Esc com um popover aberto (o menu da conta) é dele: o detalhe continua aberto. */
+  protected aoEsc(e: Event) {
+    if ((e.target as Element | null)?.closest?.("[popover]") || document.querySelector(":popover-open")) return;
+    this.fecharDetalhe();
   }
 
   /** Esc ou o X: some o detalhe e o foco volta ao horário de origem. */
@@ -299,6 +322,7 @@ export class Agendamentos {
   }
 
   private meiaHoraLivre(e: MouseEvent, c: Coluna): MeiaHora | null {
+    if (this.carregando()) return null; // sem a lista, não dá para saber se a meia hora está livre
     if ((e.target as Element).closest(".agenda-bloco")) return null;
     const y = e.clientY - (e.currentTarget as Element).getBoundingClientRect().top;
     const inicio = this.horas().primeira * 60 + Math.floor(y / (HORA_PX / 2)) * 30;

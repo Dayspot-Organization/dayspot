@@ -14,6 +14,12 @@ const soDigitos = (s: string) => s.replace(/\D/g, "");
 /** O valor da URL só entra no formulário no formato do campo; senão, fica o padrão. */
 const valido = (valor: string | null, formato: RegExp) => (valor && formato.test(valor) ? valor : null);
 
+/** Dia que existe no calendário: "2026-02-30" vira 2 de março na ida e não volta igual. */
+const diaValido = (valor: string | null) => {
+  const dia = valido(valor, /^\d{4}-\d{2}-\d{2}$/);
+  return dia && diaLocal(new Date(`${dia}T00:00`)) === dia ? dia : null;
+};
+
 const semAcento = (s: string) =>
   s
     .normalize("NFD")
@@ -70,6 +76,11 @@ export class NovoAgendamento {
     return slug ? `${location.origin}/agendar/${slug}` : "";
   });
   protected readonly copia = signal<"" | "feita" | "falhou">("");
+  private relogioCopia?: ReturnType<typeof setTimeout>;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => clearTimeout(this.relogioCopia));
+  }
 
   protected readonly clientesFiltrados = computed(() => {
     const termo = semAcento(this.busca().trim());
@@ -82,8 +93,8 @@ export class NovoAgendamento {
   protected readonly cliente = computed(() => this.listaClientes().find((c) => c.id === this.clienteId()) ?? null);
 
   // ── Data, hora e duração ────────────────────────────────────
-  protected readonly data = signal(valido(this.pedido.get("dia"), /^\d{4}-\d{2}-\d{2}$/) ?? this.hoje);
-  protected readonly hora = signal(valido(this.pedido.get("hora"), /^\d{2}:\d{2}$/) ?? "");
+  protected readonly data = signal(diaValido(this.pedido.get("dia")) ?? this.hoje);
+  protected readonly hora = signal(valido(this.pedido.get("hora"), /^([01]\d|2[0-3]):[0-5]\d$/) ?? "");
   protected readonly duracao = signal("30");
   /** Depois da primeira tentativa de envio, os campos vazios aparecem como erro. */
   protected readonly tentou = signal(false);
@@ -134,9 +145,12 @@ export class NovoAgendamento {
 
   /** Sem permissão ou fora de https a cópia falha, e o link aparece para copiar à mão. */
   protected async copiarLink(link: string) {
+    clearTimeout(this.relogioCopia);
     try {
       await navigator.clipboard.writeText(link);
       this.copia.set("feita");
+      // "Link copiado" por 2 s e o botão volta a "Copiar link".
+      this.relogioCopia = setTimeout(() => this.copia.set(""), 2000);
     } catch {
       this.copia.set("falhou");
     }

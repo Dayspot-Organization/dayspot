@@ -131,7 +131,7 @@
               </button>
             }
             <!-- Atalho só do mouse, fora do Tab e do leitor de tela: pelo teclado, o "Novo horário" da barra. -->
-            @if (vazio(); as v) {
+            @if (!carregando() && vazio(); as v) {
               @if (v.dia === c.dia) {
                 <a
                   class="agenda-vazio"
@@ -154,7 +154,7 @@
     </section>
 
     @if (selecionado(); as s) {
-      <aside class="agenda-detalhe" aria-label="Detalhe do horário">
+      <aside id="agenda-detalhe" class="agenda-detalhe" tabindex="-1" aria-label="Detalhe do horário">
         <div class="agenda-detalhe-topo">
           <span [class]="'ds-etiqueta st-' + s.status">
             <ng-container *ngTemplateOutlet="icone; context: { $implicit: s.status }" />

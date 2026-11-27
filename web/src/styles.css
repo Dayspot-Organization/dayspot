@@ -501,7 +501,7 @@ select:disabled {
   background: var(--ds-superficie);
 }
 
-/* ── Esqueleto (§4.20)───────────────────────────── */
+/* ── Esqueleto ───────────────────────────────────── */
 
 .esqueleto {
   display: block;
