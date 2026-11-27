@@ -134,13 +134,14 @@ A ordem não é estética — é imposta pelas dependências de chave estrangeir
 008 notificacoes        ← depende de 007
 009 RLS + REVOKE DELETE ← depende de todas
 010 sessoes             ← depende de 003 (independe do resto)
-011 convites            ← depende de 002 e 003 (pendente: fica para depois do piloto)
+011 convites            ← depende de 002 e 003 (aplicada como 20261127003555_CriarConvites, #127)
 
 20261120120000 contato_publico ← depende de 002 (#112; id com data e hora, fora da sequência numerada)
 20261124120000 restringir_app_user ← depende de 002, 003 e do app_user (#198)
+20261127003555 convites ← a 011 acima (#127)
 ```
 
-As migrations numeradas aplicadas vão até a 010; depois delas vêm a `20261120120000_AdicionarContatoPublico` e a `20261124120000_RestringirAppUser` (`src/Api/Migrations/`).
+As migrations numeradas aplicadas vão até a 010; depois delas vêm a `20261120120000_AdicionarContatoPublico` a `20261124120000_RestringirAppUser` e a `20261127003555_CriarConvites` (`src/Api/Migrations/`).
 
 ## Dinheiro: centavos em `integer`
 
@@ -744,7 +745,6 @@ tabelas são consultadas **antes** de existir contexto de tenant. No login o
 sistema ainda não sabe qual é o tenant — é `memberships` que responde isso. A
 sessão é lida pelo cookie justamente para descobrir o tenant, e o aceite de
 convite acha o convite pelo token. Aplicar policy nelas cria dependência circular.
-`convites` entra nessa lista quando a 011 for criada, depois do piloto.
 
 Duas consequências a carregar:
 
@@ -789,8 +789,8 @@ exatamente o que um JWT sem estado não entrega.
 
 ## 011 — convites (RF12)
 
-> **Pendente.** Esta migration ainda não existe em `src/Api/Migrations/`: convites ficam
-> para depois do piloto. O SQL abaixo é o desenho previsto.
+> **Aplicada** como `20261127003555_CriarConvites` (#127), com o SQL abaixo. Os endpoints
+> de convite ficam para depois do piloto (2.18 a 2.20).
 
 ```sql
 -- Up
@@ -1192,7 +1192,7 @@ zero linhas atualizadas → 409 `status_invalido` (o horário ainda não começo
 - [ ] `DELETE FROM tenants` roda sem erro de chave estrangeira *(novo)*
 - [ ] Cadastrar `Davi@x.com` e `davi@x.com` falha na segunda vez *(novo)*
 - [ ] Toda FK usada em filtro tem índice explícito *(novo)*
-- [ ] `INSERT` em `memberships` (e em `convites`, quando a 011 existir) com papel que não
+- [ ] `INSERT` em `memberships` (e em `convites`) com papel que não
       seja `administrador` nem `prestador` falha *(v1.4)*
 - [ ] Preço ou valor negativo falha (`servicos.preco_centavos`,
       `agendamentos.valor_centavos`); serviço sem preço falha *(v1.4)*
