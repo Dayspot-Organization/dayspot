@@ -20,6 +20,7 @@ public sealed class AppDb(DbContextOptions<AppDb> opcoes) : DbContext(opcoes)
     public DbSet<Agendamento> Agendamentos => Set<Agendamento>();
     public DbSet<Notificacao> Notificacoes => Set<Notificacao>();
     public DbSet<Sessao> Sessoes => Set<Sessao>();
+    public DbSet<Convite> Convites => Set<Convite>();
 
     /// <summary>
     /// Opções do contexto sobre a connection string do app_user (DATABASE_URL):
