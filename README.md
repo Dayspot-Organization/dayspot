@@ -69,7 +69,7 @@ O cliente final não tem conta. Ele agenda sozinho na página pública da empres
 
 Os avisos de confirmação, lembrete e cancelamento serão enviados pelo WhatsApp. Essa integração ainda não existe: fornecedor, custo e prazo são decisões pendentes ([requisitos, §8](docs/requisitos.md#8-avisos-pelo-whatsapp)).
 
-A primeira publicação é um piloto com uma empresa, hospedado no Render e no Neon.
+A primeira publicação é um piloto com uma empresa, hospedado numa VPS, com produção e homologação ([roteiro de deploy](docs/deploy.md)).
 
 O isolamento entre organizações é garantido no banco, com Row Level Security, e não apenas na aplicação.
 
@@ -86,7 +86,7 @@ O isolamento entre organizações é garantido no banco, com Row Level Security,
 | Frontend | Angular 22 + TypeScript (Angular CLI, componentes standalone, signals, `@angular/router`) |
 | Notificações | WhatsApp (planejado; integração ainda não existe) |
 | Ambiente local | Docker Compose |
-| Hospedagem | Render e Neon |
+| Hospedagem | VPS com Docker Compose e Caddy (HTTPS); deploy pelo GitHub Actions |
 
 ---
 
@@ -258,7 +258,7 @@ Hoje:
 ```
 dayspot/
 ├── .github/
-│   ├── workflows/ci.yml        # em push na main e em todo PR: .NET (dotnet format, build; Postgres 16 com migrations up, down e up de novo; testes, inclusive os de banco), web (lint, build) e docker (build das imagens da API e do front)
+│   ├── workflows/ci.yml        # em push na main e na dev, em todo PR e no botão Run workflow: .NET (dotnet format, build; Postgres 16 com migrations up, down e up de novo; testes, inclusive os de banco), web (lint, build) e docker (build das imagens da API e do front; publica e faz o deploy no push da dev e no botão na main)
 │   └── pull_request_template.md
 ├── src/Api/                    # a API (ASP.NET Core): Program.cs, rotas e handlers, Erros.cs (docs/erros-api.md), Transacao.cs
 ├── src/Api/Config.cs           # leitura das variáveis de ambiente e do .env — só ele lê o ambiente
@@ -271,7 +271,8 @@ dayspot/
 ├── db/init/                    # app_user.sh: cria o app_user no primeiro up do compose
 ├── web/                        # frontend Angular; web/Dockerfile gera a imagem do front
 ├── docs/
-├── compose.yml                 # PostgreSQL 16 + Adminer, só em 127.0.0.1
+├── deploy/                     # VPS: compose de um ambiente, borda (Caddy) e deploy.sh (docs/deploy.md)
+├── compose.yml                 # ambiente local: PostgreSQL 16 + Adminer, só em 127.0.0.1
 ├── Dockerfile                  # imagem da API (com o efbundle das migrations)
 ├── .dockerignore
 ├── Dayspot.slnx                # solução .NET (API + testes)

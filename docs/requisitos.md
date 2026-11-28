@@ -2,9 +2,18 @@
 
 Sistema de agendamentos multi-tenant, com página pública para o cliente final e avisos
 planejados pelo WhatsApp.
-Documento de requisitos e decisões técnicas — **v0.16** · 24/11/2026
+Documento de requisitos e decisões técnicas — **v0.17** · 28/11/2026
 
 > Fonte da verdade: este arquivo. A pasta do Drive é histórico.
+
+## Mudanças desde a v0.16
+
+Decidido em 26/11/2026: a hospedagem sai do Render e do Neon e vai para uma VPS.
+
+| # | O que mudou | Onde |
+|---|---|---|
+| 1 | RNF09: produção e homologação numa VPS, com o PostgreSQL na própria VPS e o Caddy na frente; homologação a cada push na `dev`, produção por botão na `main` | 4, 12 |
+| 2 | O IP das rotas com limite vem do `X-Forwarded-For` gravado pelo Caddy, não mais do `CF-Connecting-IP` | 12 |
 
 ## Mudanças desde a v0.15
 
@@ -222,11 +231,12 @@ agendam os mesmos clientes. Só o administrador gerencia serviços e preços.
 - **RNF06** — Rate limit no login.
 - **RNF07** — Segredos via variável de ambiente.
 - **RNF08** — Falha do canal de avisos não pode derrubar o fluxo de agendamento.
-- **RNF09** — Hospedagem no Render, com frontend e API no mesmo endereço, e PostgreSQL
-  gerenciado no Neon. Deploy da `main` depois do CI; migrations aplicadas fora do
-  deploy. O `Dockerfile` da raiz gera só a imagem da API, e a configuração real do
-  Render fica documentada no roteiro do #173. O Docker Compose serve só ao ambiente
-  local.
+- **RNF09** — Hospedagem numa VPS, com produção (`dayspot.app.br`) e homologação
+  (`homolog.dayspot.app.br`, só para IPs liberados), cada uma com o seu PostgreSQL na
+  própria VPS. Um Caddy na frente cuida do HTTPS e serve frontend e API no mesmo
+  endereço. Deploy depois do CI: a cada push na `dev`, na homologação; por botão na
+  `main`, na produção. As migrations rodam como passo do deploy, antes de trocar a API,
+  nunca na subida dela. Roteiro em `docs/deploy.md`.
 - **RNF10** — Todo evento recebido do canal de avisos é autenticado antes de ser
   processado. O mecanismo depende da integração do WhatsApp (§8.3).
 - **RNF11** *(v0.8)* — Escopo por prestador (RF15) garantido no backend: o filtro
@@ -649,7 +659,7 @@ Decidido em 18/11/2026 (#162):
 | Agendamento público | O cliente final agenda sem conta em `/api/publico/{slug}`. Cliente e agendamento na mesma transação; telefone já cadastrado reaproveita o cliente mais antigo, sem alterar o nome gravado e sem revelar dados dele |
 | Janela do agendamento público | Segunda a sábado, início a partir de 08:00 e fim até 19:00, no fuso da empresa (`tenants.fuso_horario`). Regra fixa até existir o cadastro de disponibilidade. O `POST /api/agendamentos` do painel não muda |
 | Profissionais na página pública | Todos os memberships ativos da empresa, sem marca de "atende" |
-| Limite das rotas públicas | Por IP: 60 leituras e 10 envios por minuto. Acima disso, 429 `muitas_tentativas` com `Retry-After`. O IP vem do `CF-Connecting-IP`, que a Cloudflare do Render sobrescreve; o `X-Forwarded-For` não é usado, porque o cliente controla o começo dele. IPv6 conta por bloco /64. Contador em memória na API |
+| Limite das rotas públicas | Por IP: 60 leituras e 10 envios por minuto. Acima disso, 429 `muitas_tentativas` com `Retry-After`. O IP vem do último item do `X-Forwarded-For`, que o Caddy da VPS grava com o IP de quem conectou nele; o começo da lista, que o cliente controla, é ignorado. IPv6 conta por bloco /64. Contador em memória na API |
 | Dados da empresa na página pública | Hoje a API devolve só nome e fuso. Revisto abaixo: o contato entra pelo #170 |
 
 Decidido em 18/11/2026, para o piloto (#180):
@@ -657,7 +667,7 @@ Decidido em 18/11/2026, para o piloto (#180):
 | Tema | Decisão |
 |---|---|
 | Primeira publicação | Piloto com uma empresa |
-| Hospedagem | Render e Neon, com frontend e API no mesmo endereço, deploy da `main` depois do CI e migrations aplicadas fora do deploy (RNF09, #173) |
+| Hospedagem | ~~Render e Neon~~ (substituído em 26/11/2026): VPS com produção e homologação, PostgreSQL na VPS e Caddy na frente (RNF09, `docs/deploy.md`) |
 | Serviços do piloto | Cadastrados por SQL no provisionamento (#174) |
 | `POST /api/agendamentos` do painel | Grava o serviço e o prestador fixos da empresa piloto (`SERVICO_FIXO` e `PRESTADOR_FIXO`) e copia o preço desse serviço. O corpo traz só `cliente_id`, `inicio` e `fim` |
 | Regras do agendamento público | Até 60 dias de antecedência, grade de 30 minutos, até 3 agendamentos futuros por telefone e telefone brasileiro normalizado, sem SMS (#169) |

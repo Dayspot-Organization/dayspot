@@ -11,7 +11,7 @@ Guia conferido contra o código depois da Fatia 2 (#200) e uma migration nova (#
 - **Migration `20261124120000_RestringirAppUser` (#198):** tira o `DELETE` do `app_user`
   em `tenants`, `usuarios` e `memberships` (remoção é `removido_em`, como na 009) e dá ao
   `app_user` `lock_timeout = '5s'` e `statement_timeout = '15s'` (§Usuário de aplicação).
-- **Pré-condição no Neon:** o papel da `MIGRATIONS_DATABASE_URL` precisa poder rodar
+- **Pré-condição (Neon, hoje fora de uso):** o papel da `MIGRATIONS_DATABASE_URL` precisa poder rodar
   `ALTER ROLE app_user` (§Usuário de aplicação).
 - **Consultas sem `tenantId` e fora da transação:** são as das tabelas fora do RLS (login,
   cadastro e sessão) mais o `BuscarEmpresaPorSlug` (§Acesso a dados).
@@ -876,7 +876,7 @@ ALTER ROLE app_user SET statement_timeout = '15s';
 Os timeouts valem nas conexões abertas depois da migration. Teste que espera lock de
 propósito desliga o limite só na própria transação (`SET LOCAL lock_timeout = 0`).
 
-**Pré-condição no Neon:** `ALTER ROLE ... SET` em outro papel exige, no PostgreSQL 16+,
+**Pré-condição fora do compose:** na VPS e no compose local o dono das tabelas é superusuário e não precisa disto. Num Postgres gerenciado (o Neon era o caso), `ALTER ROLE ... SET` em outro papel exige, no PostgreSQL 16+,
 `CREATEROLE` com `ADMIN OPTION` sobre ele. O `app_user` precisa ter sido criado pelo
 mesmo papel da `MIGRATIONS_DATABASE_URL` (quem cria um papel ganha o `ADMIN OPTION`),
 ou ter recebido `GRANT app_user TO <dono> WITH ADMIN OPTION`. Sem isso, a migration
