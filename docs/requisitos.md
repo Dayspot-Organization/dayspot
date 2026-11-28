@@ -215,6 +215,13 @@ agendam os mesmos clientes. Só o administrador gerencia serviços e preços.
 - **RNF03** — Envio de notificação idempotente: nunca duas vezes, mesmo com
   restart do worker ou execução concorrente.
 - **RNF04** — Senhas com Argon2id ou bcrypt (custo ≥ 12).
+- **RNF04a** — Senha nova (cadastro e, depois, redefinição) pelo NIST SP 800-63B: de 10 a
+  1024 caracteres, fora da lista de senhas comuns (`web/src/senhas-comuns.txt`: as senhas com
+  10 ou mais caracteres das 100 mil do SecLists, MIT) e sem a parte do e-mail antes do @ nem
+  partes do nome com 4 letras ou mais, sem diferenciar maiúscula, minúscula e acento. Sem
+  regra de maiúscula, número ou símbolo. A mesma regra no back (`ForcaSenha`) e no front
+  (`senha.ts`); erro `requisicao_invalida` no campo `senha`, com o motivo. Conta antiga continua
+  entrando com a senha que tem (#211).
 - **RNF05** — `tenant_id` derivado exclusivamente da sessão, nunca aceito do
   corpo da requisição ou de query param. **Exceção:** nas rotas públicas
   `/api/publico/{slug}`, sem sessão, o tenant sai do slug da rota, e continua nunca
