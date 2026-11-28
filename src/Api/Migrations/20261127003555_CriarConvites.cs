@@ -28,6 +28,11 @@ public sealed class CriarConvites : Migration
             );
 
             CREATE INDEX idx_convites_tenant ON convites (tenant_id);
+
+            -- A API não apaga convite; cancelar, se um dia existir, é UPDATE. Como a
+            -- tabela está fora do RLS, um DELETE sem WHERE tenant_id apagaria os
+            -- convites de todas as empresas.
+            REVOKE DELETE ON convites FROM app_user;
             """);
     }
 

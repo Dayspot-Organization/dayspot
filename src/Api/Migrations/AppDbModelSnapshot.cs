@@ -140,15 +140,18 @@ namespace Dayspot.Api.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<DateTime?>("AceitoEm")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("aceito_em");
 
                     b.Property<DateTime>("CriadoEm")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("criado_em");
+                        .HasColumnName("criado_em")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<Guid>("CriadoPor")
                         .HasColumnType("uuid")
@@ -160,8 +163,10 @@ namespace Dayspot.Api.Migrations
                         .HasColumnName("email");
 
                     b.Property<DateTime>("ExpiraEm")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expira_em");
+                        .HasColumnName("expira_em")
+                        .HasDefaultValueSql("now() + interval '7 days'");
 
                     b.Property<string>("Papel")
                         .IsRequired()
@@ -173,8 +178,10 @@ namespace Dayspot.Api.Migrations
                         .HasColumnName("tenant_id");
 
                     b.Property<Guid>("Token")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("token");
+                        .HasColumnName("token")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.HasKey("Id")
                         .HasName("pk_convites");

@@ -42,6 +42,14 @@ public sealed class AppDb(DbContextOptions<AppDb> opcoes) : DbContext(opcoes)
             e.Property(c => c.VinculoExpiraEm).HasDefaultValueSql("now() + interval '30 days'");
             e.Property(c => c.CriadoEm).HasDefaultValueSql("now()");
         });
+
+        modelo.Entity<Convite>(e =>
+        {
+            e.Property(c => c.Id).HasDefaultValueSql("gen_random_uuid()");
+            e.Property(c => c.Token).HasDefaultValueSql("gen_random_uuid()");
+            e.Property(c => c.ExpiraEm).HasDefaultValueSql("now() + interval '7 days'");
+            e.Property(c => c.CriadoEm).HasDefaultValueSql("now()");
+        });
     }
 
     /// <summary>

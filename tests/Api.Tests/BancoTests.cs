@@ -117,6 +117,7 @@ public class IsolamentoTests
             await ExigirSqlState(app, "42501", "DELETE FROM tenants");
             await ExigirSqlState(app, "42501", "DELETE FROM usuarios");
             await ExigirSqlState(app, "42501", "DELETE FROM memberships");
+            await ExigirSqlState(app, "42501", "DELETE FROM convites");
 
             // O tenant da transação morre com ela, na mesma conexão.
             await using (await app.ComTenant(TenantAlfa))
