@@ -639,7 +639,7 @@ Decidido em 23/10/2026 (recomendações de `docs/especificacao-fluxo.md` §8.1, 
 | E-mail ou slug já usado | 409 `email_em_uso` (signup e criar conta pelo convite) e 409 `slug_em_uso` (2.2, 2.22) |
 | Credencial inválida | 401 `credencial_invalida`, a mesma resposta para e-mail inexistente e senha errada (2.3) |
 | Rate limit do login | 429 `muitas_tentativas` com `Retry-After`; 5 tentativas falhas por e-mail normalizado e 20 por IP em 15 minutos; login certo zera o contador do e-mail; contador em memória na API (2.8) |
-| Link do convite | O administrador copia o link `/convite/{token}` na tela de prestadores; sem envio de e-mail no MVP. `POST` e `GET /api/convites` devolvem o token (2.18, 2.20) |
+| Link do convite | O administrador copia o link `/convite/{token}` na tela de prestadores, sem envio por e-mail (o e-mail transacional do #210 não cobre o convite). `POST` e `GET /api/convites` devolvem o token (2.18, 2.20) |
 | Rotas do convite | `GET /api/convites/{token}` sem sessão (empresa, papel e e-mail); `POST /api/convites/{token}/aceite` com sessão, fora do middleware de tenant, e a sessão passa para a empresa do convite; `POST /api/convites/{token}/conta` sem sessão. Telas `/convite/:token` e `/convite/:token/conta`. Sessão com outro e-mail → 403 `sem_permissao` (2.19, 2.22, 2.6) |
 
 Decidido em 18/11/2026 (#162):
@@ -673,6 +673,14 @@ Decidido em 20/11/2026 (#170):
 |---|---|
 | Contato na página pública | `tenants.contato_publico` (até 120 caracteres), devolvido como `contato` em `GET /api/publico/{slug}` e exibido como texto simples, sem link, no topo da página e na confirmação, com a orientação de procurar a empresa para cancelar. O valor é lido sem espaços nas pontas |
 | Empresa sem contato | Contato vazio ou só com espaços conta como ausente: todas as rotas `/api/publico/{slug}` respondem 404 `nao_encontrado` e a página mostra empresa não encontrada. O contato da empresa piloto é gravado no provisionamento (#174); a edição pelo painel fica fora do piloto (só por SQL) |
+
+Decidido em 28/11/2026 (#210):
+
+| Tema | Decisão |
+|---|---|
+| E-mail transacional | A API manda e-mail pela API HTTP do Resend, sem SDK, com remetente no domínio verificado do Dayspot (`EMAIL_REMETENTE`). Usado pela verificação do cadastro (#214) e pelo Esqueci a senha (#213). Muda o "sem envio de e-mail no MVP": o link do convite continua sendo copiado na tela |
+| Sem chave do Resend | Em Development (`ASPNETCORE_ENVIRONMENT=Development`), o e-mail só vai para o log, para testar local; fora dele, sem `RESEND_API_KEY` a API não sobe |
+| Falha no envio | Recusa ou 10 s sem resposta do Resend: 503 `email_indisponivel`, sem detalhe do provedor. O log leva só o status, sem e-mail nem código |
 
 ## 13. Estimativa de prazo
 

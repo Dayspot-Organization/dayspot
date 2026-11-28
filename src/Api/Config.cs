@@ -19,7 +19,10 @@ public sealed record Config(
     Guid TenantFixo, // TODO(T2): remover
     Guid PrestadorFixo, // TODO(T2): remover
                         // Serviço da Fatia 1, enquanto não há escolha de serviço; sai na 6.6.
-    Guid ServicoFixo) // TODO(T6): remover
+    Guid ServicoFixo, // TODO(T6): remover
+    bool Desenvolvimento, // ASPNETCORE_ENVIRONMENT=Development: sem RESEND_API_KEY, e-mail só no log (#210)
+    string ResendApiKey,
+    string EmailRemetente)
 {
     private const string UsuarioApi = "app_user"; // criado por db/init/app_user.sh
     private const string PortaPadrao = "8080"; // alvo do proxy do ng serve (web/proxy.conf.json)
@@ -66,7 +69,18 @@ public sealed record Config(
         }
 
         var c = new Config(Obrigatoria("DATABASE_URL"), Getenv("PORTA_HTTP"),
-            Id("TENANT_FIXO"), Id("PRESTADOR_FIXO"), Id("SERVICO_FIXO"));
+            Id("TENANT_FIXO"), Id("PRESTADOR_FIXO"), Id("SERVICO_FIXO"),
+            Getenv("ASPNETCORE_ENVIRONMENT") == "Development", Getenv("RESEND_API_KEY"), Getenv("EMAIL_REMETENTE"));
+
+        // Em produção, sem chave a API não sobe; com chave, o remetente é obrigatório.
+        if (c.ResendApiKey == "" && !c.Desenvolvimento)
+        {
+            erros.Add("RESEND_API_KEY ausente (ver .env.example); só Development sobe sem ela");
+        }
+        if (c.ResendApiKey != "" && !c.EmailRemetente.Contains('@'))
+        {
+            erros.Add("EMAIL_REMETENTE ausente ou sem @: use Dayspot <nao-responda@seu-dominio>");
+        }
 
         if (c.DatabaseUrl != "")
         {

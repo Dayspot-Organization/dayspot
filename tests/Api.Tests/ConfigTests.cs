@@ -7,7 +7,8 @@ namespace Dayspot.Api.Tests;
 // variáveis do config. O Dispose restaura diretório e variáveis no fim.
 public sealed partial class ConfigTests : IDisposable
 {
-    private static readonly string[] Variaveis = ["DATABASE_URL", "PORTA_HTTP", "TENANT_FIXO", "PRESTADOR_FIXO", "SERVICO_FIXO"];
+    private static readonly string[] Variaveis = ["DATABASE_URL", "PORTA_HTTP", "TENANT_FIXO", "PRESTADOR_FIXO", "SERVICO_FIXO",
+        "ASPNETCORE_ENVIRONMENT", "RESEND_API_KEY", "EMAIL_REMETENTE"];
 
     // UUIDs do Alfa no seed (db/seed.sql, tabela no README).
     private const string UrlAppUser = "postgres://app_user:x@localhost:5467/example?sslmode=disable";
@@ -45,6 +46,8 @@ public sealed partial class ConfigTests : IDisposable
         Environment.SetEnvironmentVariable("TENANT_FIXO", TenantAlfa);
         Environment.SetEnvironmentVariable("PRESTADOR_FIXO", PrestadorAlfa);
         Environment.SetEnvironmentVariable("SERVICO_FIXO", ServicoCorte);
+        Environment.SetEnvironmentVariable("RESEND_API_KEY", "re_teste");
+        Environment.SetEnvironmentVariable("EMAIL_REMETENTE", "Dayspot <nao-responda@exemplo.test>");
     }
 
     private static void EscreverEnv(string conteudo, bool bom = false) =>
@@ -66,6 +69,36 @@ public sealed partial class ConfigTests : IDisposable
         Assert.Equal("8080", c.PortaHttp);
         Assert.Equal((Guid.Parse(TenantAlfa), Guid.Parse(PrestadorAlfa), Guid.Parse(ServicoCorte)),
             (c.TenantFixo, c.PrestadorFixo, c.ServicoFixo));
+    }
+
+    // #210: em produção, sem chave a API não sobe; em Development, o e-mail vai para o log.
+    [Fact]
+    public void SemChaveDoResendEmProducao()
+    {
+        AmbienteValido();
+        Environment.SetEnvironmentVariable("RESEND_API_KEY", null);
+        ErroCom("RESEND_API_KEY ausente");
+    }
+
+    [Fact]
+    public void SemChaveDoResendEmDesenvolvimento()
+    {
+        AmbienteValido();
+        Environment.SetEnvironmentVariable("RESEND_API_KEY", null);
+        Environment.SetEnvironmentVariable("EMAIL_REMETENTE", null);
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+        var c = Config.Load();
+        Assert.Equal((true, ""), (c.Desenvolvimento, c.ResendApiKey));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("Dayspot")]
+    public void ChaveSemRemetente(string? remetente)
+    {
+        AmbienteValido();
+        Environment.SetEnvironmentVariable("EMAIL_REMETENTE", remetente);
+        ErroCom("EMAIL_REMETENTE");
     }
 
     [Fact]
@@ -143,7 +176,7 @@ public sealed partial class ConfigTests : IDisposable
     [Fact]
     public void LeArquivoEnv()
     {
-        EscreverEnv($"DATABASE_URL={UrlAppUser}\nTENANT_FIXO={TenantAlfa}\nPRESTADOR_FIXO={PrestadorAlfa}\nSERVICO_FIXO={ServicoCorte}\nPORTA_HTTP=8081\n");
+        EscreverEnv($"DATABASE_URL={UrlAppUser}\nTENANT_FIXO={TenantAlfa}\nPRESTADOR_FIXO={PrestadorAlfa}\nSERVICO_FIXO={ServicoCorte}\nPORTA_HTTP=8081\nASPNETCORE_ENVIRONMENT=Development\n");
         var c = Config.Load();
         Assert.Equal(Guid.Parse(TenantAlfa), c.TenantFixo);
         Assert.Equal("8081", c.PortaHttp);
@@ -171,7 +204,7 @@ public sealed partial class ConfigTests : IDisposable
     [Fact]
     public void EnvComBom()
     {
-        EscreverEnv($"DATABASE_URL={UrlAppUser}\nTENANT_FIXO={TenantAlfa}\nPRESTADOR_FIXO={PrestadorAlfa}\nSERVICO_FIXO={ServicoCorte}\n", bom: true);
+        EscreverEnv($"DATABASE_URL={UrlAppUser}\nTENANT_FIXO={TenantAlfa}\nPRESTADOR_FIXO={PrestadorAlfa}\nSERVICO_FIXO={ServicoCorte}\nASPNETCORE_ENVIRONMENT=Development\n", bom: true);
         Config.Load();
     }
 
@@ -180,7 +213,7 @@ public sealed partial class ConfigTests : IDisposable
     public void EnvComAspasEComentarios()
     {
         EscreverEnv($"# comentário\n\nexport DATABASE_URL=\"{UrlAppUser}\"\nTENANT_FIXO='{TenantAlfa}'\n" +
-            $"PRESTADOR_FIXO = {PrestadorAlfa} # o do seed\nSERVICO_FIXO={ServicoCorte}\r\n");
+            $"PRESTADOR_FIXO = {PrestadorAlfa} # o do seed\nSERVICO_FIXO={ServicoCorte}\r\nASPNETCORE_ENVIRONMENT=Development\n");
         var c = Config.Load();
         Assert.Equal(UrlAppUser, c.DatabaseUrl);
         Assert.Equal((Guid.Parse(TenantAlfa), Guid.Parse(PrestadorAlfa)), (c.TenantFixo, c.PrestadorFixo));

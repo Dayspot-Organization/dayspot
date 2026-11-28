@@ -24,6 +24,7 @@ public static class Erros
     public const string SlugEmUso = "slug_em_uso"; // 409
     public const string MuitasTentativas = "muitas_tentativas"; // 429
     public const string ErroInterno = "erro_interno"; // 500
+    public const string EmailIndisponivel = "email_indisponivel"; // 503
 
     /// <summary>Erro no formato padrão. detalhes pode ser nulo.</summary>
     public static IResult Responder(int status, string codigo, string mensagem, Dictionary<string, object>? detalhes = null) =>
@@ -32,6 +33,11 @@ public static class Erros
     /// <summary>400 apontando o campo, para o formulário marcar.</summary>
     public static IResult CampoInvalido(string campo, string mensagem) =>
         Responder(StatusCodes.Status400BadRequest, RequisicaoInvalida, mensagem, new() { ["campo"] = campo });
+
+    /// <summary>503 quando o envio de e-mail falha (#210), sem detalhe do provedor.</summary>
+    public static IResult EmailNaoEnviado() =>
+        Responder(StatusCodes.Status503ServiceUnavailable, EmailIndisponivel,
+            "Não conseguimos enviar o e-mail agora. Tente de novo em alguns minutos.");
 
     /// <summary>
     /// Loga o erro e responde 500 genérico: mensagem do Postgres (ou qualquer erro
