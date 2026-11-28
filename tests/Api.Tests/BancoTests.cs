@@ -44,6 +44,7 @@ public class IsolamentoTests
             """, tenant, usuario);
         await dono.Exec("INSERT INTO notificacoes (tenant_id, agendamento_id, tipo) SELECT $1, id, 'confirmacao' FROM agendamentos WHERE tenant_id = $1", tenant);
         await dono.Exec("INSERT INTO sessoes (usuario_id, tenant_id, expira_em) VALUES ($1, $2, now() + interval '1 day')", usuario, tenant);
+        await dono.Exec("INSERT INTO convites (tenant_id, email, papel, criado_por) VALUES ($1, 'convidado@teste.invalid', 'prestador', $2)", tenant, usuario);
         await tx.CommitAsync();
     }
 
@@ -116,6 +117,7 @@ public class IsolamentoTests
             await ExigirSqlState(app, "42501", "DELETE FROM tenants");
             await ExigirSqlState(app, "42501", "DELETE FROM usuarios");
             await ExigirSqlState(app, "42501", "DELETE FROM memberships");
+            await ExigirSqlState(app, "42501", "DELETE FROM convites");
 
             // O tenant da transação morre com ela, na mesma conexão.
             await using (await app.ComTenant(TenantAlfa))
@@ -285,9 +287,10 @@ public class ConsultasTests
         Assert.NotNull(await db.Servicos.FirstOrDefaultAsync());
         Assert.NotNull(await db.Disponibilidades.FirstOrDefaultAsync());
         Assert.NotNull(await db.Agendamentos.FirstOrDefaultAsync());
-        // O seed não grava notificações nem sessões: a consulta confere só os nomes.
+        // O seed não grava notificações, sessões nem convites: a consulta confere só os nomes.
         await db.Notificacoes.FirstOrDefaultAsync();
         await db.Sessoes.FirstOrDefaultAsync();
+        await db.Convites.FirstOrDefaultAsync();
     }
 
     // contato_publico é dado público da empresa (#112); o CHECK limita o tamanho.
@@ -306,5 +309,23 @@ public class ConsultasTests
         await tx.RollbackAsync();
         await using var tx2 = await dono.ComTenant(Seed.Alfa);
         Assert.Equal(1, await dono.Exec("UPDATE tenants SET contato_publico = repeat('x', 120) WHERE id = $1", Seed.Alfa));
+    }
+
+    // Convite só para administrador ou prestador (2.17), como o papel de memberships.
+    [Fact]
+    public async Task ConviteComPapelInvalidoEhRecusado()
+    {
+        const string inserir = "INSERT INTO convites (tenant_id, email, papel, criado_por) VALUES ($1, 'convidado@teste.invalid', $2, $3)";
+        await using var dono = await Banco.Conectar("MIGRATIONS_DATABASE_URL");
+        await using var tx = await dono.ComTenant(Seed.Alfa);
+
+        var erro = await Assert.ThrowsAsync<PostgresException>(() => dono.Exec(inserir, Seed.Alfa, "gerente", Seed.AdminAlfa));
+        Assert.Equal("23514", erro.SqlState);
+        Assert.Equal("convite_papel_valido", erro.ConstraintName);
+
+        await tx.RollbackAsync();
+        await using var tx2 = await dono.ComTenant(Seed.Alfa);
+        Assert.Equal(1, await dono.Exec(inserir, Seed.Alfa, "administrador", Seed.AdminAlfa));
+        Assert.Equal(1, await dono.Exec(inserir, Seed.Alfa, "prestador", Seed.AdminAlfa));
     }
 }

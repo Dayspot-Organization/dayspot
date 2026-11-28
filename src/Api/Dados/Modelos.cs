@@ -115,3 +115,18 @@ public sealed class Sessao
     public DateTime? RevogadoEm { get; set; }
     public string? UserAgent { get; set; }
 }
+
+// Fora do RLS (guia §009): listar e criar com WHERE tenant_id manual; o lookup por
+// token roda sem tenant.
+public sealed class Convite
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string Email { get; set; } = "";
+    public string Papel { get; set; } = "";
+    public Guid Token { get; set; }
+    public DateTime ExpiraEm { get; set; }
+    public DateTime? AceitoEm { get; set; }
+    public Guid CriadoPor { get; set; }
+    public DateTime CriadoEm { get; set; }
+}

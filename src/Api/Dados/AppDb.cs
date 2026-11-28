@@ -20,6 +20,7 @@ public sealed class AppDb(DbContextOptions<AppDb> opcoes) : DbContext(opcoes)
     public DbSet<Agendamento> Agendamentos => Set<Agendamento>();
     public DbSet<Notificacao> Notificacoes => Set<Notificacao>();
     public DbSet<Sessao> Sessoes => Set<Sessao>();
+    public DbSet<Convite> Convites => Set<Convite>();
 
     /// <summary>
     /// Opções do contexto sobre a connection string do app_user (DATABASE_URL):
@@ -39,6 +40,14 @@ public sealed class AppDb(DbContextOptions<AppDb> opcoes) : DbContext(opcoes)
         {
             e.Property(c => c.Id).HasDefaultValueSql("gen_random_uuid()");
             e.Property(c => c.VinculoExpiraEm).HasDefaultValueSql("now() + interval '30 days'");
+            e.Property(c => c.CriadoEm).HasDefaultValueSql("now()");
+        });
+
+        modelo.Entity<Convite>(e =>
+        {
+            e.Property(c => c.Id).HasDefaultValueSql("gen_random_uuid()");
+            e.Property(c => c.Token).HasDefaultValueSql("gen_random_uuid()");
+            e.Property(c => c.ExpiraEm).HasDefaultValueSql("now() + interval '7 days'");
             e.Property(c => c.CriadoEm).HasDefaultValueSql("now()");
         });
     }
