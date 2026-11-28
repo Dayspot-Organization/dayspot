@@ -11,6 +11,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Lista de senhas comuns (#211): a mesma que o front importa; fica em web/ porque o build do front só vê essa pasta. -->
+    <EmbeddedResource Include="../../web/src/senhas-comuns.txt" LogicalName="senhas-comuns.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="Dayspot.Api.Tests" />
     <PackageReference Include="EFCore.NamingConventions" Version="10.0.1" />
     <PackageReference Include="Konscious.Security.Cryptography.Argon2" Version="1.3.1" />

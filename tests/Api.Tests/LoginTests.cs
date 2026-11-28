@@ -129,6 +129,19 @@ public class LoginTests
         Assert.Equal("administrador", unica.GetProperty("papel").GetString());
     }
 
+    // #211: a regra de 10 caracteres é só para senha nova; a senha antiga de 8 continua entrando.
+    [Fact]
+    public async Task SenhaAntigaDe8CaracteresEntra()
+    {
+        await using var api = await Servidor.ComBanco(Seed.Alfa, autenticar: true);
+        var id = Guid.NewGuid();
+        var email = $"{id:N}@teste.example";
+        await api.Db.Database.ExecuteSqlAsync(
+            $"INSERT INTO usuarios (id, email, senha_hash, nome) VALUES ({id}, {email}, {Senha.GerarHash("12345678")}, 'Ana Teste')");
+        await Membership(api.Db, id, await NovaEmpresa(api.Db, id, "Salão Teste"), "administrador");
+        await ExigirSessao(await Entrar(api, email, "12345678"));
+    }
+
     [Fact]
     public async Task SemMembershipAtivoNaoEntra()
     {

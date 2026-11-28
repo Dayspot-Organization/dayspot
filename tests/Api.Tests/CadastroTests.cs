@@ -16,7 +16,7 @@ public class CadastroTests
         {
             ["nome"] = "Ana Souza",
             ["email"] = "ana@alfa.example",
-            ["senha"] = "12345678",
+            ["senha"] = "cafe-com-pao-42",
             ["empresa_nome"] = "Alfa Barbearia",
             ["empresa_slug"] = "alfa-barbearia",
             ["contato"] = "(11) 99999-0000",
@@ -38,8 +38,10 @@ public class CadastroTests
         Add("email", "@b");
         Add("email", new string('a', 250) + "@b.co"); // 255
         Add("senha", null);
-        Add("senha", "1234567");
-        Add("senha", "😀😀😀😀😀😀😀"); // 7 caracteres, 14 unidades UTF-16
+        Add("senha", "123456789"); // 9 caracteres
+        Add("senha", "😀😀😀😀😀😀😀😀😀"); // 9 caracteres, 18 unidades UTF-16
+        Add("senha", "1234567890"); // da lista de senhas comuns
+        Add("senha", "souza-2024!"); // tem o nome
         Add("senha", new string('x', 1025));
         Add("empresa_nome", "");
         Add("empresa_nome", new string('a', 121));
@@ -69,9 +71,19 @@ public class CadastroTests
         Assert.Equal(campo, erro.GetProperty("detalhes").GetProperty("campo").GetString());
     }
 
+    // #211: o motivo vai na mensagem, para a tela mostrar no campo.
+    [Fact]
+    public async Task SenhaComumDizOMotivo()
+    {
+        await using var api = await Servidor.SemBanco();
+        var erro = (await (await api.Chamar("POST", Rota, Corpo("senha", "qwertyuiop"))).Json()).GetProperty("erro");
+        Assert.Equal(("senha", "Essa senha é muito usada. Escolha outra."),
+            (erro.GetProperty("detalhes").GetProperty("campo").GetString(), erro.GetProperty("mensagem").GetString()));
+    }
+
     [Theory]
     [InlineData("{")]
-    [InlineData("""{"nome":"Ana Souza","email":"ana@alfa.example","senha":"12345678","empresa_nome":"Alfa","empresa_slug":"alfa-barbearia","contato":"x","fuso_horario":"UTC"}""")]
+    [InlineData("""{"nome":"Ana Souza","email":"ana@alfa.example","senha":"cafe-com-pao-42","empresa_nome":"Alfa","empresa_slug":"alfa-barbearia","contato":"x","fuso_horario":"UTC"}""")]
     public async Task CorpoMalformadoOuCampoDesconhecido(string json)
     {
         await using var api = await Servidor.SemBanco();
@@ -80,7 +92,7 @@ public class CadastroTests
 
     // Com o banco fora do ar, chegar a ele é a prova de que a validação passou.
     [Theory]
-    [InlineData("senha", "12345678")]
+    [InlineData("senha", "1234567890 ")] // a lista só barra a senha inteira
     [InlineData("senha", 1024)]
     [InlineData("contato", 120)]
     [InlineData("empresa_nome", 120)]
@@ -88,8 +100,8 @@ public class CadastroTests
     [InlineData("empresa_slug", "abc")]
     [InlineData("empresa_slug", "slug50")]
     [InlineData("email", "email254")]
-    [InlineData("senha", "1234567 ")] // sem Trim: o espaço conta
-    [InlineData("senha", "çççççççç")] // 8 caracteres Unicode
+    [InlineData("senha", "123456789 ")] // sem Trim: o espaço conta
+    [InlineData("senha", "çãéíóúçãéí")] // 10 caracteres Unicode
     public async Task PassaDaValidacao(string campo, object valor)
     {
         var texto = valor is int n ? new string('x', n) : (string)valor;
@@ -118,7 +130,7 @@ public class CadastroGravacaoTests
         {
             ["nome"] = "Ana Souza",
             ["email"] = email,
-            ["senha"] = "12345678",
+            ["senha"] = "cafe-com-pao-42",
             ["empresa_nome"] = "Loja de Teste",
             ["empresa_slug"] = slug,
             ["contato"] = contato,
@@ -172,7 +184,7 @@ public class CadastroGravacaoTests
             Assert.Equal(email, await dono.Escalar<string>("SELECT email FROM usuarios WHERE id = $1", usuarioId));
             var hash = await dono.Escalar<string>("SELECT senha_hash FROM usuarios WHERE id = $1", usuarioId);
             Assert.StartsWith("$argon2id$", hash);
-            Assert.True(Senha.Conferir("12345678", hash!));
+            Assert.True(Senha.Conferir("cafe-com-pao-42", hash!));
             Assert.Equal(usuarioId, await dono.Escalar<Guid>("SELECT criado_por FROM tenants WHERE id = $1", tenantId));
             Assert.Equal("(11) 99999-0000", await dono.Escalar<string>("SELECT contato_publico FROM tenants WHERE id = $1", tenantId));
             Assert.Equal("America/Sao_Paulo", await dono.Escalar<string>("SELECT fuso_horario FROM tenants WHERE id = $1", tenantId));
