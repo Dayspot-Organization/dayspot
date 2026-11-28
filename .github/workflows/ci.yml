@@ -111,5 +111,8 @@ jobs:
       - name: Checkout do repositório
         uses: actions/checkout@v7
 
-      - name: Build da imagem (sem publicar)
+      - name: Build da imagem da API (sem publicar)
         run: docker build .
+
+      - name: Build da imagem do front (sem publicar)
+        run: docker build web/

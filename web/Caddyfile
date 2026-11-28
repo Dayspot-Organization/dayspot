@@ -1,0 +1,25 @@
+# Servidor do front dentro da imagem dayspot-web (web/Dockerfile), só na rede interna.
+{
+	admin off
+}
+
+:80 {
+	root * /srv
+
+	# Todo .js e .css do build tem hash no nome: muda o conteúdo, muda o nome. Sem
+	# fallback: arquivo que não existe é 404, nunca o index.html guardado como script.
+	@comHash path *.js *.css
+	handle @comHash {
+		@existe file
+		header @existe Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	# O resto confere com o servidor a cada visita, para o deploy novo aparecer sem
+	# limpar cache. Rota do Angular (/agenda, /entrar...) não é arquivo: vai o index.html.
+	handle {
+		header Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}
