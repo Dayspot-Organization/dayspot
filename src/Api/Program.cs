@@ -39,6 +39,7 @@ builder.Services.AddScoped<AppDb>();
 builder.Services.AddSingleton(new Fixos(cfg.TenantFixo, cfg.PrestadorFixo, cfg.ServicoFixo));
 builder.Services.AddPublico();
 builder.Services.AddLimites();
+builder.Services.AddEmail(cfg);
 
 var app = builder.Build();
 

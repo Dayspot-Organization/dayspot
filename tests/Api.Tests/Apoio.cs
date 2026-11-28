@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using Dayspot.Api.Dados;
@@ -118,7 +119,9 @@ public sealed class Servidor : IAsyncDisposable
     public static async Task<Servidor> Criar(Action<IServiceCollection> servicos, Action<WebApplication> pipeline,
         AppDb? db = null, IDbContextTransaction? tx = null)
     {
-        var builder = WebApplication.CreateSlimBuilder();
+        // Production mesmo com ASPNETCORE_ENVIRONMENT=Development exportado do .env: em
+        // Development o ASP.NET põe a página de exceção, e a exceção não chega ao teste.
+        var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions { EnvironmentName = Environments.Production });
         builder.WebHost.UseTestServer();
         builder.Logging.ClearProviders();
         servicos(builder.Services);
@@ -315,4 +318,20 @@ public sealed class RelogioAjustavel(DateTimeOffset inicio) : TimeProvider
     public DateTimeOffset Agora { get; set; } = inicio;
 
     public override DateTimeOffset GetUtcNow() => Agora;
+}
+
+/// <summary>Envio de e-mail falso (#210): guarda as mensagens; com Falhar, devolve false como o Resend fora do ar.</summary>
+public sealed class EnvioFalso : IEnvioEmail
+{
+    public System.Collections.Concurrent.ConcurrentQueue<MensagemEmail> Enviadas { get; } = new();
+    public bool Falhar { get; set; }
+
+    public Task<bool> Enviar(MensagemEmail mensagem, CancellationToken ct)
+    {
+        if (!Falhar)
+        {
+            Enviadas.Enqueue(mensagem);
+        }
+        return Task.FromResult(!Falhar);
+    }
 }
