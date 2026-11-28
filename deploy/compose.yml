@@ -1,0 +1,65 @@
+# Um ambiente da VPS (producao ou homologacao). Quem sobe é o deploy/deploy.sh, com
+# -p dayspot-<ambiente>, o .env do servidor e TAG = sha do commit (docs/deploy.md).
+# Só a borda (deploy/borda) publica porta: o Docker passa por cima do ufw, então banco
+# e API ficam só nas redes internas.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?defina no .env do servidor}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina no .env do servidor}
+      POSTGRES_DB: ${POSTGRES_DB:?defina no .env do servidor}
+      APP_USER_PASSWORD: ${APP_USER_PASSWORD:?defina no .env do servidor}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Cria o app_user, e só com o volume vazio (primeira subida).
+      - ../db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  # Só sob demanda (docker compose run --rm migracoes). É o único contêiner com a senha
+  # do dono das tabelas: a API usa só o app_user (RNF07).
+  migracoes:
+    image: ghcr.io/dayspot-organization/dayspot-api:${TAG:?TAG é o sha do commit}
+    profiles: [migracoes]
+    entrypoint: ["./efbundle"]
+    environment:
+      MIGRATIONS_DATABASE_URL: ${MIGRATIONS_DATABASE_URL:?defina no .env do servidor}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    image: ghcr.io/dayspot-organization/dayspot-api:${TAG:?TAG é o sha do commit}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?defina no .env do servidor}
+      TENANT_FIXO: ${TENANT_FIXO:?defina no .env do servidor}
+      PRESTADOR_FIXO: ${PRESTADOR_FIXO:?defina no .env do servidor}
+      SERVICO_FIXO: ${SERVICO_FIXO:?defina no .env do servidor}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      default:
+      borda:
+        aliases: ["${AMBIENTE:?defina no .env do servidor}-api"]
+
+  web:
+    image: ghcr.io/dayspot-organization/dayspot-web:${TAG:?TAG é o sha do commit}
+    restart: unless-stopped
+    networks:
+      borda:
+        aliases: ["${AMBIENTE:?defina no .env do servidor}-web"]
+
+networks:
+  borda:
+    external: true
+
+volumes:
+  postgres_data:

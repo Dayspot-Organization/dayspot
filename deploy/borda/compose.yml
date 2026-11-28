@@ -1,0 +1,31 @@
+# Borda da VPS: o único contêiner com porta publicada. Sobe uma vez à mão e depois pelo
+# deploy de produção (deploy/deploy.sh). Nunca `down -v`: o volume guarda os certificados,
+# e o Let's Encrypt limita quantos se pede por semana.
+name: dayspot-borda
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    environment:
+      HOMOLOG_IPS: ${HOMOLOG_IPS:-}
+    volumes:
+      # A pasta, não o arquivo: o git checkout troca o Caddyfile por outro arquivo, e o
+      # mount de um arquivo continuaria mostrando o antigo.
+      - ./:/etc/caddy:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - borda
+
+networks:
+  borda:
+    name: borda
+
+volumes:
+  caddy_data:
+  caddy_config:

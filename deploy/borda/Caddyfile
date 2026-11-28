@@ -1,0 +1,34 @@
+# Borda da VPS: HTTPS automático (Let's Encrypt) e os dois ambientes (docs/deploy.md).
+
+(ambiente) {
+	encode zstd gzip
+	header Strict-Transport-Security "max-age=31536000"
+	handle /api/* {
+		reverse_proxy {args[0]}-api:8080 {
+			# Só o IP de quem conectou aqui: o X-Forwarded-For que o cliente manda não
+			# chega à API, que conta os limites por ele (src/Api/IpReal.cs).
+			header_up X-Forwarded-For {client_ip}
+		}
+	}
+	handle {
+		reverse_proxy {args[0]}-web:80
+	}
+}
+
+dayspot.app.br {
+	import ambiente producao
+}
+
+www.dayspot.app.br {
+	redir https://dayspot.app.br{uri} permanent
+}
+
+homolog.dayspot.app.br {
+	# Dentro de route: fora dele o Caddy reordena as diretivas, e o respond rodaria
+	# depois do proxy. Lista vazia (borda.env) deixa só o loopback: ninguém entra.
+	route {
+		@fora not client_ip 127.0.0.1/32 {$HOMOLOG_IPS}
+		respond @fora "Acesso restrito" 403
+		import ambiente homologacao
+	}
+}
