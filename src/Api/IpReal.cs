@@ -4,20 +4,19 @@ using Microsoft.AspNetCore.HttpOverrides;
 
 namespace Dayspot.Api;
 
-/// <summary>IP do cliente atrás da Cloudflare e do balanceador do Render, para os limites por IP.</summary>
+/// <summary>IP do cliente atrás do Caddy da VPS (deploy/borda), para os limites por IP.</summary>
 public static class IpReal
 {
     public static IServiceCollection AddIpReal(this IServiceCollection servicos)
     {
-        // No Render o tráfego chega pela Cloudflare, que grava CF-Connecting-IP em toda
-        // requisição e sobrescreve o que o cliente mandou. O X-Forwarded-For não serve:
-        // ela acrescenta à lista, e o cliente controla o começo dela.
+        // O Caddy grava no X-Forwarded-For o IP de quem conectou nele e descarta o que o
+        // cliente mandou. Numa lista, só o último item é do Caddy: o começo é do cliente.
         servicos.Configure<ForwardedHeadersOptions>(o =>
         {
             o.ForwardedHeaders = ForwardedHeaders.XForwardedFor;
-            o.ForwardedForHeaderName = "CF-Connecting-IP";
             o.ForwardLimit = 1;
-            // O par da conexão é o balanceador do Render, sem faixa de IP publicada.
+            // ponytail: confia em qualquer par. A API não publica porta: só o Caddy, pela
+            // rede interna do Docker, chega nela. Publicou porta? Restrinja ao IP do Caddy.
             o.KnownProxies.Clear();
             o.KnownIPNetworks.Clear();
         });

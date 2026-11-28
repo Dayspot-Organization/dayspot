@@ -40,7 +40,7 @@ Cada organização (barbearia, clínica, estúdio) tem seus próprios usuários,
   - [Clonando](#clonando)
   - [Variáveis de ambiente](#variáveis-de-ambiente)
   - [Subindo o ambiente](#subindo-o-ambiente)
-  - [Imagem Docker da API](#imagem-docker-da-api)
+  - [Imagens Docker](#imagens-docker)
   - [Frontend](#frontend)
 - [🗄️ Banco de dados](#️-banco-de-dados)
   - [Migrations](#migrations)
@@ -150,19 +150,28 @@ por `ROLLBACK`.
 
 > ⚠️ **Banco de dev migrado pela ferramenta antiga.** Quem migrou o banco antes das EF Core Migrations não tem a tabela `__EFMigrationsHistory`: o `dotnet ef database update` tentaria criar tudo de novo e falharia. Não há transição: recrie o banco com `docker compose down -v` e `docker compose up -d` (**apaga os dados locais**), depois aplique as migrations e o seed. No `.env`, troque as variáveis antigas de migration pela `MIGRATIONS_DATABASE_URL` do `.env.example`.
 
-### Imagem Docker da API
+### Imagens Docker
 
-O `Dockerfile` da raiz gera a imagem da API (sem o `web/`), para o deploy no Render.
-O `.env` não entra na imagem: as variáveis do `.env.example` (menos as de migration) vêm do ambiente.
+O `Dockerfile` da raiz gera a imagem da API e o `web/Dockerfile`, a do front (o build do
+Angular servido por um Caddy). O `.env` não entra em nenhuma das duas: as variáveis do
+`.env.example` vêm do ambiente.
 
 ```bash
 docker build -t dayspot-api .
+docker build -t dayspot-web web/
 docker run --rm -p 8080:8080 -e DATABASE_URL=... -e TENANT_FIXO=... \
   -e PRESTADOR_FIXO=... -e SERVICO_FIXO=... dayspot-api
 ```
 
-A porta é a `PORTA_HTTP` (8080 por padrão); se houver `PORT`, que o Render define, ela vence.
-Migrations e seed não rodam na imagem (8.3): aplique antes, como em [Subindo o ambiente](#subindo-o-ambiente).
+A porta da API é a `PORTA_HTTP` (8080 por padrão). A API não aplica migrations ao subir:
+a imagem traz o `efbundle`, que as aplica como o dono das tabelas, lendo a
+`MIGRATIONS_DATABASE_URL`:
+
+```bash
+docker run --rm --entrypoint ./efbundle -e MIGRATIONS_DATABASE_URL=... dayspot-api
+```
+
+O seed não está na imagem: no ambiente local, siga [Subindo o ambiente](#subindo-o-ambiente).
 
 ### Frontend
 
@@ -249,7 +258,7 @@ Hoje:
 ```
 dayspot/
 ├── .github/
-│   ├── workflows/ci.yml        # em push na main e em todo PR: .NET (dotnet format, build; Postgres 16 com migrations up, down e up de novo; testes, inclusive os de banco), web (lint, build) e docker (build da imagem)
+│   ├── workflows/ci.yml        # em push na main e em todo PR: .NET (dotnet format, build; Postgres 16 com migrations up, down e up de novo; testes, inclusive os de banco), web (lint, build) e docker (build das imagens da API e do front)
 │   └── pull_request_template.md
 ├── src/Api/                    # a API (ASP.NET Core): Program.cs, rotas e handlers, Erros.cs (docs/erros-api.md), Transacao.cs
 ├── src/Api/Config.cs           # leitura das variáveis de ambiente e do .env — só ele lê o ambiente
@@ -260,10 +269,10 @@ dayspot/
 ├── tests/Api.Tests/            # xUnit: API, config, auth e banco (isolamento por RLS, exclusão de tenant, consultas)
 ├── db/seed.sql                 # dois tenants fictícios (alfa e beta)
 ├── db/init/                    # app_user.sh: cria o app_user no primeiro up do compose
-├── web/                        # frontend Angular
+├── web/                        # frontend Angular; web/Dockerfile gera a imagem do front
 ├── docs/
 ├── compose.yml                 # PostgreSQL 16 + Adminer, só em 127.0.0.1
-├── Dockerfile                  # imagem da API para o Render
+├── Dockerfile                  # imagem da API (com o efbundle das migrations)
 ├── .dockerignore
 ├── Dayspot.slnx                # solução .NET (API + testes)
 ├── global.json                 # versão do SDK e runner de testes
