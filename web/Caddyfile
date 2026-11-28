@@ -16,10 +16,12 @@
 	}
 
 	# O resto confere com o servidor a cada visita, para o deploy novo aparecer sem
-	# limpar cache. Rota do Angular (/agenda, /entrar...) não é arquivo: vai o index.html.
+	# limpar cache. Rota do Angular (/agenda, /entrar...) não tem extensão: vai o
+	# index.html. Arquivo com extensão que não existe (/logo.png) é 404.
 	handle {
 		header Cache-Control "no-cache"
-		try_files {path} /index.html
+		@rotaDoAngular not path_regexp \.\w+$
+		rewrite @rotaDoAngular /index.html
 		file_server
 	}
 }
