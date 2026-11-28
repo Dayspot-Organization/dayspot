@@ -25,8 +25,7 @@ public sealed class EnvioResend(HttpClient http, Config cfg, ILogger<EnvioResend
     {
         using var req = new HttpRequestMessage(HttpMethod.Post, "emails")
         {
-            Content = JsonContent.Create(new Corpo(cfg.EmailRemetente, [m.Para], m.Assunto, m.Texto, m.Html),
-                options: new(System.Text.Json.JsonSerializerDefaults.Web)),
+            Content = JsonContent.Create(new Corpo(cfg.EmailRemetente, [m.Para], m.Assunto, m.Texto, m.Html)),
         };
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", cfg.ResendApiKey);
         try
