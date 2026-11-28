@@ -650,11 +650,7 @@ public class LimitePublicoTests
         var req = new HttpRequestMessage(new HttpMethod(metodo), rota);
         if (ip is not null)
         {
-            req.Headers.Add("CF-Connecting-IP", ip);
-        }
-        if (encaminhado is not null)
-        {
-            req.Headers.Add("X-Forwarded-For", encaminhado);
+            req.Headers.Add("X-Forwarded-For", encaminhado is null ? ip : $"{encaminhado}, {ip}");
         }
         return api.Http.SendAsync(req);
     }
@@ -727,7 +723,7 @@ public class LimitePublicoTests
             {
                 Content = new StringContent(corpo, System.Text.Encoding.UTF8, "application/json"),
             };
-            req.Headers.Add("CF-Connecting-IP", "203.0.113.1");
+            req.Headers.Add("X-Forwarded-For", "203.0.113.1");
             return req;
         }
         await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => api.Http.SendAsync(Pedido())));

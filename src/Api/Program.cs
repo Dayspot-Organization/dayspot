@@ -6,7 +6,7 @@ using Dayspot.Api.Dados;
 var timeoutCabecalhos = TimeSpan.FromSeconds(5); // corta slowloris
 var timeoutOcioso = TimeSpan.FromSeconds(60);
 var timeoutPing = TimeSpan.FromSeconds(10); // por tentativa
-var prazoPing = TimeSpan.FromSeconds(30); // total: o Neon free leva alguns segundos para acordar
+var prazoPing = TimeSpan.FromSeconds(30); // total: dá tempo de o Postgres do compose terminar de subir
 var timeoutShutdown = TimeSpan.FromSeconds(30); // dá tempo de a requisição mais longa terminar
 
 Config cfg;

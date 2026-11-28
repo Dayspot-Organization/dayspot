@@ -319,11 +319,7 @@ public class LimiteCadastroTests
         {
             Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json"),
         };
-        req.Headers.Add("CF-Connecting-IP", ip);
-        if (encaminhado is not null)
-        {
-            req.Headers.Add("X-Forwarded-For", encaminhado);
-        }
+        req.Headers.Add("X-Forwarded-For", encaminhado is null ? ip : $"{encaminhado}, {ip}");
         return api.Http.SendAsync(req);
     }
 
@@ -436,7 +432,7 @@ public class LimiteCadastroTests
         await Esgotar(api, "203.0.113.1");
         await ExigirLimite(await Enviar(api, "203.0.113.1"), 3600);
         var req = new HttpRequestMessage(HttpMethod.Get, $"/api/publico/{e.Slug}");
-        req.Headers.Add("CF-Connecting-IP", "203.0.113.1");
+        req.Headers.Add("X-Forwarded-For", "203.0.113.1");
         Assert.Equal(HttpStatusCode.OK, (await api.Http.SendAsync(req)).StatusCode);
     }
 }

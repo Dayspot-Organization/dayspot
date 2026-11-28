@@ -35,9 +35,9 @@ public static class Rotas
     /// </summary>
     public static void MapApi(this IEndpointRouteBuilder app)
     {
-        // Health check do Render e do monitor externo (#172). O ShortCircuit responde já no
+        // Health check do deploy (deploy/deploy.sh) e do monitor externo (#172). O ShortCircuit responde já no
         // UseRouting: sem limite, sem tenant e sem transação, então não depende do banco e
-        // não reinicia a API enquanto o Neon acorda.
+        // responde mesmo com o banco fora do ar.
         app.MapMethods("/api/saude", Leitura, () => Results.Ok()).ShortCircuit();
 
         app.MapPost("/api/login", Login.Entrar);

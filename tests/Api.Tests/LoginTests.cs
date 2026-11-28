@@ -406,11 +406,7 @@ public class LimiteLoginTests
         {
             Content = new StringContent($$"""{"email":"{{email}}","senha":"errada"}""", Encoding.UTF8, "application/json"),
         };
-        req.Headers.Add("CF-Connecting-IP", ip);
-        if (encaminhado is not null)
-        {
-            req.Headers.Add("X-Forwarded-For", encaminhado);
-        }
+        req.Headers.Add("X-Forwarded-For", encaminhado is null ? ip : $"{encaminhado}, {ip}");
         return api.Http.SendAsync(req);
     }
 
