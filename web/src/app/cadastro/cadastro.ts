@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, afterNextRender, inject, signal } from "@angular/core";
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, afterNextRender, computed, inject, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { Router, RouterLink } from "@angular/router";
 import { finalize } from "rxjs";
-import { LucideChevronLeft, LucideCircleExclamationPoint, LucideEye, LucideEyeOff } from "@lucide/angular";
+import { LucideCheck, LucideChevronLeft, LucideCircleExclamationPoint, LucideEye, LucideEyeOff } from "@lucide/angular";
 import { Api, ApiError, mensagemDeErro } from "../api";
 import { PaginaEntrada, SLUG_VALIDO, enderecoDoNome, erroDeEmail, limparEndereco, valorDe } from "../entrada/entrada";
+import { forcaDaSenha } from "../entrada/senha";
+import { SENHAS_COMUNS } from "../entrada/senhas-comuns";
 
 type Campo = "nome" | "email" | "senha" | "empresa" | "endereco" | "contato";
 type Erros = Partial<Record<Campo, string>>;
@@ -39,7 +41,7 @@ const TEXTOS_DE_CONFLITO = new Map([
 @Component({
   selector: "app-cadastro",
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PaginaEntrada, RouterLink, LucideChevronLeft, LucideCircleExclamationPoint, LucideEye, LucideEyeOff],
+  imports: [PaginaEntrada, RouterLink, LucideCheck, LucideChevronLeft, LucideCircleExclamationPoint, LucideEye, LucideEyeOff],
   templateUrl: "./cadastro.html",
 })
 export class Cadastro {
@@ -54,6 +56,9 @@ export class Cadastro {
   readonly email = signal("");
   readonly senha = signal("");
   readonly senhaVisivel = signal(false);
+  /** Medidor e motivo da senha (#211), a mesma regra do POST /api/signup. */
+  readonly forca = computed(() => forcaDaSenha(this.senha(), this.nome(), this.email(), SENHAS_COMUNS));
+  protected readonly barras = [0, 1, 2, 3];
   readonly empresa = signal("");
   readonly endereco = signal("");
   readonly contato = signal("");
@@ -107,8 +112,8 @@ export class Cadastro {
     if (!this.nome().trim()) erros.nome = "Escreva seu nome.";
     const erroEmail = erroDeEmail(this.email());
     if (erroEmail) erros.email = erroEmail;
-    if (!this.senha()) erros.senha = "Escreva uma senha.";
-    else if (this.senha().length < 8) erros.senha = "A senha precisa de pelo menos 8 caracteres.";
+    if (!this.senha()) erros.senha = "Crie uma senha com pelo menos 10 caracteres.";
+    else if (this.forca().estado !== "ok") erros.senha = this.forca().texto;
     this.erros.set(erros);
 
     const primeiro = (["nome", "email", "senha"] as const).find((c) => erros[c]);

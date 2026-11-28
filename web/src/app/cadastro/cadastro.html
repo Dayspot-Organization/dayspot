@@ -60,6 +60,7 @@
             id="k-senha"
             [type]="senhaVisivel() ? 'text' : 'password'"
             autocomplete="new-password"
+            maxlength="1024"
             [value]="senha()"
             (input)="digitar('senha', valorDe($event))"
             [attr.aria-invalid]="erros().senha ? 'true' : null"
@@ -79,10 +80,20 @@
             }
           </button>
         </div>
+        <!-- Medidor (#211): enche até os 10 caracteres; a frase diz o que falta e não é anunciada a cada tecla. -->
+        <span class="ds-forca" [class.ok]="forca().estado === 'ok'" [class.ruim]="forca().estado === 'ruim'" aria-hidden="true">
+          @for (i of barras; track i) {
+            <span [class.feita]="senha() && i < forca().nivel"></span>
+          }
+        </span>
         @if (erros().senha; as erro) {
           <span class="ds-ajuda" id="k-senha-a"><svg lucideCircleAlert class="ds-ic" aria-hidden="true"></svg><span>{{ erro }}</span></span>
+        } @else if (!senha()) {
+          <span class="ds-ajuda" id="k-senha-a">Use pelo menos 10 caracteres.</span>
+        } @else if (forca().estado === "ok") {
+          <span class="ds-ajuda ds-ajuda--ok" id="k-senha-a"><svg lucideCheck class="ds-ic" aria-hidden="true"></svg><span>{{ forca().texto }}</span></span>
         } @else {
-          <span class="ds-ajuda" id="k-senha-a">Use pelo menos 8 caracteres.</span>
+          <span class="ds-ajuda" id="k-senha-a">{{ forca().texto }}</span>
         }
       </div>
 

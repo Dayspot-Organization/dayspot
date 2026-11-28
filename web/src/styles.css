@@ -1863,6 +1863,35 @@ app-agendamentos {
 .ds-campo--erro .ds-ajuda {
   color: var(--ds-erro-texto);
 }
+.ds-ajuda--ok {
+  color: var(--ds-confirmado-texto);
+}
+.ds-ajuda--ok .ds-ic {
+  color: var(--ds-confirmado);
+}
+/* Medidor da senha (#211): quatro barras de 4 px que enchem na tinta até os 10 caracteres;
+   pronta, verdes; comum ou com o nome, vermelhas. */
+.ds-forca {
+  display: flex;
+  gap: var(--ds-e-1);
+  margin-top: 2px;
+}
+.ds-forca > span {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--ds-raio-pilula);
+  background: var(--ds-contorno);
+  transition: background-color 0.15s;
+}
+.ds-forca > span.feita {
+  background: var(--ds-tinta);
+}
+.ds-forca.ok > span.feita {
+  background: var(--ds-confirmado);
+}
+.ds-forca.ruim > span.feita {
+  background: var(--ds-erro);
+}
 .ds-campo--grande .ds-entrada,
 .ds-campo--grande .ds-prefixo {
   height: var(--ds-a-campo-grande);

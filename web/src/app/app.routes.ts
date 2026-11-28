@@ -3,7 +3,6 @@ import { Title } from "@angular/platform-browser";
 import { type RouterStateSnapshot, type Routes, TitleStrategy } from "@angular/router";
 import { Agendamentos } from "./agendamentos/agendamentos";
 import { Agendar } from "./agendar/agendar";
-import { Cadastro } from "./cadastro/cadastro";
 import { Entrar } from "./entrar/entrar";
 import { Painel, trilhaDe } from "./layout";
 import { NovoAgendamento } from "./novo-agendamento/novo-agendamento";
@@ -26,7 +25,13 @@ export const routes: Routes = [
   { path: "", pathMatch: "full", redirectTo: "entrar" },
   // Entrar e Cadastro (#120): fora da casca do painel.
   { path: "entrar", component: Entrar, canActivate: [semSessaoGuard], data: { titulo: "Entrar" } },
-  { path: "cadastro", component: Cadastro, canActivate: [semSessaoGuard], data: { titulo: "Cadastro" } },
+  // Sob demanda: o Cadastro traz a lista de senhas comuns (#211), que não precisa ir no bundle inicial.
+  {
+    path: "cadastro",
+    loadComponent: () => import("./cadastro/cadastro").then((m) => m.Cadastro),
+    canActivate: [semSessaoGuard],
+    data: { titulo: "Cadastro" },
+  },
   // Painel só com sessão (sessaoGuard). O "**" é filho daqui: rota inexistente sem sessão
   // vai para /entrar; com sessão, para a agenda.
   {
