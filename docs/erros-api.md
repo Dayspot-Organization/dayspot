@@ -33,6 +33,7 @@ Toda resposta de erro (status 4xx/5xx) tem `Content-Type: application/json` e es
 | 409    | `slug_em_uso`         | Cadastro com slug de empresa já usado. |
 | 429    | `muitas_tentativas`   | Acima do limite de requisições. Rotas públicas: 60 leituras e 10 envios por minuto, por IP. Login: 5 falhas por e-mail ou 20 por IP em 15 minutos; acima do limite, recusa sem conferir a senha, e login certo zera o contador do e-mail. Cadastro: 5 por hora por IP. Cabeçalho `Retry-After` em segundos. |
 | 500    | `erro_interno`        | Falha inesperada. Mensagem sempre genérica; o detalhe fica só no log do servidor. |
+| 503    | `email_indisponivel`  | O e-mail (código de verificação ou link de redefinição de senha) não saiu: o Resend recusou ou não respondeu em 10 s. Sem detalhe do provedor. Pode tentar de novo. |
 
 Código novo entra aqui e em `src/Api/Erros.cs` no mesmo PR.
 
@@ -58,7 +59,7 @@ ver); de outro prestador do **mesmo** tenant, para quem não é administrador,
 ## Cliente HTTP (1.9)
 
 - Resposta não-2xx: ler `erro.codigo` e `erro.mensagem`.
-- Corpo fora desse formato com status 502/503/504: tratar como erro de rede (`ErroRede`),
+- Corpo fora desse formato com status 502/503/504 (o 503 `email_indisponivel` está no formato): tratar como erro de rede (`ErroRede`),
   porque é o proxy sem alcançar a API (o do `ng serve` responde 502 com ela fora do ar).
 - Corpo fora desse formato com outro status (HTML de erro etc.): tratar como `erro_interno`.
 - Requisição sem resposta (status 0 no `HttpClient`): erro de rede (`ErroRede`).
