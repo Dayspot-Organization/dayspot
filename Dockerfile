@@ -8,6 +8,8 @@ COPY global.json ./
 COPY src/Api/Api.csproj src/Api/
 RUN dotnet restore src/Api/Api.csproj
 COPY src/Api/ src/Api/
+# Lista de senhas comuns, embutida pelo Api.csproj (#211).
+COPY web/src/senhas-comuns.txt web/src/
 RUN dotnet publish src/Api/Api.csproj -c Release -o /out --no-restore -p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0

@@ -295,7 +295,8 @@ mantém a cor no hover: `ds-erro` com texto branco fica em 3,97:1.
 | Peça | Classe | No código |
 |---|---|---|
 | Botão | `.ds-botao`, com `--principal`, `--fantasma`, `--icone` e `--grande` | sim, menos o texto perigo e o perigo |
-| Campo | `.ds-campo`, `.ds-entrada`, `.ds-prefixo`, `.ds-junto`, `.ds-ajuda`, `--grande` e `--erro` | sim |
+| Campo | `.ds-campo`, `.ds-entrada`, `.ds-prefixo`, `.ds-junto`, `.ds-ajuda` (e `--ok`), `--grande` e `--erro` | sim |
+| Medidor de senha | `.ds-forca`, com `ok` e `ruim` | sim |
 | Aviso | `.ds-aviso`, com `--erro` e `--neutro` | sim |
 | Estado vazio | `.ds-vazio`, `.ds-vazio-linha` | sim |
 | Etapas | `.ds-etapas` | sim |
@@ -642,6 +643,7 @@ frases, e o histórico vai para a ficha do cliente; e o atalho do WhatsApp fica 
 | 25/11/2026 | Agenda v3 no código, só com o que a API já devolve. Ficam de fora o "Toda a equipe", o telefone com o WhatsApp, o serviço e o profissional, a frase da conversa e as ações do detalhe (mais ações, Remarcar, Cancelar e Agendar de novo); o intervalo também, até existir o horário de funcionamento. O domingo continua aparecendo quando tem horário ou é hoje. Abaixo de 1100 px o detalhe cobre a grade em vez de empurrá-la, e a semana rola de lado com 96 px por dia. O primeiro carregamento fica sem esqueleto: a grade aparece vazia e os blocos entram quando chegam | a API ainda não traz esses dados nem as ações (#171, #168, 5.1 e 2.21), e a tela não mostra o que não funciona; os dias fechados estão em aberto; o celular e o esqueleto não estão desenhados |
 | 25/11/2026 | Menu com nome e recolhível: 200 px aberto, 60 recolhido, trocado no pé do menu e salvo no navegador; na primeira visita, abre a partir de 1280 px. O primeiro item desce para 24 px do topo | o menu só de ícones esconde o nome até o hover, e dono de salão pouco técnico pode estranhar; recolhido, a grade ganha espaço |
 | 25/11/2026 | Estado vazio v3: ícone Lucide num quadrado cinza, o fato no título, o próximo passo numa frase e uma ação no máximo; dentro de lista, uma linha de texto. Todos os vazios foram reescritos, e saem as ilustrações e os tokens `--ilu-*` da v2.1 | a ilustração dentro de cartão era da v2.1, e os textos não diziam o próximo passo nem falavam como o produto |
+| 28/11/2026 | Senha com 10 caracteres e medidor embaixo do campo: quatro barras de 4 px que enchem na tinta até os 10 caracteres, verdes quando a senha está boa e vermelhas quando é comum ou tem o nome ou o e-mail. A frase diz o que falta ("Faltam 3 caracteres.", "Essa senha é muito usada. Escolha outra.") e vira "Senha boa.", com check | a regra do NIST, como na proposta (#211); a frase fica no `aria-describedby` e não é anunciada a cada tecla |
 | 26/11/2026 | Logo em `ds-tinta`: #A83B70 no claro e #EAA2C1 no escuro, como recomenda a proposta | o rosa claro sobre o branco fica em 2:1; a tinta é o mesmo rosa, mais escuro (6,0:1) |
 
 ## Em aberto
@@ -654,8 +656,6 @@ Da proposta, ainda sem decisão:
   curta na barra.
 - **Domingo e dias fechados:** somem ou aparecem em cinza quando o salão abre em escala.
 - **Visão do prestador:** falta desenhar a Agenda com uma pessoa só.
-- **Tamanho mínimo da senha:** a tela pede 8 caracteres, como no desenho, mas os requisitos não
-  fixam um mínimo.
 - **Domínio do link:** o campo mostra só "agendar/", porque o domínio ainda não está definido.
 - **Esqueci a senha:** não está no backlog, então a tela não oferece.
 - **Escolha de empresa:** a tela de quem tem mais de uma empresa não está desenhada.

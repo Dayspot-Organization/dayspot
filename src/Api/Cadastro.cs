@@ -18,11 +18,9 @@ public sealed record CadastroJson(Guid UsuarioId, Guid TenantId, string Slug, st
 public static partial class Cadastro
 {
     public const int MaxNome = 200;
-    public const int MinSenha = 8;
     public const int MaxEmpresaNome = 120;
     public const int MaxContato = 120;
     public const int MaxEmail = 254;
-    public const int MaxSenha = 1024;
 
     // Slug já em minúsculas: 3 a 50 caracteres, sem hífen nas pontas.
     [GeneratedRegex("^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$")]
@@ -54,13 +52,9 @@ public static partial class Cadastro
         }
         // A senha não sofre Trim: espaço nas pontas faz parte dela.
         var senha = entrada.Senha ?? "";
-        if (Clientes.Caracteres(senha) < MinSenha)
+        if (ForcaSenha.Motivo(senha, nome, email) is { } motivo)
         {
-            return Erros.CampoInvalido("senha", "Senha com no mínimo 8 caracteres.");
-        }
-        if (Clientes.Caracteres(senha) > MaxSenha)
-        {
-            return Erros.CampoInvalido("senha", "Senha com no máximo 1024 caracteres.");
+            return Erros.CampoInvalido("senha", motivo);
         }
         var empresaNome = (entrada.EmpresaNome ?? "").Trim();
         if (empresaNome == "" || Clientes.Caracteres(empresaNome) > MaxEmpresaNome)
