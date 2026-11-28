@@ -13,8 +13,9 @@
    dentro de transação, nunca `SET`.
 4. **API:** erros no formato de `docs/erros-api.md`, pelos helpers de
    `src/Api/Erros.cs`.
-5. **Git:** `CONTRIBUTING.md`. Branch a partir da `main`, um PR por card com
-   `Closes #N`, nada de push direto na `main`.
+5. **Git:** `CONTRIBUTING.md`. Branch a partir da `dev`, PR para a `dev`, um PR por
+   card com `Closes #N`, nada de push direto na `dev` nem na `main`. Deploy em
+   `docs/deploy.md`.
 6. **Sem referência ao Claude no que vai para o GitHub.** Commits, PRs, comentários
    e código não mencionam Claude, Claude Code nem IA: nada de `Co-Authored-By`,
    `Claude-Session`, "Generated with Claude Code", link de sessão ou de thread.

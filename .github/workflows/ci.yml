@@ -1,9 +1,12 @@
 name: CI
 
+# Push na dev publica na homologação; o botão (Run workflow) na main publica na produção.
+# Os dois só depois dos testes (docs/deploy.md).
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "dev"]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build-and-test:
@@ -106,13 +109,56 @@ jobs:
   docker:
     name: Docker Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      # PR e push na main só buildam; publicam o push na dev e o botão na main.
+      PUBLICA: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/dev') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
+      API: ghcr.io/dayspot-organization/dayspot-api:${{ github.sha }}
+      WEB: ghcr.io/dayspot-organization/dayspot-web:${{ github.sha }}
 
     steps:
       - name: Checkout do repositório
         uses: actions/checkout@v7
 
-      - name: Build da imagem da API (sem publicar)
-        run: docker build .
+      - name: Build da imagem da API
+        run: docker build -t "$API" .
 
-      - name: Build da imagem do front (sem publicar)
-        run: docker build web/
+      - name: Build da imagem do front
+        run: docker build -t "$WEB" web/
+
+      - name: Publicar as imagens no GHCR
+        if: env.PUBLICA == 'true'
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker push "$API"
+          docker push "$WEB"
+
+  deploy:
+    name: Deploy
+    needs: [build-and-test, web, docker]
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/dev') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    # O Environment guarda a chave e limita a branch: homologacao só da dev, producao só da main.
+    environment: ${{ github.ref == 'refs/heads/main' && 'producao' || 'homologacao' }}
+    concurrency:
+      group: deploy-${{ github.ref == 'refs/heads/main' && 'producao' || 'homologacao' }}
+      cancel-in-progress: false
+
+    steps:
+      # A chave só roda o deploy/deploy.sh (comando forçado): o pedido é ambiente e sha.
+      - name: Deploy na VPS por SSH
+        env:
+          AMBIENTE: ${{ github.ref == 'refs/heads/main' && 'producao' || 'homologacao' }}
+          CHAVE: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOST: ${{ vars.DEPLOY_HOST }}
+          KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$CHAVE" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -o BatchMode=yes "deploy@$HOST" "$AMBIENTE $GITHUB_SHA"

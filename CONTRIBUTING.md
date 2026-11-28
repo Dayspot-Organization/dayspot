@@ -7,16 +7,16 @@ Regras de trabalho do time. Valem para os três integrantes e para o Claude Code
 ## Fluxo de um card, do início ao fim
 
 1. Pegue um card em **Ready** no GitHub Projects, atribua a você e mova para **In progress**.
-2. Crie a branch a partir da `main` atualizada:
+2. Crie a branch a partir da `dev` atualizada:
 
    ```bash
-   git switch main
+   git switch dev
    git pull
    git switch -c feat/t0-migration-clientes
    ```
 
 3. Faça commits pequenos, no padrão abaixo.
-4. Suba a branch e abra o PR **para a `main`**:
+4. Suba a branch e abra o PR **para a `dev`** (a branch padrão do GitHub):
 
    ```bash
    git push -u origin feat/t0-migration-clientes
@@ -26,8 +26,17 @@ Regras de trabalho do time. Valem para os três integrantes e para o Claude Code
 6. Com aprovação e CI verde, faça o merge (**merge commit**) e apague a branch.
 7. Mova o card para **Done** (o `Closes #N` fecha a issue sozinho).
 
-> Não existe branch `dev`. Todo trabalho sai da `main` e volta para a `main` por PR.
-> Ninguém faz push direto na `main`.
+> Todo trabalho sai da `dev` e volta para a `dev` por PR. Cada merge na `dev` publica
+> na homologação (`homolog.dayspot.app.br`). Ninguém faz push direto na `dev` nem na `main`.
+
+### Da `dev` para a produção
+
+1. Com a homologação conferida, abra um PR da `dev` para a `main`, com o título
+   `Publicação <data>` e a lista dos PRs que entram.
+2. Com aprovação e CI verde, faça o merge (**merge commit**).
+3. Em **Actions › CI › Run workflow**, escolha a `main`: os testes rodam de novo e a
+   produção é publicada. Roteiro, volta de versão e regra das migrations em
+   [`docs/deploy.md`](docs/deploy.md).
 
 ---
 
@@ -146,5 +155,5 @@ dotnet format                     # o CI falha se sobrar diferença (--verify-no
 ## Definição de pronto
 
 Está em [`docs/backlog.md`](docs/backlog.md#definição-de-pronto). Resumo: mergeado na
-`main`, PR aprovado por outro integrante, CI verde, critérios de aceite verificados e,
+`dev`, PR aprovado por outro integrante, CI verde, critérios de aceite verificados e,
 se mexeu no banco, migration versionada.

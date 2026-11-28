@@ -386,7 +386,7 @@ Era a Fatia 7 até a v2.1; nenhum card dela tinha sido criado.
 
 **8.1 entregue para a API pelo PR #159.** O Dockerfile do worker passou para a 3.12.
 
-> **8.2 e 8.3 a rever.** O piloto publica no Render, com o Postgres no Neon e as migrations aplicadas fora do deploy (#149 e #173). Os dois itens ainda descrevem o plano anterior.
+> **8.2 e 8.3 entregues fora de card (26/11/2026).** A hospedagem saiu do Render e do Neon para uma VPS: compose de produção em `deploy/` e migrations como passo do deploy (`docs/deploy.md`). O #149 e o #173 ficaram para trás.
 
 ---
 
@@ -440,7 +440,7 @@ Na v2.3, para 481h: `GET /membros` (2.21, +2h) e criar conta pelo convite (2.22,
 
 **Issue:**
 
-- [ ] Mergeada na `main`
+- [ ] Mergeada na `dev`
 - [ ] PR aprovado por outro integrante
 - [ ] CI verde
 - [ ] Critérios de aceite verificados
