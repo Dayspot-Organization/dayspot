@@ -424,8 +424,10 @@ notificacoes(id, tenant_id, agendamento_id, tipo, versao, status,
              UNIQUE(agendamento_id, tipo, versao))
 ```
 
-**O que está no schema hoje.** As migrations vão até a 010. `convites` ainda não
-existe: a migration 011 fica para depois do piloto. As colunas do Telegram
+**O que está no schema hoje.** As migrations numeradas vão até a 010, seguidas de
+`AdicionarContatoPublico`, `RestringirAppUser` e `CriarConvites`. `convites` existe (011,
+como `20261127003555_CriarConvites`), sem `DELETE` para o `app_user`; os endpoints de
+convite ficam para depois do piloto (2.18 a 2.20). As colunas do Telegram
 (`tenants.telegram_bot_token`, `clientes.telegram_chat_id`, `clientes.vinculo_token`,
 `clientes.vinculo_expira_em`, `clientes.vinculado_em` e
 `notificacoes.telegram_message_id`) continuam no schema, sem uso, até uma migration

@@ -2,7 +2,13 @@
 
 Fatia 0 do backlog (itens 0.7 a 0.18) e base de acesso a dados da Fatia 1 (1.2 e
 1.3). Complementa `docs/requisitos.md`.
-Versão **1.14** · 25/11/2026
+Versão **1.15** · 28/11/2026
+
+## Mudanças desde a v1.14
+
+- **Migration `20261127003555_CriarConvites` (#127):** cria `convites` (§011) e revoga o
+  `DELETE` do `app_user` na tabela (§Usuário de aplicação). Os defaults de `id`, `token`,
+  `expira_em` e `criado_em` estão também no modelo do EF (`AppDb.cs`).
 
 ## Mudanças desde a v1.13
 
@@ -141,7 +147,7 @@ A ordem não é estética — é imposta pelas dependências de chave estrangeir
 20261127003555 convites ← a 011 acima (#127)
 ```
 
-As migrations numeradas aplicadas vão até a 010; depois delas vêm a `20261120120000_AdicionarContatoPublico` a `20261124120000_RestringirAppUser` e a `20261127003555_CriarConvites` (`src/Api/Migrations/`).
+As migrations numeradas aplicadas vão até a 010; depois delas vêm a `20261120120000_AdicionarContatoPublico`, a `20261124120000_RestringirAppUser` e a `20261127003555_CriarConvites` (`src/Api/Migrations/`).
 
 ## Dinheiro: centavos em `integer`
 
@@ -810,6 +816,8 @@ CREATE TABLE convites (
 
 CREATE INDEX idx_convites_tenant ON convites (tenant_id);
 
+REVOKE DELETE ON convites FROM app_user;
+
 -- Down
 DROP TABLE convites;
 ```
@@ -819,6 +827,9 @@ piloto (2.17 a 2.20); a remoção de membro, na 5.8. A
 tabela está no desenho desde a v1.1 para ninguém inventar convite por e-mail sem
 registro.
 
+- **Sem `DELETE` para o `app_user`.** A API não apaga convite; cancelar, se um dia
+  existir, é `UPDATE`. Fora do RLS, um `DELETE` sem `WHERE tenant_id` apagaria os
+  convites de todas as empresas.
 - **Papel do convite: `administrador` ou `prestador`.** Administrador convida administrador; o criador da
   empresa (`tenants.criado_por`) fica protegido pela regra do endpoint de remoção,
   não pelo banco.
@@ -863,12 +874,14 @@ script que roda igual nos dois.
 
 O `ALTER DEFAULT PRIVILEGES` evita ter que lembrar de dar `GRANT` toda vez que uma
 tabela nova for criada. As exceções são o `DELETE` em `agendamentos`, que a 009 revoga,
-e em `tenants`, `usuarios` e `memberships`, que a `RestringirAppUser` revoga (#198). A
+e em `tenants`, `usuarios` e `memberships`, que a `RestringirAppUser` revoga (#198), e em
+`convites`, que a `CriarConvites` revoga. A
 mesma migration dá ao `app_user` `lock_timeout` de 5 s e `statement_timeout` de 15 s:
 lock preso ou consulta travada vira erro em vez de segurar a conexão do pool.
 
 ```sql
 REVOKE DELETE ON tenants, usuarios, memberships FROM app_user;
+REVOKE DELETE ON convites FROM app_user;
 ALTER ROLE app_user SET lock_timeout = '5s';
 ALTER ROLE app_user SET statement_timeout = '15s';
 ```
@@ -1197,6 +1210,7 @@ zero linhas atualizadas → 409 `status_invalido` (o horário ainda não começo
 - [ ] Preço ou valor negativo falha (`servicos.preco_centavos`,
       `agendamentos.valor_centavos`); serviço sem preço falha *(v1.4)*
 - [ ] `DELETE FROM agendamentos` como `app_user` falha (`42501`) *(v1.4)*
+- [ ] `DELETE FROM convites` como `app_user` falha (`42501`) *(v1.15)*
 
 O quarto item é o mais esquecido: quase toda equipe escreve a constraint de
 sobreposição e só testa o caso que deve falhar. Se `'[)'` virar `'[]'` por
